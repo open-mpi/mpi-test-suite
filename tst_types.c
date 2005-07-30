@@ -1,0 +1,555 @@
+#include <values.h>
+#include <limits.h>
+#include "config.h"
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#endif
+#ifdef HAVE_STRINGS_H
+#  include <strings.h>
+#endif
+#include "mpi.h"
+#include "mpi_test_suite.h"
+
+
+/*
+#ifdef __USE_ISOC99
+#error "ISOC99 defined"
+#endif
+*/
+
+#undef DEBUG
+#define DEBUG(x)
+
+#ifndef MIN
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#endif
+
+#define MAX_TYPES 4
+
+#define CHECK_ARG(i,ret) do {           \
+    if ((i) < 0 || (i) > TST_TYPES_NUM) \
+      return (ret);                     \
+  } while (0)
+
+#define TST_TYPES_NUM (sizeof (types) / sizeof (types[0]))
+#define TST_TYPES_CLASS_NUM (sizeof (tst_types_class_strings) / sizeof (tst_types_class_strings[0]))
+
+struct tst_type_class {
+  char * class_string;
+  unsigned long long int class;
+};
+
+static const struct tst_type_class tst_types_class_strings [] =
+  {
+    {"STANDARD_C_INT_TYPES", TST_MPI_STANDARD_C_INT_TYPES},
+    {"STANDARD_C_FLOAT_TYPES", TST_MPI_STANDARD_C_FLOAT_TYPES},
+    {"STANDARD_C_TYPES", TST_MPI_STANDARD_C_TYPES},
+    {"STRUCT_C_TYPES", TST_MPI_STRUCT_C_TYPES},
+    {"ALL_C_TYPES", TST_MPI_ALL_C_TYPES},
+    {"STANDARD_FORTRAN_INT_TYPES", TST_MPI_STANDARD_FORTRAN_INT_TYPES},
+    {"STANDARD_FORTRAN_FLOAT_TYPES", TST_MPI_STANDARD_FORTRAN_FLOAT_TYPES},
+    {"STANDARD_FORTRAN_COMPLEX_TYPES", TST_MPI_STANDARD_FORTRAN_COMPLEX_TYPES},
+    {"STANDARD_FORTRAN_TYPES", TST_MPI_STANDARD_FORTRAN_TYPES},
+    {"STRUCT_FORTRAN_TYPES",  TST_MPI_STRUCT_FORTRAN_TYPES},
+    {"ALL_FORTRAN_TYPES", TST_MPI_ALL_FORTRAN_TYPES}
+  };
+
+
+struct type {
+  MPI_Datatype mpi_datatype;
+  char description [TST_DESCRIPTION_LEN];
+  int lb;
+  int ub;
+  int type_class;
+  int type_num;
+  int type_mapping[MAX_TYPES];
+};
+
+static struct type types[32] = {
+/* Standard C Types */
+  {MPI_CHAR,              "MPI_CHAR",             0, sizeof (char), TST_MPI_CHAR, 1, {TST_MPI_CHAR}},
+  {MPI_UNSIGNED_CHAR,     "MPI_UNSIGNED_CHAR",    0, sizeof (unsigned char), TST_MPI_UNSIGNED_CHAR, 1, {TST_MPI_UNSIGNED_CHAR}},
+  {MPI_BYTE,              "MPI_BYTE",             0, sizeof (char), TST_MPI_BYTE, 1, {TST_MPI_BYTE}},
+  {MPI_SHORT,             "MPI_SHORT",            0, sizeof (short), TST_MPI_SHORT, 1, {TST_MPI_SHORT}},
+  {MPI_UNSIGNED_SHORT,    "MPI_UNSIGNED_SHORT",   0, sizeof (unsigned short), TST_MPI_UNSIGNED_SHORT, 1, {TST_MPI_UNSIGNED_SHORT}},
+  {MPI_INT,               "MPI_INT",              0, sizeof (int), TST_MPI_INT, 1, {TST_MPI_INT}},
+  {MPI_UNSIGNED,          "MPI_UNSIGNED",         0, sizeof (unsigned int), TST_MPI_UNSIGNED, 1, {TST_MPI_UNSIGNED}},
+  {MPI_LONG,              "MPI_LONG",             0, sizeof (long), TST_MPI_LONG, 1, {TST_MPI_LONG}},
+  {MPI_UNSIGNED_LONG,     "MPI_UNSIGNED_LONG",    0, sizeof (unsigned long), TST_MPI_UNSIGNED_LONG, 1, {TST_MPI_UNSIGNED_LONG}},
+  {MPI_FLOAT,             "MPI_FLOAT",            0, sizeof (float), TST_MPI_FLOAT, 1, {TST_MPI_FLOAT}},
+  {MPI_DOUBLE,            "MPI_DOUBLE",           0, sizeof (double), TST_MPI_DOUBLE, 1, {TST_MPI_DOUBLE}},
+#if 0 && defined(HAVE_LONG_DOUBLE)
+  {MPI_LONG_DOUBLE,       "MPI_LONG_DOUBLE",      0, sizeof (long double), TST_MPI_LONG_DOUBLE, 1, {TST_MPI_LONG_DOUBLE}},
+#endif
+#ifdef HAVE_MPI_LONG_LONG
+  {MPI_LONG_LONG,         "MPI_LONG_LONG",        0, sizeof (long long int), TST_MPI_LONG_LONG, 1, {TST_MPI_LONG_LONG}},
+#endif /* HAVE_MPI_LONG_LONG */
+/*  {MPI_PACKED,          "MPI_PACKED",           0, 0, 0, NULL},
+  {MPI_LB,                "MPI_LB",               0, sizeof (), 1, {TST_}},
+  {MPI_UB,                "MPI_UB",               0, sizeof (), 1, {TST_}},*/
+/* Composed C types */
+  {MPI_FLOAT_INT,         "MPI_FLOAT_INT",        0, sizeof (struct tst_mpi_float_int), TST_MPI_FLOAT_INT, 1, {TST_MPI_FLOAT_INT}},
+  {MPI_DOUBLE_INT,        "MPI_DOUBLE_INT",       0, sizeof (struct tst_mpi_double_int), TST_MPI_DOUBLE_INT, 1, {TST_MPI_DOUBLE_INT}},
+  {MPI_LONG_INT,          "MPI_LONG_INT",         0, sizeof (struct tst_mpi_long_int), TST_MPI_LONG_INT, 1, {TST_MPI_LONG_INT}},
+  {MPI_SHORT_INT,         "MPI_SHORT_INT",        0, sizeof (struct tst_mpi_short_int), TST_MPI_SHORT_INT, 1, {TST_MPI_SHORT_INT}},
+  {MPI_2INT,              "MPI_2INT",             0, sizeof (struct tst_mpi_2int), TST_MPI_2INT, 1, {TST_MPI_2INT}},
+/*  {MPI_LONG_DOUBLE_INT,   "MPI_LONG_DOUBLE_INT",  0, sizeof (struct tst_mpi_long_double_int), TST_MPI_LONG_DOUBLE_INT, 1, {TST_MPI_LONG_DOUBLE_INT}},*/
+/* Fortran Types */
+/*  {MPI_COMPLEX,           "MPI_COMPLEX",         0, sizeof (complex), 1, {TST_}},
+  {MPI_DOUBLE_COMPLEX,    "MPI_DOUBLE_COMPLEX",    0, sizeof (), 1, {TST_}},
+  {MPI_LOGICAL,           "MPI_LOGICAL",           0, sizeof (), 1, {TST_}},
+  {MPI_REAL,              "MPI_REAL",              0, sizeof (), 1, {TST_}},
+  {MPI_DOUBLE_PRECISION,  "MPI_DOUBLE_PRECISION",  0, sizeof (), 1, {TST_}},
+  {MPI_INTEGER,           "MPI_INTEGER",           0, sizeof (), 1, {TST_}},
+  {MPI_2INTEGER,          "MPI_2INTEGER",          0, sizeof (), 1, {TST_}},
+  {MPI_2COMPLEX,          "MPI_2COMPLEX",          0, sizeof (), 1, {TST_}},
+  {MPI_2DOUBLE_COMPLEX,   "MPI_2DOUBLE_COMPLEX",   0, sizeof (), 1, {TST_}},
+  {MPI_2REAL,             "MPI_2REAL",             0, sizeof (), 1, {TST_}},
+  {MPI_2DOUBLE_PRECISION, "MPI_2DOUBLE_PRECISION", 0, sizeof (), 1, {TST_}},
+  {MPI_CHARACTER,         "MPI_CHARACTER",         0, sizeof (), 1, {TST_}}*/
+  /*
+   * The last element
+   */
+  {-1,                    "",                     0, 0, 0, 0, {NULL}}
+};
+
+int tst_type_init (int * num_types)
+{
+  /*
+   * We should create at least some other datatypes, to test communication!
+   */
+  *num_types = 18;
+  return 0;
+}
+
+MPI_Datatype tst_type_getdatatype (int type)
+{
+  CHECK_ARG (type, MPI_DATATYPE_NULL);
+  return types[type].mpi_datatype;
+}
+
+int tst_type_gettypeclass (int type)
+{
+  CHECK_ARG (type, -1);
+  return types[type].type_class;
+}
+
+const char * tst_type_getdescription (int type)
+{
+  CHECK_ARG (type, NULL);
+  return types[type].description;
+}
+
+int tst_type_gettypesize (int type)
+{
+  CHECK_ARG (type, -1);
+  return types[type].ub;
+}
+
+
+void tst_type_hexdump (const char * text, const char * data, int num)
+{
+#define NUM_COL 16
+   int i;
+
+   printf ("(Rank:%d) %s [%d Bytes]\n(Rank:%d) [ 0-%d]:\t",
+           tst_global_rank, text, num,
+           tst_global_rank, NUM_COL-1);
+   for (i = 0; i < num; i++)
+     {
+       if ((i % 7) == 7)
+         printf ("  0x%.2x", data[i] & 0xFF);
+       else
+         printf (" 0x%.2x", data[i] & 0xFF);
+       if ((i % NUM_COL) == NUM_COL-1 && i != num-1)
+         printf ("\n(Rank:%d) [%d-%d]:\t",
+                 tst_global_rank, i+1, MIN(i+NUM_COL+1, num-1));
+     }
+   printf("\n");
+}
+
+
+static int tst_type_gettypemax_log (int type)
+{
+  CHECK_ARG (type, -1);
+
+  switch (types[type].type_class)
+    {
+      case TST_MPI_CHAR: return 1;
+      case TST_MPI_UNSIGNED_CHAR: return 1;
+      case TST_MPI_BYTE: return 1;
+      case TST_MPI_SHORT: return SIZEOF_SHORT;
+      case TST_MPI_UNSIGNED_SHORT: return SIZEOF_SHORT;
+      case TST_MPI_INT: return SIZEOF_INT;
+      case TST_MPI_UNSIGNED: return SIZEOF_INT;
+      case TST_MPI_LONG: return SIZEOF_LONG;
+      case TST_MPI_UNSIGNED_LONG: return SIZEOF_LONG;
+      case TST_MPI_FLOAT: return SIZEOF_FLOAT;
+      case TST_MPI_DOUBLE: return SIZEOF_DOUBLE;
+#if 0 & defined(HAVE_LONG_DOUBLE)
+      case TST_MPI_LONG_DOUBLE: return SIZEOF_LONG_DOUBLE;
+#endif
+#ifdef HAVE_MPI_LONG_LONG
+      case TST_MPI_LONG_LONG: return SIZEOF_LONG_LONG;
+#endif /* HAVE_MPI_LONG_LONG */
+      case TST_MPI_PACKED: return 1;
+	/*
+	  case TST_MPI_LB: return 0;
+	  case TST_MPI_UB: return 0;
+	*/
+      case TST_MPI_FLOAT_INT: return SIZEOF_STRUCT_MPI_FLOAT_INT;
+      case TST_MPI_DOUBLE_INT: return SIZEOF_STRUCT_MPI_DOUBLE_INT;
+      case TST_MPI_LONG_INT: return SIZEOF_STRUCT_MPI_LONG_INT;
+      case TST_MPI_SHORT_INT: return SIZEOF_STRUCT_MPI_SHORT_INT;
+      case TST_MPI_2INT: return SIZEOF_STRUCT_MPI_2INT;
+      case TST_MPI_LONG_DOUBLE_INT: return SIZEOF_STRUCT_MPI_LONG_DOUBLE_INT;
+/*
+      case TST_MPI_COMPLEX: return SIZEOF_FORTRAN_COMPLEX;
+      case TST_MPI_DOUBLE_COMPLEX: return SIZEOF_FORTRAN_DOUBLE_COMPLEX;
+      case TST_MPI_LOGICAL: return SIZEOF_FORTRAN_LOGICAL;
+      case TST_MPI_REAL: return SIZEOF_FORTRAN_REAL;
+      case TST_MPI_DOUBLE_PRECISION: return SIZEOF_FORTRAN_DOUBLE_PRECISION;
+      case TST_MPI_INTEGER: return SIZEOF_FORTRAN_INTEGER;
+      case TST_MPI_2INTEGER: return SIZEOF_FORTRAN_2INTEGER;
+      case TST_MPI_2COMPLEX: return SIZEOF_FORTRAN_2COMPLEX;
+      case TST_MPI_2DOUBLE_COMPLEX: return SIZEOF_FORTRAN_2DOUBLE_COMPEX;
+      case TST_MPI_2REAL: return SIZEOF_FORTRAN_2REAL;
+      case TST_MPI_2DOUBLE_PRECISION: return SIZEOF_FORTRAN_2DOUBLE_PRECISION;
+*/
+      default: return -1;
+    }
+}
+
+char * tst_type_allocvalues (const int type, const int values_num)
+{
+  CHECK_ARG (type, NULL);
+  return calloc (values_num, tst_type_gettypesize(type));
+}
+
+#define TST_TYPE_SET(tst_type,c_type,c_type_caps)                                                \
+  case tst_type:                                                                                 \
+    {                                                                                            \
+      switch (type_set)                                                                          \
+      {                                                                                          \
+      case TST_TYPE_SET_ZERO: *(c_type*)buffer = 0; break;                                       \
+      case TST_TYPE_SET_MAX: *(c_type*)buffer = c_type_caps##_MAX; break;                        \
+      case TST_TYPE_SET_MIN: *(c_type*)buffer = c_type_caps##_MIN; break;                        \
+      case TST_TYPE_SET_VALUE:                                                                   \
+          *(c_type*)buffer = direct_value; break;                                                \
+      }                                                                                          \
+      break;                                                                                     \
+    }
+
+#define TST_TYPE_SET_UNSIGNED(tst_type,c_type,c_type_caps)                                       \
+  case tst_type:                                                                                 \
+    {                                                                                            \
+      switch (type_set)                                                                          \
+      {                                                                                          \
+      case TST_TYPE_SET_ZERO: *(c_type*)buffer = 0; break;                                       \
+      case TST_TYPE_SET_MAX: *(c_type*)buffer = c_type_caps##_MAX; break;                        \
+      case TST_TYPE_SET_MIN: *(c_type*)buffer = 0; break;                                        \
+      case TST_TYPE_SET_VALUE:                                                                   \
+          *(c_type*)buffer = direct_value; break;                                                \
+      }                                                                                          \
+      break;                                                                                     \
+    }
+
+#define TST_TYPE_SET_STRUCT(tst_type,c_type,c_type_caps)                                         \
+  case tst_type:                                                                                 \
+    {                                                                                            \
+      switch (type_set)                                                                          \
+      {                                                                                          \
+      case TST_TYPE_SET_ZERO:                                                                    \
+        (*(c_type*)buffer).a = 0;                                                                \
+        (*(c_type*)buffer).b = 0;                                                                \
+        break;                                                                                   \
+      case TST_TYPE_SET_MAX:                                                                     \
+        (*(c_type*)buffer).a = c_type_caps##_MAX;                                                \
+        (*(c_type*)buffer).b = INT_MAX;                                                          \
+        break;                                                                                   \
+      case TST_TYPE_SET_MIN:                                                                     \
+        (*(c_type*)buffer).a = c_type_caps##_MIN;                                                \
+        (*(c_type*)buffer).b = INT_MIN;                                                          \
+        break;                                                                                   \
+      case TST_TYPE_SET_VALUE:                                                                   \
+        (*(c_type*)buffer).a = direct_value;                                                     \
+        (*(c_type*)buffer).b = direct_value;                                                     \
+        break;                                                                                   \
+      default:                                                                                   \
+        return -1;                                                                               \
+      }                                                                                          \
+      break;                                                                                     \
+    }
+
+
+int tst_type_setvalue (int type, char * buffer, int type_set, long long direct_value)
+{
+  CHECK_ARG (type, -1);
+
+  memset (buffer, 0, tst_type_gettypesize (type));
+
+  switch (types[type].type_class)
+    {
+      TST_TYPE_SET (TST_MPI_CHAR, char, CHAR);
+      TST_TYPE_SET_UNSIGNED (TST_MPI_UNSIGNED_CHAR, unsigned char, UCHAR);
+      TST_TYPE_SET (TST_MPI_BYTE, char, CHAR);
+      TST_TYPE_SET (TST_MPI_SHORT, short, SHRT);
+      TST_TYPE_SET_UNSIGNED (TST_MPI_UNSIGNED_SHORT, unsigned short, USHRT);
+      TST_TYPE_SET (TST_MPI_INT, int, INT);
+      TST_TYPE_SET_UNSIGNED (TST_MPI_UNSIGNED, unsigned int, UINT);
+      TST_TYPE_SET (TST_MPI_LONG, long, LONG);
+      TST_TYPE_SET_UNSIGNED (TST_MPI_UNSIGNED_LONG, unsigned long, ULONG);
+      TST_TYPE_SET (TST_MPI_FLOAT, float, FLT);
+      TST_TYPE_SET (TST_MPI_DOUBLE, double, DBL);
+#if 0 && defined(HAVE_LONG_DOUBLE) && defined (LDBL_MAX)
+      TST_TYPE_SET (TST_MPI_LONG_DOUBLE, long double, LDBL);
+#endif
+#ifdef HAVE_MPI_LONG_LONG
+      TST_TYPE_SET (TST_MPI_LONG_LONG, long long, LONG_LONG);
+#endif /* HAVE_MPI_LONG_LONG */
+      TST_TYPE_SET (TST_MPI_PACKED, char, CHAR);
+      /*
+	TST_TYPE_SET (TST_MPI_LB, char, CHAR);
+	TST_TYPE_SET (TST_MPI_UB, char, CHAR);
+      */
+
+      TST_TYPE_SET_STRUCT (TST_MPI_FLOAT_INT, struct tst_mpi_float_int, FLT);
+      TST_TYPE_SET_STRUCT (TST_MPI_DOUBLE_INT, struct tst_mpi_double_int, DBL);
+      TST_TYPE_SET_STRUCT (TST_MPI_LONG_INT, struct tst_mpi_long_int, LONG);
+      TST_TYPE_SET_STRUCT (TST_MPI_SHORT_INT, struct tst_mpi_short_int, SHRT);
+      TST_TYPE_SET_STRUCT (TST_MPI_2INT, struct tst_mpi_2int, INT);
+#if 0 && defined(HAVE_LONG_DOUBLE) && defined (LDBL_MAX)
+      TST_TYPE_SET_STRUCT (TST_MPI_LONG_DOUBLE_INT, struct tst_mpi_long_double_int, LDBL);
+#endif
+/*
+      TST_TYPE_SET (TST_MPI_COMPLEX
+      TST_TYPE_SET (TST_MPI_DOUBLE_COMPLEX
+      TST_TYPE_SET (TST_MPI_LOGICAL
+      TST_TYPE_SET (TST_MPI_REAL
+      TST_TYPE_SET (TST_MPI_DOUBLE_PRECISION
+      TST_TYPE_SET (TST_MPI_INTEGER
+      TST_TYPE_SET (TST_MPI_2INTEGER
+      TST_TYPE_SET (TST_MPI_2COMPLEX
+      TST_TYPE_SET (TST_MPI_2DOUBLE_COMPLEX
+      TST_TYPE_SET (TST_MPI_2REAL
+      TST_TYPE_SET (TST_MPI_2DOUBLE_PRECISION
+*/
+      default: ERROR (EINVAL, "Unknown type in tst_type_setvalue");
+    }
+  /* tst_type_hexdump ("Setting:", buffer, tst_type_gettypesize (type)); */
+  return 0;
+}
+
+int tst_type_setstandardarray (int type, int values_num, char * buffer, int comm_rank)
+{
+  const int type_size = tst_type_gettypesize (type);
+  int i;
+  CHECK_ARG (type, -1);
+
+  if (values_num > 0)
+    tst_type_setvalue (type, &buffer[0*type_size], TST_TYPE_SET_MIN, 0);
+  if (values_num > 1)
+    tst_type_setvalue (type, &buffer[1*type_size], TST_TYPE_SET_MAX, 0);
+
+  for (i = 2; i < values_num; i++)
+    tst_type_setvalue (type, &buffer[i*type_size], TST_TYPE_SET_VALUE, comm_rank + i);
+
+  return 0;
+}
+
+int tst_type_cmpvalue (int type, const char * buffer1, const char * buffer2)
+{
+  CHECK_ARG (type, -1);
+  /*
+  ret = memcmp (buffer1, buffer2, tst_type_gettypesize (type));
+  if (ret && tst_type_gettypeclass (type) == TST_MPI_SHORT_INT)
+    printf ("(Rank:%d) type_size:%d sizeof(struct):%d buffer1:%d,%d buffer2:%d,%d differs for TST_MPI_SHORT_INT\n",
+            tst_global_rank, tst_type_gettypesize (type),
+            sizeof (struct tst_mpi_short_int),
+            ((struct tst_mpi_short_int*)buffer1)->a,
+            ((struct tst_mpi_short_int*)buffer1)->b,
+            ((struct tst_mpi_short_int*)buffer2)->a,
+            ((struct tst_mpi_short_int*)buffer2)->b);
+  */
+  return memcmp (buffer1, buffer2, tst_type_gettypesize (type));
+}
+
+int tst_type_checkstandardarray (int type, int values_num, char * buffer, int comm_rank)
+{
+  const int type_size = tst_type_gettypesize (type);
+  char err[128];
+  char * cmp_value;
+  int i;
+
+  CHECK_ARG (type, -1);
+
+  cmp_value = tst_type_allocvalues (type, 1);
+
+  tst_type_setvalue (type, cmp_value, TST_TYPE_SET_MIN, 0);
+
+  if (values_num > 0 && tst_type_cmpvalue (type, &buffer[0*type_size], cmp_value))
+    {
+      printf ("(Rank:%d) Error in MIN cmp_value:%d buffer[%d]:%d\n",
+              tst_global_rank, (char)*cmp_value, 0*type_size, (char)buffer[0*type_size]);
+      tst_type_hexdump ("Expected cmp_value", cmp_value, type_size);
+      tst_type_hexdump ("Received buffer", &(buffer[0*type_size]), type_size);
+      // return -1;
+    }
+
+  tst_type_setvalue (type, cmp_value, TST_TYPE_SET_MAX, 0);
+  if (values_num > 1 && tst_type_cmpvalue (type, &buffer[1*type_size], cmp_value))
+    {
+      printf ("(Rank:%d) Error in MAX cmp_value:%d buffer[%d]:%d\n",
+              tst_global_rank, (char)*cmp_value, 1*type_size, (char)buffer[1*type_size]);
+      tst_type_hexdump ("Expected cmp_value", cmp_value, type_size);
+      tst_type_hexdump ("Received buffer", &(buffer[0*type_size]), type_size);
+      // return -1;
+    }
+
+  for (i = 2; i < values_num; i++)
+    {
+      tst_type_setvalue (type, cmp_value, TST_TYPE_SET_VALUE, comm_rank + i);
+
+      if (tst_type_cmpvalue (type, cmp_value, &(buffer[i*type_size])))
+        {
+          /* struct tst_mpi_float_int * tmp = (struct tst_mpi_float_int*) &(buffer[i*type_size]); */
+          /* ((struct tst_mpi_float_int*)cmp_value)->a, */
+
+          snprintf (err, sizeof (err), "(Rank:%d) Error at i:%d expected ", tst_global_rank, i);
+          tst_type_hexdump (err, cmp_value, type_size);
+
+          snprintf (err, sizeof (err), "(Rank:%d) Error at i:%d but received ", tst_global_rank, i);
+          tst_type_hexdump (err, &(buffer[i*type_size]), type_size);
+
+          return -1;
+        }
+/*
+      else
+        printf ("(Rank:%d) Correct at i:%d cmp_value:%d buffer[%d]:%d\n",
+                tst_global_rank, i,
+                (char)*cmp_value,
+                i*type_size,
+                (char)buffer[i*type_size]);
+*/
+    }
+
+  free (cmp_value);
+  return 0;
+}
+
+static int tst_type_getvalue (int type, char * buffer1, char * buffer2)
+{
+  CHECK_ARG (type, -1);
+
+  return 0;
+}
+
+
+
+void tst_type_list (void)
+{
+  int i;
+  for (i = 0; i < TST_TYPES_NUM; i++)
+    {
+      if (types[i].description[0] == '\0')
+	break;
+      printf ("type:%d %s\n",
+	      i, types[i].description);
+    }
+
+  for (i = 0; i < TST_TYPES_CLASS_NUM; i++)
+    printf ("Type-Class:%d %s\n",
+	    i, tst_types_class_strings[i].class_string);
+
+}
+
+
+static int tst_type_search (const int search_test, const int * test_list, const int test_list_num)
+{
+  int k;
+
+  for (k = 0; k < test_list_num; k++)
+    if (test_list[k] == search_test)
+      break;
+  return (k == test_list_num) ? 0 : 1;
+}
+
+
+int tst_type_select (const char * type_string,
+		     int * type_list, int * type_list_num, const int type_list_max)
+{
+  int i;
+
+  if (type_string == NULL || type_list == NULL || type_list_num == NULL)
+    ERROR (EINVAL, "Passed a NULL parameter");
+
+  for (i = 0; i < TST_TYPES_CLASS_NUM; i++)
+    {
+      /*
+       * In case we match a complete class of types, include every one!
+       */
+      if (!strcasecmp (type_string, tst_types_class_strings[i].class_string))
+	{
+	  int j;
+	  DEBUG (printf ("type_string:%s matched with tst_types_class_strings[%d]:%s\n",
+			 type_string, i, tst_types_class_strings[i].class_string));
+	  for (j = 0; j < TST_TYPES_NUM; j++)
+	    {
+	      /*
+	       * First search for this test in the type_list -- if already in, continue!
+	       */
+	      if (tst_type_search (j, type_list, *type_list_num))
+		{
+		  WARNING (printf ("Type:%s selected through class:%s was already "
+				   "included in list -- not including\n",
+				   types[j].description,
+				   tst_types_class_strings[i].class_string));
+		  continue;
+		}
+	      if (types[j].type_class & tst_types_class_strings[i].class)
+		{
+		  DEBUG (printf ("type_string:%s test j:%d i:%d with class:%d matches, type_list_num:%d\n",
+				 type_string, j, (1 << i), types[j].type_class, *type_list_num));
+		  type_list[*type_list_num] = j;
+		  (*type_list_num)++;
+		  if (*type_list_num == type_list_max)
+		    ERROR (EINVAL, "Too many user selected types");
+		}
+	    }
+	  return 0;
+	}
+    }
+
+  /*
+   * In case we didn't match a complete class of types, test for every single one...
+   */
+  for (i = 0; i < TST_TYPES_NUM; i++)
+    {
+      if (!strcasecmp (type_string, types[i].description))
+	{
+	  if (tst_type_search (i, type_list, *type_list_num))
+	    {
+	      WARNING (printf ("Type:%s was already included in list -- not including\n",
+			       types[i].description));
+	      return 0;
+	    }
+
+	  type_list[*type_list_num] = i;
+	  (*type_list_num)++;
+	  if (*type_list_num == type_list_max)
+	    ERROR (EINVAL, "Too many user selected types");
+
+	  DEBUG (printf ("type_string:%s matched with type_list_num:%d\n",
+			 type_string, *type_list_num));
+	  return 0;
+	}
+    }
+
+  {
+    char buffer[128];
+    sprintf (buffer, "Datatype %s not recognized",
+	     type_string);
+    ERROR (EINVAL, buffer);
+  }
+  return -1;
+}

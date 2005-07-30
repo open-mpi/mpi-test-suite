@@ -1,0 +1,243 @@
+           Documentation for the MPI-Testsuite (beta ,-])
+           ----------------------------------------------
+
+Overview
+--------
+
+1.) Introduction
+2.) Compiling the MPI-Testsuite
+3.) Running the MPI-Testsuite
+3a.) MPI-implementations already tested
+3b.) Tests failing on specific platforms
+4.) Programming New Tests
+
+
+Introduction
+------------
+The MPI-test-Suite is in contrast to other test-suite tailored for
+the use with PACX-MPI.
+
+The main focus is on:
+  - Easy maintainability,
+  - Easy integration of new tests,
+  - Rich underlying functionality for flexible tests
+    (convenience functions for datatypes, comms and checking),
+  - Only a single binary (for single, since expensive
+    MPI_Init/MPI_Finalize) to make it as quick and easy as possible to 
+    run automatically.
+
+
+Compiling the MPI-Testsuite
+---------------------------
+The MPI-Testsuite has to be configured with the configure-build system prior
+to compiling.
+The flags are currently the same as for PACX-MPI, so one has to specify
+the location of the MPI-installation with option --with-mpi-dir=<DIR>.
+
+In order to use PACX-MPI as MPI-implementation, one has to additionally pass
+the option --enable-pacx --with-pacx-dir=<PACX>
+
+After a successful configure-run, one may compile with make.
+
+
+Running the MPI-Testsuite
+-------------------------
+The MPI-Testsuite may be run with an arbitrary number of processes!
+It runs a variety of P2P and Collective tests with varying
+datatypes and preset comunicators. Each test specifies, which kind of 
+datatypes, e.g. struct-datatypes and comms, e.g. MPI_COMM_SELF,
+intra-comms and alike it may run.
+
+Per default, ALL tests will be run with ALL combinations of datatypes
+and ALL generated communicators!
+
+
+Through command-line switches, the user may influence and reduce the
+number of tests with the following commands:
+
+mpirun -np XX ./mpi_test_suite -h  shows the help:
+
+  Usage: mpi_test_suite [-t tst] [-c comm] [-d datatype] [-n num_values] [-v] [-l]
+  test:   one (or more) tests or test-classes and
+  comm:   one (or more) communicator or communicator-classes
+  datatype:       one (or more) datatype or datatype-classes
+  num_values:     how many elements to communicate (default:10000)
+
+  All multiple test/comm/datatype-declarations must be separated by commas
+  With the option -l/--list all available tests, communicators and datatypes
+  and corresponding classes are listed
+
+  The option -v, verbose mode is turned on
+  The option -h shows this help.
+
+The command:
+
+   mpirun -np 1 ./mpi_test_suite -l  
+
+lists all available tests/test-classes, comms/comm-classes and
+type/type-classes is listed.
+Showing the individual tests, comms and types would be too long, however,
+currently the following classes are setup:
+
+Test-Class:0 Environment
+Test-Class:1 P2P
+Test-Class:2 Collective
+Communicator-Class:0 COMM_SELF
+Communicator-Class:1 COMM_NULL
+Communicator-Class:2 INTRA_COMM
+Communicator-Class:3 INTER_COMM
+Communicator-Class:4 CART_COMM
+Communicator-Class:5 TOPO_COMM
+Type-Class:0 STANDARD_C_INT_TYPES
+Type-Class:1 STANDARD_C_FLOAT_TYPES
+Type-Class:2 STANDARD_C_TYPES
+Type-Class:3 STRUCT_C_TYPES
+Type-Class:4 ALL_C_TYPES
+Type-Class:5 STANDARD_FORTRAN_INT_TYPES
+Type-Class:6 STANDARD_FORTRAN_FLOAT_TYPES
+Type-Class:7 STANDARD_FORTRAN_COMPLEX_TYPES
+Type-Class:8 STANDARD_FORTRAN_TYPES
+Type-Class:9 STRUCT_FORTRAN_TYPES
+Type-Class:10 ALL_FORTRAN_TYPES
+
+
+
+
+For example, the command
+
+  mpirun -np 32 ./mpi_test_suite -t "Ring\ Bsend",Collective -c COMM_SELF,INTER_COMM -d MPI_CHAR
+
+will run the test called "Ring Bsend" and ALL test-cases belonging to
+test-class Collective with the communicator MPI_COMM_SELF and
+ALL communicators which are belonging to communicator-class INTER_COMM
+(e.g. the comm called "Zero-and-Rest Intercommunicator") *but only* with
+the datatype MPI_CHAR.
+(However, You may also just specify the corresponding number ,-]).
+
+If no options are specified, ALL tests are run with all applicable
+communicators and all applicable datatypes. Of course, if a test is not
+applicable for a certain combination (e.g. "Ring" doesn't support
+MPI_COMM_NULL) it is not being run.
+
+
+MPI-implementations already tested
+----------------------------------
+We have run the testsuite successfully on 
+  Linux/IA32 using MPIch-1.2.7
+  Linux/IA32 using LAM-7.0
+  Linux/IA32 using PACX-MPI-5.0 on top of MPIch-1.2.5
+  Linux/EM64t using MPIch-1.2.4
+  NEC SX6 using MPIsx
+  NEC SX8 using MPIsx
+  Hitachi
+  SGI Origin
+
+
+Tests failing on specific platforms
+-----------------------------------
+On some platforms, we found, that some tests fail:
+- With MPIch-1.2.5 and the ch_shmem-device, we trigger a bug in "Ring Ssend", which seems to be known:
+  
+  P2P tests Alltoall - Issend (9/14), comm Zero-and-Rest Intercommunicator (8/10), type MPI_CHAR (1/18)
+  [0] MPI Internal Aborting program Nested call to GetSendPkt
+  [0] Nested call to GetSendPkt
+
+  The source of MPIch-1.2.5/mpid/ch_shmem/shmempriv.c, line 590 explains here:
+                /* There is an implementation bug in the flow control
+                   code that can cause MPID_DeviceCheck to call a
+                   routine that calls this routine. When that happens,
+                   we'll quickly drop into the same code, so we prefer
+                   to abort.  The test is here because if we find
+                   a free packet, it is ok to enter this routine,
+                   just not ok to enter and then call DeviceCheck */
+                if (nest_count++ > 0) {
+                    MPID_Abort( 0, 1, "MPI Internal",
+                                "Nested call to GetSendPkt" );
+                }
+
+
+
+Programming New Tests
+---------------------
+In order to integrate a new test, the programmer should
+  - write three functions in a new file with a descriptive name, like:
+      tst_p2p_simple_ring_bsend.c
+    containing:
+      tst_p2p_simeple_ring_bsend_init
+      tst_p2p_simeple_ring_bsend_run
+      tst_p2p_simeple_ring_bsend_cleanup
+    where all names start with "tst_",
+    and the kind of communication calls tested (actually a TST_CLASS)
+    and the communication pattern (here a simple ring using MPI_Bsend).
+
+ - Add these functions to mpi_test_suite.h in a sorted manner
+ - Add the test-description to the tst_tests-array in tst_test.c:
+   Here, the
+   struct tst_test {
+     int class;
+     char * description;
+     int run_with_comm;
+     tst_int64 run_with_type;
+     int needs_sync;
+     int (*tst_init_func) (const struct tst_env * env);
+     int (*tst_run_func) (const struct tst_env * env);
+     int (*tst_cleanup_func) (const struct tst_env * env);
+   };
+   describes with 
+     class:            Which kind of test is being run
+                       (one of TST_CLASS_ENV, TST_CLASS_P2P, TST_CLASS_COLL),
+     description:      A short notion of what is being done,
+     run_with_comm:    An OR-ed list of which communicators may be used within the test
+                       (several of TST_MPI_COMM_SELF, TST_MPI_COMM_NULL, TST_MPI_INTRA_COMM,
+                       TST_MPI_INTER_COMM, TST_MPI_CART_COMM, TST_MPI_TOPO_COMM).
+     run_with_type:    Similar to the above, a OR-ed list of type being one/several of:
+                       TST_MPI_CHAR, TST_MPI_UNSIGNED_CHAR, ..., TST_MPI_INT, ... or even
+                       sets like TST_MPI_STANDARD_C_INT_TYPES or TST_MPI_STRUCT_FORTRAN_TYPES
+     needs_sync:       If non-zero a MPI_Barrier is done before and after the test, if the 
+                       test's communication may not intermingle with other (or own) test due 
+                       to MPI_ANY_SOURCE or MPI_ANY_TAG or alike.
+     tst_init_func:    The initialization function run once before the test to allocate arrays.
+     tst_run_func:     The test-function itself, run once or many times!
+     tst_cleanup_func: The clean-up function run once after the test to release arrays and buffers.
+
+
+   For example the Buffered-Send test using a Ring-topology of communication is declared like this:
+    {TST_CLASS_P2P, "Ring Bsend",
+     TST_MPI_INTRA_COMM,
+     TST_MPI_ALL_C_TYPES,
+     TST_NONE,
+     &tst_p2p_simple_ring_bsend_init, &tst_p2p_simple_ring_bsend_run, &tst_p2p_simple_ring_bsend_cleanup},
+
+
+   These functions are passed a struct tst_env, which contains:
+   struct tst_env {
+     int comm;
+     int type;
+     int test; 
+     int values_num;
+   };
+
+   An identifier for the communicator, type, test and the number of values to be communicated.
+   The respective MPI-objects may be retrieved with the corresponding functions, e.g.
+     mpi_comm = tst_comm_getcomm (env->comm);
+
+
+
+These tests must adhere to the following rules:
+
+1.) They must run with an arbitrary number of processes!
+    Even if it means, that some processes are just hanging in the MPI_Barrier if it needs_sync!
+
+2.) They MUST adhere to their specification in tst_tests!
+
+3.) They should run with as many communicators as possible (like declaring run_with_comm:
+    (TST_MPI_COMM_SELF | TST_MPI_COMM_NULL | TST_MPI_INTRA_COMM | TST_MPI_INTER_COMM) or more ,-]
+
+4.) They should run with as many types as possible (see above).
+
+5.) Every call to MPI-functions should be wrapped with the MPI_CHECK macro, which
+    checks for the return value... This doesn't buy much, but anyway.
+
+6.) Every communicated data should be initialized with the tst_type_setstandardarray
+    and checked with tst_type_checkstandardarray!
+

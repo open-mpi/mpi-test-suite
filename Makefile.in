@@ -1,0 +1,79 @@
+
+VPATH = @srcdir@
+SRCDIR = @srcdir@
+INCDIR = $(SRCDIR)/../../include
+
+#Path of MPI-Library on the Machine
+MPI_DIR     = @mpi_dir@
+MPI_INC_DIR = @mpi_inc_dir@
+MPI_LIB_DIR = @mpi_lib_dir@
+
+#Path of PACX-Library on the Machine
+PACX_INC_DIR = @pacx_dir@/include
+PACX_LIB_DIR = @pacx_dir@/lib
+
+
+@SET_MAKE@
+# YES, we need those two includes! Otherwise, if configure is done in other dir
+# the newly created, system-specific include-files aren't found!
+CFLAGS       = @CFLAGS@ -I. -I@srcdir@ @pacx_inc_command@ -I$(MPI_INC_DIR) @SYS_HOSTCFLAGS@
+CC           = @CC@
+FC           = @F77@
+RM           = rm -fr
+MV           = mv
+FFLAGS       = @FFLAGS@ $(DEFS) @pacx_inc_command@ -I$(MPI_INC_DIR)
+LDFLAGS      = @pacx_lib_command@ -L$(MPI_LIB_DIR) @pacx_lib@ -l@lib_mpi@ @SYS_LDFLAGS@
+SHELL        = /bin/sh
+
+INSTALL_DIR  = @prefix@
+
+############  end of configure section #############################
+
+OBJ =	mpi_test_suite.o			\
+	tst_comm.o				\
+	tst_tests.o				\
+	tst_types.o				\
+	coll/tst_coll_allreduce.o		\
+	coll/tst_coll_alltoall.o		\
+	coll/tst_coll_bcast.o			\
+	coll/tst_coll_gather.o			\
+	coll/tst_coll_scatter.o			\
+	coll/tst_coll_scatterv.o		\
+	coll/tst_coll_scatterv_stride.o		\
+	p2p/tst_p2p_alltoall.o			\
+	p2p/tst_p2p_alltoall_irsend.o		\
+	p2p/tst_p2p_alltoall_issend.o		\
+	p2p/tst_p2p_alltoall_probe_anysource.o	\
+	p2p/tst_p2p_direct_partner_intercomm.o	\
+	p2p/tst_p2p_many_to_one.o		\
+	p2p/tst_p2p_many_to_one_iprobe_anysource.o	\
+	p2p/tst_p2p_many_to_one_probe_anysource.o	\
+	p2p/tst_p2p_simple_ring.o		\
+	p2p/tst_p2p_simple_ring_bsend.o		\
+	p2p/tst_p2p_simple_ring_isend.o		\
+	p2p/tst_p2p_simple_ring_ssend.o
+
+
+####################################################################
+
+
+HEADER = config.h
+
+PROGRAM = mpi_test_suite
+
+.SUFFIXES: .o .c
+
+all: $(OBJ)
+	$(CC) -o $(PROGRAM) $(OBJ) $(LDFLAGS)
+
+$(OBJ): $(HEADER)
+.c.o:   $(HEADER)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+clean mostlyclean:
+	$(RM) $(OBJ) $(PROGRAM)
+
+distclean extraclean: clean
+	$(RM) patch* *~* *\#* *.orig *.rej *.bak core a.out Makefile
+
+.PHONY: install mostlyclean clean distclean extraclean realclean TAGS check

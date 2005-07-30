@@ -1,0 +1,509 @@
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT
+AC_PREREQ(2.59)
+
+AC_CONFIG_SRCDIR([mpi_test_suite.c])
+AC_CONFIG_HEADERS(config.h)
+AC_CANONICAL_HOST
+AC_ARG_PROGRAM
+
+AC_ARG_ENABLE(fortran,
+  [  --enable-fortran        build the Fortran library [[default=yes]]],
+  [test "$enableval" = no && ENABLE_PACX_FORTRAN=no], ENABLE_PACX_FORTRAN=yes)
+
+AC_ARG_ENABLE(pacx,
+  [  --enable-pacx           build the PACX library [[default=no]]],
+  [test "$enableval" = yes && ENABLE_PACX=yes], ENABLE_PACX=no)
+
+
+
+dnl Check for programs (we currently use C and Fortran).
+dnl yacc/bison and lex/flex are needed for parsing of .hostfile and .netfile
+AC_PROG_CPP
+AC_PROG_CC
+AC_PROG_MAKE_SET
+AC_PROG_LN_S
+
+FORTRAN_TARGET=""
+FORTRAN_OBJ_FILES=""
+FORTRAN_OBJ_FILES_MPI2=""
+if test "x$ENABLE_PACX_FORTRAN" = "xyes" ; then
+  AC_DEFINE([FORTRAN], 1, [Define if support for Fortran is requested])
+
+  AC_PROG_F77
+  AC_F77_LIBRARY_LDFLAGS
+
+  dnl On Nec SX5, above doesn't work out, therefore, we have to add this manually
+  dnl in order to link C and Fortran object files with a C compiler.
+  case "$host" in
+    sx*-nec-*)
+      FLIBS="$FLIBS -li90sx"
+      AC_MSG_RESULT([Adding libi90sx.a to FLIBS])
+      ;;
+  esac
+
+  AC_CHECK_FORTRAN_NAME_CONVENTION
+
+  dnl Substitute the name of the file to compile for Fortran
+  FORTRAN_TARGET="fortran"
+  FORTRAN_OBJ_FILES=""
+  FORTRAN_OBJ_FILES_MPI2=""
+else
+  F77="echo Fortran support disabled "
+fi
+AC_SUBST([FORTRAN_TARGET])
+AC_SUBST([FORTRAN_OBJ_FILES])
+AC_SUBST([FORTRAN_OBJ_FILES_MPI2])
+
+if test -n "$GCC" ; then
+  CFLAGS="$CFLAGS -Wall"
+fi
+
+dnl XXXXXXXX F_OVER IS 6 FOR ALL PLATFORMS, EXCEPT FOR HITACHI (2201?), DESCRIBING
+dnl THE NUMBER OF ELEMENTS IN OUR PACX_STATUS FOR FORTRAN --- EVEN FOR HITACHI (SR8000)
+dnl THE NUMBERS MATCH...
+dnl Add system-specific LDFLAGS.
+F_OVER="6"
+AC_MSG_CHECKING([for system-specific LDFLAGS for MPI])
+SYS_LDFLAGS=""
+case "$host" in
+  *-osf1*)                dnl Intel Paragon is: i860-intel-osf1
+    SYS_LDFLAGS="-nx"
+    ;;
+  f700-fujitsu-*)                dnl Fujitsu VPP 700
+    SYS_LDFLAGS="-Wl,-P -lmp -lpx -lelf -lm -lgen"
+    ;;
+  *-nec-*)
+    SYS_LDFLAGS="-li90sxe"
+    ;;
+  *-hitachi*)
+    F_OVER="7"
+    ;;
+dnl  *solaris*)
+dnl    SYS_LDFLAGS="-lsocket -lnsl -lm"
+dnl    ;;
+  *)
+    ;;
+esac
+if test "x$SYS_LDFLAGS" = "x" ; then
+  AC_MSG_RESULT([none])
+else
+  AC_MSG_RESULT([$SYS_LDFLAGS])
+fi
+AC_SUBST([F_OVER])
+
+
+
+dnl =======================================================================
+dnl Check for MPI library instead of AC_CHECK_LIB(mpi, MPI_Init)
+dnl Now check for mpi, user may specify directory
+
+dnl XXX USE AS_HELP_STRING()
+AC_MSG_CHECKING([for the MPI directory])
+AC_ARG_WITH(mpi_dir,
+  [  --with-mpi-dir=MPI_DIR  give the path for MPI [/usr/local/mpich]],
+  mpi_dir="$withval", mpi_dir="/usr/local/mpich")
+AC_MSG_RESULT([$mpi_dir])
+AC_SUBST([mpi_dir])
+
+AC_MSG_CHECKING([for the MPI library directory])
+AC_ARG_WITH(mpi_lib_dir,
+  [  --with-mpi-lib-dir=dir  give the path for MPI-libraries [MPI_DIR/lib]],
+  mpi_lib_dir="$withval", mpi_lib_dir="$mpi_dir/lib")
+AC_MSG_RESULT([$mpi_lib_dir])
+AC_SUBST([mpi_lib_dir])
+
+AC_MSG_CHECKING([for the MPI include directory])
+AC_ARG_WITH(mpi_inc_dir,
+  [  --with-mpi-inc-dir=dir  give the path for MPI-include-files [MPI_DIR/include]],
+  mpi_inc_dir="$withval", mpi_inc_dir="$mpi_dir/include")
+AC_MSG_RESULT([$mpi_inc_dir])
+AC_SUBST([mpi_inc_dir])
+
+
+pacx_dir=""
+pacx_inc_command=""
+pacx_lib=""
+pacx_lib_command=""
+
+if test "x$ENABLE_PACX" = "xyes" ; then
+  pacx_inc_command='-I$(PACX_INC_DIR)'
+  pacx_lib='-lpacx'
+  pacx_lib_command='-L$(PACX_LIB_DIR)'
+  
+  AC_MSG_CHECKING([for the PACX directory])
+  AC_ARG_WITH(pacx_dir,
+    [  --with-pacx-dir=PACX_DIR give the path for MPI [$HOME/WORK/PACX/COMPILE/usr]],
+    pacx_dir="$withval", pacx_dir="$HOME/WORK/PACX/COMPILE/usr")
+  AC_MSG_RESULT([$pacx_dir])
+fi
+
+AC_SUBST([pacx_dir])
+AC_SUBST([pacx_inc_command])
+AC_SUBST([pacx_lib])
+AC_SUBST([pacx_lib_command])
+
+
+dnl =======================================================================
+dnl Search for the correct mpirun-Command!
+dnl This is only interesting to the PACX_runtests.sh script
+dnl in the test/mpichtest directory to automatically recognise
+dnl the mprun definition on the so called CUSS-Cluster.
+AC_MSG_CHECKING([for the mpirun command])
+mpirun_cmd="Not found"
+if test -x "$mpi_dir/bin/mpirun" ; then
+  mpirun_cmd="mpirun"
+elif test -x "$mpi_dir/bin/mprun" ; then
+  mpirun_cmd="mprun"
+fi
+AC_MSG_RESULT([$mpirun_cmd])
+AC_SUBST(mpirun_cmd)
+
+
+dnl =======================================================================
+dnl Test, whether the name of the MPI library is libmpi.a, libmpi.so or libmpich.a
+dnl Determine whether to use signal-based MPI-library on AIX
+AC_MSG_CHECKING([for the MPI library])
+libmpi=""
+case "$host" in
+  *-ibm-aix*)                dnl IBM machines
+    dnl If we are using signal-based MPI, check for traditional MPI-libraries
+    if test "x$PACX_SIGNAL" = "xyes" ; then
+      if test -f "$mpi_lib_dir/libmpi.a" ; then
+        lib_mpi="mpi"
+      elif test -f "$mpi_lib_dir/libmpi.so" ; then
+        lib_mpi="mpi"
+      elif test -f "$mpi_lib_dir/libmpich.a" ; then
+        lib_mpi="mpich"
+      else
+        AC_MSG_ERROR([neither libmpi nor libmpich found; check path for MPI package first...])
+      fi
+    else
+      if test -f "$mpi_lib_dir/libmpi_r.a" ; then
+         lib_mpi="mpi_r"
+      else
+         AC_MSG_ERROR([libmpi_r not found; check path for MPI package...])
+      fi
+    fi
+  ;;
+  *-sgi-*)                   dnl Again, SGI machines have to be differnt
+    if test -f "$mpi_lib_dir/libmpi.a" ; then
+      lib_mpi="mpi"
+    elif test -f "$mpi_lib_dir/libmpi.so" ; then
+      lib_mpi="mpi"
+    elif test -f "$mpi_lib_dir/libmpi_ss.so" ; then
+      lib_mpi="mpich"
+    else
+      AC_MSG_ERROR([neither libmpi nor libmpi_ss found; check path for MPI package first...])
+    fi
+  ;;
+  *)                         dnl All other machines
+    if test -f "$mpi_lib_dir/libmpi.a" ; then
+      lib_mpi="mpi"
+    elif test -f "$mpi_lib_dir/libmpi.so" ; then
+      lib_mpi="mpi"
+    elif test -f "$mpi_lib_dir/libmpich.a" ; then
+      lib_mpi="mpich"
+    else
+      AC_MSG_ERROR([neither libmpi nor libmpich found; check path for MPI package first...])
+    fi
+  ;;
+esac
+AC_MSG_RESULT([found $lib_mpi])
+AC_SUBST(lib_mpi)
+
+
+
+AC_PROG_MPICC
+
+AC_MSG_CHECKING([for compilation of an MPI program])
+old_CFLAGS=${CFLAGS}
+old_LIBS=${LIBS}
+CFLAGS="-I$mpi_inc_dir"
+LIBS="-L$mpi_lib_dir -l$lib_mpi $SYS_LDFLAGS"
+dnl Only test for MPI_Finalize; MPI_Init takes argc, argv,
+dnl which configure-main doesn't provide
+AC_COMPILE_IFELSE(AC_LANG_PROGRAM([
+#include "mpi.h"
+  ], [
+  MPI_Finalize();
+  ]), [
+  AC_MSG_RESULT([found])
+  AC_DEFINE(HAVE_MPI, 1, Define if program for MPI could be compiled and linked)],
+  [AC_MSG_ERROR(MPI not found; check paths for MPI package first...)])
+CFLAGS=${old_CFLAGS}
+LIBS=${old_LIBS}
+
+
+AC_CHECK_MPI_VERSION
+
+
+AC_SUBST(CFLAGS)
+AC_SUBST(FFLAGS)
+AC_SUBST(SYS_HOSTCFLAGS)
+AC_SUBST(SYS_LDFLAGS)
+
+
+
+dnl Checks for header files and compiler characteristics.
+AC_C_CONST
+AC_C_INLINE
+AC_C_RESTRICT
+AC_HEADER_STDC
+
+
+dnl Check for headers used by us
+dnl Need to check for sys/types.h since AC_TYPE_PID_T depends on it later!
+AC_CHECK_HEADERS([getopt.h sys/time.h sys/types.h])
+
+dnl Checks for typedefs, structures.
+AC_TYPE_PID_T
+AC_CHECK_SIZEOF(pid_t)
+AC_TYPE_SIZE_T
+dnl AC_TYPE_SSIZE_T
+AC_TYPE_SOCKLEN_T
+
+
+dnl Check for sizes of different types and Endian-ness
+dnl Cross-compiling defaults are PARAGON and C !!!
+AC_C_LONG_DOUBLE
+AC_C_BIGENDIAN
+
+dnl The second argument is IGNORED!!!!!
+AC_CHECK_SIZEOF(char, 1)
+AC_CHECK_SIZEOF(short, 2)
+AC_CHECK_SIZEOF(int, 4)
+AC_CHECK_SIZEOF(long, 4)
+AC_CHECK_SIZEOF(long long, 8)
+AC_CHECK_SIZEOF(unsigned short, 2)
+AC_CHECK_SIZEOF(unsigned int, 4)
+AC_CHECK_SIZEOF(unsigned long, 8)
+AC_CHECK_SIZEOF(unsigned long long, 8)
+AC_CHECK_SIZEOF(float, 4)
+AC_CHECK_SIZEOF(double, 8)
+AC_CHECK_SIZEOF(long double, 8)
+
+dnl This substitution is needed for pacxf.inc.in
+AC_SUBST(ac_cv_sizeof_char)
+AC_SUBST(ac_cv_sizeof_short)
+AC_SUBST(ac_cv_sizeof_int)
+AC_SUBST(ac_cv_sizeof_long)
+AC_SUBST(ac_cv_sizeof_long_long)
+AC_SUBST(ac_cv_sizeof_unsigned_short)
+AC_SUBST(ac_cv_sizeof_unsigned_int)
+AC_SUBST(ac_cv_sizeof_unsigned_long)
+AC_SUBST(ac_cv_sizeof_unsigned_long_long)
+AC_SUBST(ac_cv_sizeof_float)
+AC_SUBST(ac_cv_sizeof_double)
+AC_SUBST(ac_cv_sizeof_long_double)
+
+
+dnl compile='${CC-cc} $CFLAGS $WDEF conftest.c -o conftest $LIBS >/dev/null 2>&1'
+dnl SHALL WE COMMENT THAT OUT?
+dnl compile='${CC-cc} $CFLAGS $WDEF -c conftest.c ; ${F77-f77} $FFLAGS -o conftest conftest.o conftestf.o $LIBS >/dev/null 2>&1'
+
+if test "x$ENABLE_PACX_FORTRAN" = "xyes" ; then
+  AC_CHECK_SIZEOF_FORTRAN(INTEGER)
+  AC_CHECK_SIZEOF_FORTRAN(REAL)
+  AC_CHECK_SIZEOF_FORTRAN(DOUBLE PRECISION)
+  AC_CHECK_SIZEOF_FORTRAN(COMPLEX)
+  AC_CHECK_SIZEOF_FORTRAN(LOGICAL)
+  AC_CHECK_SIZEOF_FORTRAN(CHARACTER)
+
+  dnl This substitution is needed for pacxf.inc.in
+  AC_SUBST(ac_cv_sizeof_fortran_integer)
+  AC_SUBST(ac_cv_sizeof_fortran_real)
+  AC_SUBST(ac_cv_sizeof_fortran_double_precision)
+  AC_SUBST(ac_cv_sizeof_fortran_complex)
+  AC_SUBST(ac_cv_sizeof_fortran_logical)
+  AC_SUBST(ac_cv_sizeof_fortran_character)
+fi
+
+AC_CHECK_SIZEOF_MPI_STRUCT(MPI_FLOAT_INT, float, int)
+AC_CHECK_SIZEOF_MPI_STRUCT(MPI_DOUBLE_INT, double, int)
+AC_CHECK_SIZEOF_MPI_STRUCT(MPI_LONG_INT, long, int)
+AC_CHECK_SIZEOF_MPI_STRUCT(MPI_2INT, int, int)
+AC_CHECK_SIZEOF_MPI_STRUCT(MPI_SHORT_INT, short, int)
+AC_CHECK_SIZEOF_MPI_STRUCT(MPI_LONG_DOUBLE_INT, long double, int)
+
+dnl This substitution is needed for pacxf.inc.in
+AC_SUBST(ac_cv_sizeof_struct_mpi_float_int)
+AC_SUBST(ac_cv_sizeof_struct_mpi_double_int)
+AC_SUBST(ac_cv_sizeof_struct_mpi_long_int)
+AC_SUBST(ac_cv_sizeof_struct_mpi_2int)
+AC_SUBST(ac_cv_sizeof_struct_mpi_short_int)
+AC_SUBST(ac_cv_sizeof_struct_mpi_long_double_int)
+
+
+dnl Check for availability of optional MPI-datatypes for pacxf.inc.in and PACX_get_c_type 
+AC_CHECK_C_MPI_DATATYPE(MPI_LONG_LONG_INT,
+                        AC_DEFINE([HAVE_C_MPI_LONG_LONG_INT], 1, [Define if MPI supports the "long long int" datatype]))
+
+if test "x$ENABLE_PACX_FORTRAN" = "xyes" ; then
+
+  AC_CHECK_FORTRAN_MPI_DATATYPE(MPI_INTEGER1,
+                                AC_DEFINE([HAVE_FORTRAN_MPI_INTEGER1], 1,
+                                  [Define if MPI supports the optional Fortran datatype MPI_INTEGER1]))
+  AC_CHECK_FORTRAN_MPI_DATATYPE(MPI_INTEGER2,
+                                AC_DEFINE([HAVE_FORTRAN_MPI_INTEGER2], 1,
+                                  [Define if MPI supports the optional Fortran datatype MPI_INTEGER2]))
+  AC_CHECK_FORTRAN_MPI_DATATYPE(MPI_INTEGER4,
+                                AC_DEFINE([HAVE_FORTRAN_MPI_INTEGER4], 1,
+                                  [Define if MPI supports the optional Fortran datatype MPI_INTEGER4]))
+  AC_CHECK_FORTRAN_MPI_DATATYPE(MPI_INTEGER8,
+                                AC_DEFINE([HAVE_FORTRAN_MPI_INTEGER8], 1,
+                                  [Define if MPI supports the optional Fortran datatype MPI_INTEGER8]))
+  AC_CHECK_FORTRAN_MPI_DATATYPE(MPI_INTEGER16,
+                                AC_DEFINE([HAVE_FORTRAN_MPI_INTEGER16], 1,
+                                  [Define if MPI supports the optional Fortran datatype MPI_INTEGER16]))
+  AC_CHECK_FORTRAN_MPI_DATATYPE(MPI_REAL2,
+                                AC_DEFINE([HAVE_FORTRAN_MPI_REAL2], 1,
+                                  [Define if MPI supports the optional Fortran datatype MPI_REAL2]))
+  AC_CHECK_FORTRAN_MPI_DATATYPE(MPI_REAL4,
+                                AC_DEFINE([HAVE_FORTRAN_MPI_REAL4], 1,
+                                  [Define if MPI supports the optional Fortran datatype MPI_REAL4]))
+  AC_CHECK_FORTRAN_MPI_DATATYPE(MPI_REAL8,
+                                AC_DEFINE([HAVE_FORTRAN_MPI_REAL8], 1,
+                                  [Define if MPI supports the optional Fortran datatype MPI_REAL8]))
+  AC_CHECK_FORTRAN_MPI_DATATYPE(MPI_REAL16,
+                                AC_DEFINE([HAVE_FORTRAN_MPI_REAL16], 1,
+                                  [Define if MPI supports the optional Fortran datatype MPI_REAL16]))
+  AC_CHECK_FORTRAN_MPI_DATATYPE(MPI_DOUBLE_COMPLEX,
+                                AC_DEFINE([HAVE_FORTRAN_MPI_DOUBLE_COMPLEX], 1,
+                                  [Define if MPI supports the optional Fortran datatype MPI_DOUBLE_COMPLEX]))
+  
+  dnl These were disable, uncommented the following:
+  dnl 
+  dnl ac_cv_MPI_INTEGER1="C"
+  dnl ac_cv_MPI_INTEGER2="C"
+  dnl ac_cv_MPI_INTEGER4="C"
+  dnl ac_cv_MPI_INTEGER8="C"
+  dnl ac_cv_MPI_INTEGER16="C"
+  dnl ac_cv_MPI_REAL2="C"
+  dnl ac_cv_MPI_REAL4="C"
+  dnl ac_cv_MPI_REAL8="C"
+  dnl ac_cv_MPI_REAL16="C"
+  dnl ac_cv_DOUBLE_COMPLEX="C"
+  
+  AC_SUBST(ac_cv_MPI_INTEGER1)
+  AC_SUBST(ac_cv_MPI_INTEGER2)
+  AC_SUBST(ac_cv_MPI_INTEGER4)
+  AC_SUBST(ac_cv_MPI_INTEGER8)
+  AC_SUBST(ac_cv_MPI_INTEGER16)
+  AC_SUBST(ac_cv_MPI_REAL2)
+  AC_SUBST(ac_cv_MPI_REAL4)
+  AC_SUBST(ac_cv_MPI_REAL8)
+  AC_SUBST(ac_cv_MPI_REAL16)
+  AC_SUBST(ac_cv_MPI_DOUBLE_COMPLEX)
+  
+  case "$host" in
+    *-ibm-aix*)
+      dnl The IBM SP2 sucks, Fortran has MPI_REAL16,
+      dnl but provides 16 Byte long double in C only with -qldbl128
+      if test "x${ac_cv_have_mpi_fortran_MPI_REAL16}" = "xyes" ; then
+        AC_MSG_CHECKING(whether MPI_REAL16 needs -qldbl128 on SP2)
+        if test "x${ac_cv_sizeof_long_double}" != "x16" ; then
+          SYS_HOSTCFLAGS="$SYS_HOSTCFLAGS -qldbl128"
+          ac_cv_sizeof_long_double="16"
+          AC_MSG_RESULT([yes])
+        else
+          AC_MSG_RESULT([no])
+        fi
+      fi
+    ;;
+  esac
+
+  if test "x${ac_cv_have_mpi_fortran_MPI_INTEGER1}" = "xyes" ; then
+    AC_CHECK_SIZEOF_FORTRAN([INTEGER*1])
+  fi
+  
+  if test "x${ac_cv_have_mpi_fortran_MPI_INTEGER2}" = "xyes" ; then
+    AC_CHECK_SIZEOF_FORTRAN([INTEGER*2])
+  fi
+  
+  if test "x${ac_cv_have_mpi_fortran_MPI_INTEGER4}" = "xyes" ; then
+    AC_CHECK_SIZEOF_FORTRAN([INTEGER*4])
+  fi
+  
+  if test "x${ac_cv_have_mpi_fortran_MPI_INTEGER8}" = "xyes" ; then
+    AC_CHECK_SIZEOF_FORTRAN([INTEGER*8])
+  fi
+  
+  if test "x${ac_cv_have_mpi_fortran_MPI_INTEGER16}" = "xyes" ; then
+    AC_CHECK_SIZEOF_FORTRAN([INTEGER*16])
+  fi
+  
+  if test "x${ac_cv_have_mpi_fortran_MPI_REAL2}" = "xyes" ; then
+    AC_CHECK_SIZEOF_FORTRAN([REAL*2])
+  fi
+  
+  if test "x${ac_cv_have_mpi_fortran_MPI_REAL4}" = "xyes" ; then
+    AC_CHECK_SIZEOF_FORTRAN([REAL*4])
+  fi
+  
+  if test "x${ac_cv_have_mpi_fortran_MPI_REAL8}" = "xyes" ; then
+    AC_CHECK_SIZEOF_FORTRAN([REAL*8])
+  fi
+  
+  dnl Please check whether this test fits the IBM-test above.
+  if test "x${ac_cv_have_mpi_fortran_MPI_REAL16}" = "xyes" ; then
+    AC_CHECK_SIZEOF_FORTRAN([REAL*16])
+  fi
+
+  if test "x${ac_cv_have_mpi_fortran_MPI_DOUBLE_COMPLEX}" = "xyes" ; then
+    AC_CHECK_SIZEOF_FORTRAN(DOUBLE COMPLEX)
+  fi
+
+  dnl This substitution is needed for pacxf.inc.in
+  dnl We may do this even though we don't set it, it's just left blank.
+  AC_SUBST(ac_cv_sizeof_fortran_integerp1)
+  AC_SUBST(ac_cv_sizeof_fortran_integerp2)
+  AC_SUBST(ac_cv_sizeof_fortran_integerp4)
+  AC_SUBST(ac_cv_sizeof_fortran_integerp8)
+  AC_SUBST(ac_cv_sizeof_fortran_integerp16)
+  AC_SUBST(ac_cv_sizeof_fortran_realp2)
+  AC_SUBST(ac_cv_sizeof_fortran_realp4)
+  AC_SUBST(ac_cv_sizeof_fortran_realp8)
+  AC_SUBST(ac_cv_sizeof_fortran_realp16)
+  AC_SUBST(ac_cv_sizeof_fortran_double_complex)
+fi dnl ENABLE_PACX_FORTRAN
+
+
+if test "x$ENABLE_PACX_FORTRAN" = "xyes" ; then
+  AC_CHECK_FORTRAN_MPI_TYPES_IN_C
+fi dnl ENABLE_PACX_FORTRAN
+
+
+dnl Checks for library functions.
+AC_FUNC_MEMCMP
+AC_FUNC_VPRINTF
+AC_CHECK_FUNCS([kill snprintf vsprintf vsnprintf strerror strstr strcasecmp setlinebuf gethostname select socket poll])
+
+dnl Substitute the variables at the very end.
+dnl They might be changed after their first check (see MPI_REAL16 / ac_cv_sizeof_long_double).
+
+case "$host" in
+  *-ibm-aix*) dnl XXX is this test to strict?
+    dnl As said, the IBM SP2 sucks -- we need to compile with a different compiler,
+    dnl that is cc_r is OK for the tests above, but not when actually compiling PACX-MPI
+    dnl and the final programs.
+    if test "x$PACX_SIGNAL" = "xyes" ; then 
+      dnl AC_CHECK_TOOL(CC, mpcc, cc)
+      dnl AC_CHECK_TOOL(F77, mpxlf, xlf)
+      CC="mpcc"
+      F77="mpxlf"
+    else
+      dnl AC_CHECK_TOOL(CC, mpcc_r, cc_r) dnl Doesn't work, since it's using the cached value...
+      dnl AC_CHECK_TOOL(F77, mpxlf_r, xfl_r)
+      CC="mpcc_r"
+      F77="mpxlf_r"
+    fi
+  ;;
+esac
+
+AC_CONFIG_FILES([Makefile])
+
+AS_MKDIR_P([coll])
+AS_MKDIR_P([p2p])
+
+AC_OUTPUT
