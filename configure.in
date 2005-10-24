@@ -8,11 +8,11 @@ AC_CANONICAL_HOST
 AC_ARG_PROGRAM
 
 AC_ARG_ENABLE(fortran,
-  [  --enable-fortran        build the Fortran library [[default=yes]]],
+  AS_HELP_STRING([--enable-fortran], [build the Fortran library [[default=yes]]]),
   [test "$enableval" = no && ENABLE_PACX_FORTRAN=no], ENABLE_PACX_FORTRAN=yes)
 
 AC_ARG_ENABLE(pacx,
-  [  --enable-pacx           build the PACX library [[default=no]]],
+  AS_HELP_STRING([--enable-pacx], [build the PACX library [[default=no]]]),
   [test "$enableval" = yes && ENABLE_PACX=yes], ENABLE_PACX=no)
 
 
@@ -101,21 +101,21 @@ dnl Now check for mpi, user may specify directory
 dnl XXX USE AS_HELP_STRING()
 AC_MSG_CHECKING([for the MPI directory])
 AC_ARG_WITH(mpi_dir,
-  [  --with-mpi-dir=MPI_DIR  give the path for MPI [/usr/local/mpich]],
+  AS_HELP_STRING([--with-mpi-dir=MPI_DIR], [give the path for MPI [/usr/local/mpich]]),
   mpi_dir="$withval", mpi_dir="/usr/local/mpich")
 AC_MSG_RESULT([$mpi_dir])
 AC_SUBST([mpi_dir])
 
 AC_MSG_CHECKING([for the MPI library directory])
 AC_ARG_WITH(mpi_lib_dir,
-  [  --with-mpi-lib-dir=dir  give the path for MPI-libraries [MPI_DIR/lib]],
+  AS_HELP_STRING([--with-mpi-lib-dir=dir], [give the path for MPI-libraries [MPI_DIR/lib]]),
   mpi_lib_dir="$withval", mpi_lib_dir="$mpi_dir/lib")
 AC_MSG_RESULT([$mpi_lib_dir])
 AC_SUBST([mpi_lib_dir])
 
 AC_MSG_CHECKING([for the MPI include directory])
 AC_ARG_WITH(mpi_inc_dir,
-  [  --with-mpi-inc-dir=dir  give the path for MPI-include-files [MPI_DIR/include]],
+  AS_HELP_STRING([--with-mpi-inc-dir=dir], [give the path for MPI-include-files [MPI_DIR/include]]),
   mpi_inc_dir="$withval", mpi_inc_dir="$mpi_dir/include")
 AC_MSG_RESULT([$mpi_inc_dir])
 AC_SUBST([mpi_inc_dir])
@@ -133,7 +133,7 @@ if test "x$ENABLE_PACX" = "xyes" ; then
   
   AC_MSG_CHECKING([for the PACX directory])
   AC_ARG_WITH(pacx_dir,
-    [  --with-pacx-dir=PACX_DIR give the path for MPI [$HOME/WORK/PACX/COMPILE/usr]],
+    AS_HELP_STRING([--with-pacx-dir=PACX_DIR], [give the path for MPI [$HOME/WORK/PACX/COMPILE/usr]]),
     pacx_dir="$withval", pacx_dir="$HOME/WORK/PACX/COMPILE/usr")
   AC_MSG_RESULT([$pacx_dir])
 fi
@@ -254,7 +254,7 @@ AC_HEADER_STDC
 
 dnl Check for headers used by us
 dnl Need to check for sys/types.h since AC_TYPE_PID_T depends on it later!
-AC_CHECK_HEADERS([getopt.h sys/time.h sys/types.h])
+AC_CHECK_HEADERS([getopt.h limits.h sys/time.h sys/types.h])
 
 dnl Checks for typedefs, structures.
 AC_TYPE_PID_T

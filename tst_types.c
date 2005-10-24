@@ -1,6 +1,8 @@
-#include <values.h>
-#include <limits.h>
 #include "config.h"
+#include <values.h>
+#ifdef HAVE_LIMITS_H
+#  include <limits.h>
+#endif
 #ifdef HAVE_STRING_H
 #  include <string.h>
 #endif
@@ -24,7 +26,8 @@
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #endif
 
-#define MAX_TYPES 4
+#define MAX_TYPES 128                   /* One of the largest type_maaings is for MPI_TYPE_MIX_ARRAY */
+#define DEFAULT_INIT_BYTE 0xa5
 
 #define CHECK_ARG(i,ret) do {           \
     if ((i) < 0 || (i) > TST_TYPES_NUM) \
@@ -36,7 +39,7 @@
 
 struct tst_type_class {
   char * class_string;
-  unsigned long long int class;
+  tst_uint64 class;
 };
 
 static const struct tst_type_class tst_types_class_strings [] =
@@ -46,12 +49,12 @@ static const struct tst_type_class tst_types_class_strings [] =
     {"STANDARD_C_TYPES", TST_MPI_STANDARD_C_TYPES},
     {"STRUCT_C_TYPES", TST_MPI_STRUCT_C_TYPES},
     {"ALL_C_TYPES", TST_MPI_ALL_C_TYPES},
-    {"STANDARD_FORTRAN_INT_TYPES", TST_MPI_STANDARD_FORTRAN_INT_TYPES},
+/*    {"STANDARD_FORTRAN_INT_TYPES", TST_MPI_STANDARD_FORTRAN_INT_TYPES},
     {"STANDARD_FORTRAN_FLOAT_TYPES", TST_MPI_STANDARD_FORTRAN_FLOAT_TYPES},
     {"STANDARD_FORTRAN_COMPLEX_TYPES", TST_MPI_STANDARD_FORTRAN_COMPLEX_TYPES},
     {"STANDARD_FORTRAN_TYPES", TST_MPI_STANDARD_FORTRAN_TYPES},
     {"STRUCT_FORTRAN_TYPES",  TST_MPI_STRUCT_FORTRAN_TYPES},
-    {"ALL_FORTRAN_TYPES", TST_MPI_ALL_FORTRAN_TYPES}
+    {"ALL_FORTRAN_TYPES", TST_MPI_ALL_FORTRAN_TYPES} */
   };
 
 
@@ -60,7 +63,7 @@ struct type {
   char description [TST_DESCRIPTION_LEN];
   int lb;
   int ub;
-  int type_class;
+  tst_uint64 type_class;
   int type_num;
   int type_mapping[MAX_TYPES];
 };
@@ -80,9 +83,13 @@ static struct type types[32] = {
   {MPI_DOUBLE,            "MPI_DOUBLE",           0, sizeof (double), TST_MPI_DOUBLE, 1, {TST_MPI_DOUBLE}},
 #if 0 && defined(HAVE_LONG_DOUBLE)
   {MPI_LONG_DOUBLE,       "MPI_LONG_DOUBLE",      0, sizeof (long double), TST_MPI_LONG_DOUBLE, 1, {TST_MPI_LONG_DOUBLE}},
+#else
+  {MPI_DATATYPE_NULL,     "MPI_LONG_DOUBLE n/a",  0, 0, 0, 0, {0}},
 #endif
 #ifdef HAVE_MPI_LONG_LONG
   {MPI_LONG_LONG,         "MPI_LONG_LONG",        0, sizeof (long long int), TST_MPI_LONG_LONG, 1, {TST_MPI_LONG_LONG}},
+#else
+  {MPI_DATATYPE_NULL,     "MPI_LONG_LONG n/a",    0, 0, 0, 0, {0}},
 #endif /* HAVE_MPI_LONG_LONG */
 /*  {MPI_PACKED,          "MPI_PACKED",           0, 0, 0, NULL},
   {MPI_LB,                "MPI_LB",               0, sizeof (), 1, {TST_}},
@@ -93,7 +100,27 @@ static struct type types[32] = {
   {MPI_LONG_INT,          "MPI_LONG_INT",         0, sizeof (struct tst_mpi_long_int), TST_MPI_LONG_INT, 1, {TST_MPI_LONG_INT}},
   {MPI_SHORT_INT,         "MPI_SHORT_INT",        0, sizeof (struct tst_mpi_short_int), TST_MPI_SHORT_INT, 1, {TST_MPI_SHORT_INT}},
   {MPI_2INT,              "MPI_2INT",             0, sizeof (struct tst_mpi_2int), TST_MPI_2INT, 1, {TST_MPI_2INT}},
-/*  {MPI_LONG_DOUBLE_INT,   "MPI_LONG_DOUBLE_INT",  0, sizeof (struct tst_mpi_long_double_int), TST_MPI_LONG_DOUBLE_INT, 1, {TST_MPI_LONG_DOUBLE_INT}},*/
+#if 0 && defined(HAVE_LONG_DOUBLE)
+  {MPI_LONG_DOUBLE_INT,   "MPI_LONG_DOUBLE_INT",  0, sizeof (struct tst_mpi_long_double_int), TST_MPI_LONG_DOUBLE_INT, 1, {TST_MPI_LONG_DOUBLE_INT}},*/
+#else
+  {MPI_DATATYPE_NULL,     "MPI_LONG_DOUBLE_INT n/a", 0, 0, 0, 0, {0}},
+#endif /* HAVE_MPI_LONG_LONG */
+
+  /*
+   * First of all a representation of 7 MPI_INTs with different MPI_Type-creation calls
+   */
+  {MPI_DATATYPE_NULL,     "MPI_CONTIGUOUS_INT",   0, 7*sizeof(int), TST_MPI_INT_CONTI, 7, {TST_MPI_INT}},
+  {MPI_DATATYPE_NULL,     "MPI_VECTOR_INT",       0, 7*sizeof(int), TST_MPI_INT_VECTOR, 7, {TST_MPI_INT}},
+  {MPI_DATATYPE_NULL,     "MPI_HVECTOR_INT",      0, 7*sizeof(int), TST_MPI_INT_HVECTOR, 7, {TST_MPI_INT}},
+  {MPI_DATATYPE_NULL,     "MPI_INDEXED_INT",      0, 7*sizeof(int), TST_MPI_INT_INDEXED, 7, {TST_MPI_INT}},
+  {MPI_DATATYPE_NULL,     "MPI_HINDEXED_INT",     0, 7*sizeof(int), TST_MPI_INT_HINDEXED, 7 , {TST_MPI_INT}},
+  {MPI_DATATYPE_NULL,     "MPI_STRUCT_INT",       0, 7*sizeof(int), TST_MPI_INT_STRUCT, 7, {TST_MPI_INT}},
+  /*
+   * Now, more complex derived MPI_Datattypes
+   */
+  {MPI_DATATYPE_NULL,     "MPI_TYPE_MIX",         0, sizeof(struct tst_mpi_type_mix), TST_MPI_TYPE_MIX, 11, {TST_MPI_INT}},
+  {MPI_DATATYPE_NULL,     "MPI_TYPE_MIX_ARRAY",   0, sizeof(struct tst_mpi_type_mix_array), TST_MPI_TYPE_MIX_ARRAY,6 , {TST_MPI_INT}},
+
 /* Fortran Types */
 /*  {MPI_COMPLEX,           "MPI_COMPLEX",         0, sizeof (complex), 1, {TST_}},
   {MPI_DOUBLE_COMPLEX,    "MPI_DOUBLE_COMPLEX",    0, sizeof (), 1, {TST_}},
@@ -110,15 +137,200 @@ static struct type types[32] = {
   /*
    * The last element
    */
-  {-1,                    "",                     0, 0, 0, 0, {NULL}}
+  {MPI_DATATYPE_NULL,     "",                     0, 0, 0, 0, {TST_MPI_INT}}
 };
 
 int tst_type_init (int * num_types)
 {
-  /*
-   * We should create at least some other datatypes, to test communication!
-   */
-  *num_types = 18;
+  int i;
+  int num = 19;
+
+  {
+    /*
+     * MPI_CONTIGUOUS_INT
+     */
+    MPI_Type_contiguous (7, MPI_INT, &(types[num].mpi_datatype));
+    MPI_Type_commit (&(types[num].mpi_datatype));
+    types[num].type_num = 7;
+    for(i=0 ; i < 7; i++)
+      types[num].type_mapping[i] = TST_MPI_INT;
+    num++;
+  }
+
+  {
+    /*
+     * MPI_VECTOR_INT
+     */
+    MPI_Type_vector (7, 1, 1, MPI_INT, &(types[num].mpi_datatype));
+    MPI_Type_commit (&(types[num].mpi_datatype));
+    types[num].type_num = 7;
+    for(i=0; i < 7; i++)
+      types[num].type_mapping[i] = TST_MPI_INT;
+    num++;
+  }
+
+  {
+    /*
+     * MPI_HVECTOR_INT
+     */
+    MPI_Type_hvector (7, 1, sizeof(int), MPI_INT, &(types[num].mpi_datatype));
+    MPI_Type_commit (&(types[num].mpi_datatype));
+    types[num].type_num = 7;
+    for(i=0; i < 7; i++)
+      types[num].type_mapping[i] = TST_MPI_INT;
+    num++;
+  }
+
+  {
+    /*
+     * MPI_INDEXED_INT
+     */
+    int block[7];
+    int dis[7];
+    for(i=0; i < 7; i++) {
+      block[i] = 1;
+      dis[i] = i;
+    }
+    MPI_Type_indexed (7, block, dis, MPI_INT, &(types[num].mpi_datatype));
+    MPI_Type_commit (&(types[num].mpi_datatype));
+    types[num].type_num = 7;
+    for(i=0; i < 7; i++)
+      types[num].type_mapping[i]=TST_MPI_INT;
+    num++;
+  }
+
+  {
+    /*
+     * MPI_HINDEXED_INT
+     */
+    int block[7];
+    MPI_Aint dis[7];
+    for(i=0; i < 7; i++) {
+      block[i] = 1;
+      dis[i] = i*sizeof(int);
+    }
+    MPI_Type_hindexed (7, block, dis, MPI_INT,&(types[num].mpi_datatype));
+    MPI_Type_commit (&(types[num].mpi_datatype));
+    types[num].type_num = 7;
+    for(i=0 ; i < 7; i++)
+      types[num].type_mapping[i]=TST_MPI_INT;
+    num++;
+  }
+
+  {
+    /*
+     * MPI_STRUCT_INT
+     */
+    int block_struct[1];
+    MPI_Aint dis_struct[1];
+    MPI_Datatype dtype[1];
+
+    block_struct[0] = 7;
+    dis_struct[0] = 0;
+    dtype[0] = MPI_INT;
+
+    MPI_Type_struct (1, block_struct, dis_struct, dtype, &(types[num].mpi_datatype));
+    MPI_Type_commit (&(types[num].mpi_datatype));
+
+    types[num].type_num = 7;
+    for(i=0; i < 7; i++)
+      types[num].type_mapping[i] = TST_MPI_INT;
+    num++;
+  }
+
+  {
+    /*
+     * MPI_TYPE_MIX
+     */
+    int block_mix[11];
+    MPI_Aint disp_mix[11];
+    MPI_Datatype mix_type[11] = {MPI_CHAR, MPI_SHORT, MPI_INT, MPI_LONG,
+                                 MPI_FLOAT, MPI_DOUBLE, MPI_FLOAT_INT,
+                                 MPI_DOUBLE_INT, MPI_LONG_INT, MPI_SHORT_INT, MPI_2INT};
+    MPI_Aint mix_base;
+    struct tst_mpi_type_mix type_tmp;
+
+    MPI_Address (&(type_tmp.a), disp_mix);
+    MPI_Address (&(type_tmp.b), disp_mix+1);
+    MPI_Address (&(type_tmp.c), disp_mix+2);
+    MPI_Address (&(type_tmp.d), disp_mix+3);
+    MPI_Address (&(type_tmp.e), disp_mix+4);
+    MPI_Address (&(type_tmp.f), disp_mix+5);
+    MPI_Address (&(type_tmp.g), disp_mix+6);
+    MPI_Address (&(type_tmp.h), disp_mix+7);
+    MPI_Address (&(type_tmp.i), disp_mix+8);
+    MPI_Address (&(type_tmp.j), disp_mix+9);
+    MPI_Address (&(type_tmp.k), disp_mix+10);
+    mix_base = disp_mix[0];
+    for(i=0; i < 11; i++) disp_mix[i] -= mix_base;
+    for(i=0; i < 11; i++) block_mix[i] = 1;
+    MPI_Type_struct (11, block_mix, disp_mix, mix_type, &(types[num].mpi_datatype));
+    MPI_Type_commit (&(types[num].mpi_datatype));
+    types[num].type_num = 11;
+    types[num].type_mapping[0] = TST_MPI_CHAR;
+    types[num].type_mapping[1] = TST_MPI_SHORT;
+    types[num].type_mapping[2] = TST_MPI_INT;
+    types[num].type_mapping[3] = TST_MPI_LONG;
+    types[num].type_mapping[4] = TST_MPI_FLOAT;
+    types[num].type_mapping[5] = TST_MPI_DOUBLE;
+    types[num].type_mapping[6] = TST_MPI_FLOAT_INT;
+    types[num].type_mapping[7] = TST_MPI_DOUBLE_INT;
+    types[num].type_mapping[8] = TST_MPI_LONG_INT;
+    types[num].type_mapping[9] = TST_MPI_SHORT_INT;
+    types[num].type_mapping[10] = TST_MPI_2INT;
+    num++;
+  }
+
+  {
+    /*
+     * MPI_TYPE_MIX_ARRAY
+     */
+    int block_mix[6];
+    MPI_Aint disp_mix[6];
+    MPI_Datatype mix_type[6];
+    MPI_Aint mix_base;
+    struct tst_mpi_type_mix_array type_tmp_array;
+
+    MPI_Type_contiguous (TST_MPI_TYPE_MIX_ARRAY_NUM, MPI_CHAR, &(mix_type[0]));
+    MPI_Type_contiguous (TST_MPI_TYPE_MIX_ARRAY_NUM, MPI_SHORT, &(mix_type[1]));
+    MPI_Type_contiguous (TST_MPI_TYPE_MIX_ARRAY_NUM, MPI_INT, &(mix_type[2]));
+    MPI_Type_contiguous (TST_MPI_TYPE_MIX_ARRAY_NUM, MPI_LONG, &(mix_type[3]));
+    MPI_Type_contiguous (TST_MPI_TYPE_MIX_ARRAY_NUM, MPI_FLOAT, &(mix_type[4]));
+    MPI_Type_contiguous (TST_MPI_TYPE_MIX_ARRAY_NUM, MPI_DOUBLE, &(mix_type[5]));
+/*
+    MPI_Type_commit (&(mix_type[0]));
+    MPI_Type_commit (&(mix_type[1]));
+    MPI_Type_commit (&(mix_type[2]));
+    MPI_Type_commit (&(mix_type[3]));
+    MPI_Type_commit (&(mix_type[4]));
+    MPI_Type_commit (&(mix_type[5]));
+*/
+    MPI_Address(&(type_tmp_array.a[0]), disp_mix);
+    MPI_Address(&(type_tmp_array.b[0]), disp_mix+1);
+    MPI_Address(&(type_tmp_array.c[0]), disp_mix+2);
+    MPI_Address(&(type_tmp_array.d[0]), disp_mix+3);
+    MPI_Address(&(type_tmp_array.e[0]), disp_mix+4);
+    MPI_Address(&(type_tmp_array.f[0]), disp_mix+5);
+
+    mix_base = disp_mix[0];
+    for(i=0; i < 6; i++) disp_mix[i] -= mix_base;
+    for(i=0; i < 6; i++) block_mix[i] = 1;
+    MPI_Type_struct (6, block_mix, disp_mix, mix_type, &(types[num].mpi_datatype));
+    MPI_Type_commit (&(types[num].mpi_datatype));
+    types[num].type_num = 6 * TST_MPI_TYPE_MIX_ARRAY_NUM;
+    for (i = 0; i < TST_MPI_TYPE_MIX_ARRAY_NUM; i++)
+      {
+        types[num].type_mapping[0*TST_MPI_TYPE_MIX_ARRAY_NUM+i] = TST_MPI_CHAR;
+        types[num].type_mapping[1*TST_MPI_TYPE_MIX_ARRAY_NUM+i] = TST_MPI_SHORT;
+        types[num].type_mapping[2*TST_MPI_TYPE_MIX_ARRAY_NUM+i] = TST_MPI_INT;
+        types[num].type_mapping[3*TST_MPI_TYPE_MIX_ARRAY_NUM+i] = TST_MPI_LONG;
+        types[num].type_mapping[4*TST_MPI_TYPE_MIX_ARRAY_NUM+i] = TST_MPI_FLOAT;
+        types[num].type_mapping[5*TST_MPI_TYPE_MIX_ARRAY_NUM+i] = TST_MPI_DOUBLE;
+      }
+    num++;
+  }
+
+  *num_types = num;
   return 0;
 }
 
@@ -128,7 +340,7 @@ MPI_Datatype tst_type_getdatatype (int type)
   return types[type].mpi_datatype;
 }
 
-int tst_type_gettypeclass (int type)
+tst_uint64 tst_type_gettypeclass (int type)
 {
   CHECK_ARG (type, -1);
   return types[type].type_class;
@@ -193,16 +405,25 @@ static int tst_type_gettypemax_log (int type)
       case TST_MPI_LONG_LONG: return SIZEOF_LONG_LONG;
 #endif /* HAVE_MPI_LONG_LONG */
       case TST_MPI_PACKED: return 1;
-	/*
-	  case TST_MPI_LB: return 0;
-	  case TST_MPI_UB: return 0;
-	*/
+        /*
+          case TST_MPI_LB: return 0;
+          case TST_MPI_UB: return 0;
+        */
       case TST_MPI_FLOAT_INT: return SIZEOF_STRUCT_MPI_FLOAT_INT;
       case TST_MPI_DOUBLE_INT: return SIZEOF_STRUCT_MPI_DOUBLE_INT;
       case TST_MPI_LONG_INT: return SIZEOF_STRUCT_MPI_LONG_INT;
       case TST_MPI_SHORT_INT: return SIZEOF_STRUCT_MPI_SHORT_INT;
       case TST_MPI_2INT: return SIZEOF_STRUCT_MPI_2INT;
       case TST_MPI_LONG_DOUBLE_INT: return SIZEOF_STRUCT_MPI_LONG_DOUBLE_INT;
+      case TST_MPI_INT_CONTI: return (7*sizeof(int));
+      case TST_MPI_INT_VECTOR: return (7*sizeof(int));
+      case TST_MPI_INT_HVECTOR: return (7*sizeof(int));
+      case TST_MPI_INT_INDEXED: return (7*sizeof(int));
+      case TST_MPI_INT_HINDEXED: return (7*sizeof(int));
+      case TST_MPI_INT_STRUCT: return (7*sizeof(int));
+      case TST_MPI_TYPE_MIX: return sizeof(struct tst_mpi_type_mix);
+      case TST_MPI_TYPE_MIX_ARRAY: return sizeof(struct tst_mpi_type_mix_array);
+
 /*
       case TST_MPI_COMPLEX: return SIZEOF_FORTRAN_COMPLEX;
       case TST_MPI_DOUBLE_COMPLEX: return SIZEOF_FORTRAN_DOUBLE_COMPLEX;
@@ -222,8 +443,16 @@ static int tst_type_gettypemax_log (int type)
 
 char * tst_type_allocvalues (const int type, const int values_num)
 {
+  char * buffer;
+  int type_size;
   CHECK_ARG (type, NULL);
-  return calloc (values_num, tst_type_gettypesize(type));
+  type_size = tst_type_gettypesize(type);
+
+  buffer = malloc (values_num * type_size);
+  if (buffer != NULL)
+    memset (buffer, DEFAULT_INIT_BYTE, values_num * type_size);
+
+  return buffer;
 }
 
 #define TST_TYPE_SET(tst_type,c_type,c_type_caps)                                                \
@@ -240,6 +469,7 @@ char * tst_type_allocvalues (const int type, const int values_num)
       break;                                                                                     \
     }
 
+
 #define TST_TYPE_SET_UNSIGNED(tst_type,c_type,c_type_caps)                                       \
   case tst_type:                                                                                 \
     {                                                                                            \
@@ -253,6 +483,7 @@ char * tst_type_allocvalues (const int type, const int values_num)
       }                                                                                          \
       break;                                                                                     \
     }
+
 
 #define TST_TYPE_SET_STRUCT(tst_type,c_type,c_type_caps)                                         \
   case tst_type:                                                                                 \
@@ -282,11 +513,176 @@ char * tst_type_allocvalues (const int type, const int values_num)
     }
 
 
+#define TST_TYPE_SET_CONTI(tst_type,c_type,c_type_caps)                                          \
+  case tst_type:                                                                                 \
+    {                                                                                            \
+      int __i;                                                                                   \
+      switch (type_set)                                                                          \
+      {                                                                                          \
+      case TST_TYPE_SET_ZERO:                                                                    \
+        for(__i=0 ; __i<7 ; __i++)                                                               \
+          ((c_type*)buffer)[__i] = 0;                                                            \
+        break;                                                                                   \
+      case TST_TYPE_SET_MAX:                                                                     \
+        for(__i=0 ; __i<7 ; __i++)                                                               \
+          ((c_type*)buffer)[__i] = c_type_caps##_MAX;                                            \
+        break;                                                                                   \
+      case TST_TYPE_SET_MIN:                                                                     \
+        for(__i=0 ; __i<7 ; __i++)                                                               \
+          ((c_type*)buffer)[__i] = c_type_caps##_MIN;                                            \
+        break;                                                                                   \
+      case TST_TYPE_SET_VALUE:                                                                   \
+        for(__i=0 ; __i<7 ; __i++)                                                               \
+          ((c_type*)buffer)[__i] =  direct_value;                                                \
+        break;                                                                                   \
+      }                                                                                          \
+      break;                                                                                     \
+    }
+
+
+#define TST_TYPE_SET_STRUCT_MIX(tst_type,c_type,c_type_caps)                                     \
+  case tst_type:                                                                                 \
+    {                                                                                            \
+      switch (type_set)                                                                          \
+      {                                                                                          \
+      case TST_TYPE_SET_ZERO:                                                                    \
+        (*(c_type*)buffer).a = 0;                                                                \
+        (*(c_type*)buffer).b = 0;                                                                \
+        (*(c_type*)buffer).c = 0;                                                                \
+        (*(c_type*)buffer).d = 0;                                                                \
+        (*(c_type*)buffer).e = 0;                                                                \
+        (*(c_type*)buffer).f = 0;                                                                \
+        (*(c_type*)buffer).g.a = 0;                                                              \
+        (*(c_type*)buffer).g.b = 0;                                                              \
+        (*(c_type*)buffer).h.a = 0;                                                              \
+        (*(c_type*)buffer).h.b = 0;                                                              \
+        (*(c_type*)buffer).i.a = 0;                                                              \
+        (*(c_type*)buffer).i.b = 0;                                                              \
+        (*(c_type*)buffer).j.a = 0;                                                              \
+        (*(c_type*)buffer).j.b = 0;                                                              \
+        (*(c_type*)buffer).k.a = 0;                                                              \
+        (*(c_type*)buffer).k.b = 0;                                                              \
+        break;                                                                                   \
+        case TST_TYPE_SET_MAX:                                                                   \
+        (*(c_type*)buffer).a = CHAR_MAX;                                                         \
+        (*(c_type*)buffer).b = SHRT_MAX;                                                         \
+        (*(c_type*)buffer).c = INT_MAX;                                                          \
+        (*(c_type*)buffer).d = LONG_MAX;                                                         \
+        (*(c_type*)buffer).e = FLT_MAX;                                                          \
+        (*(c_type*)buffer).f = DBL_MAX;                                                          \
+        (*(c_type*)buffer).g.a = FLT_MAX;                                                        \
+        (*(c_type*)buffer).g.b = INT_MAX;                                                        \
+        (*(c_type*)buffer).h.a = DBL_MAX;                                                        \
+        (*(c_type*)buffer).h.b = INT_MAX;                                                        \
+        (*(c_type*)buffer).i.a = LONG_MAX;                                                       \
+        (*(c_type*)buffer).i.b = INT_MAX;                                                        \
+        (*(c_type*)buffer).j.a = SHRT_MAX;                                                       \
+        (*(c_type*)buffer).j.b = INT_MAX;                                                        \
+        (*(c_type*)buffer).k.a = INT_MAX;                                                        \
+        (*(c_type*)buffer).k.b = INT_MAX;                                                        \
+        break;                                                                                   \
+        case TST_TYPE_SET_MIN:                                                                   \
+        (*(c_type*)buffer).a = CHAR_MIN;                                                         \
+        (*(c_type*)buffer).b = SHRT_MIN;                                                         \
+        (*(c_type*)buffer).c = INT_MIN;                                                          \
+        (*(c_type*)buffer).d = LONG_MIN;                                                         \
+        (*(c_type*)buffer).e = FLT_MIN;                                                          \
+        (*(c_type*)buffer).f = DBL_MIN;                                                          \
+        (*(c_type*)buffer).g.a = FLT_MIN;                                                        \
+        (*(c_type*)buffer).g.b = INT_MIN;                                                        \
+        (*(c_type*)buffer).h.a = DBL_MIN;                                                        \
+        (*(c_type*)buffer).h.b = INT_MIN;                                                        \
+        (*(c_type*)buffer).i.a = LONG_MIN;                                                       \
+        (*(c_type*)buffer).i.b = INT_MIN;                                                        \
+        (*(c_type*)buffer).j.a = SHRT_MIN;                                                       \
+        (*(c_type*)buffer).j.b = INT_MIN;                                                        \
+        (*(c_type*)buffer).k.a = INT_MIN;                                                        \
+        (*(c_type*)buffer).k.b = INT_MIN;                                                        \
+        break;                                                                                   \
+      case TST_TYPE_SET_VALUE:                                                                   \
+        (*(c_type*)buffer).a = direct_value;                                                     \
+        (*(c_type*)buffer).b = direct_value;                                                     \
+        (*(c_type*)buffer).c = direct_value;                                                     \
+        (*(c_type*)buffer).d = direct_value;                                                     \
+        (*(c_type*)buffer).e = direct_value;                                                     \
+        (*(c_type*)buffer).f = direct_value;                                                     \
+        (*(c_type*)buffer).g.a = direct_value;                                                   \
+        (*(c_type*)buffer).g.b = direct_value;                                                   \
+        (*(c_type*)buffer).h.a = direct_value;                                                   \
+        (*(c_type*)buffer).h.b = direct_value;                                                   \
+        (*(c_type*)buffer).i.a = direct_value;                                                   \
+        (*(c_type*)buffer).i.b = direct_value;                                                   \
+        (*(c_type*)buffer).j.a = direct_value;                                                   \
+        (*(c_type*)buffer).j.b = direct_value;                                                   \
+        (*(c_type*)buffer).k.a = direct_value;                                                   \
+        (*(c_type*)buffer).k.b = direct_value;                                                   \
+        break;                                                                                   \
+      default:                                                                                   \
+      return -1;                                                                                 \
+      }                                                                                          \
+      break;                                                                                     \
+    }
+
+
+#define TST_TYPE_SET_STRUCT_MIX_ARRAY(tst_type,c_type,c_type_caps)                               \
+  case tst_type:                                                                                 \
+    {                                                                                            \
+      switch (type_set)                                                                          \
+      {                                                                                          \
+      int __i;                                                                                   \
+      case TST_TYPE_SET_ZERO:                                                                    \
+      for (__i=0; __i < TST_MPI_TYPE_MIX_ARRAY_NUM; __i++) {                                     \
+        ((*(c_type*)buffer).a)[__i] = 0;                                                         \
+        ((*(c_type*)buffer).b)[__i] = 0;                                                         \
+        ((*(c_type*)buffer).c)[__i] = 0;                                                         \
+        ((*(c_type*)buffer).d)[__i] = 0;                                                         \
+        ((*(c_type*)buffer).e)[__i] = 0;                                                         \
+        ((*(c_type*)buffer).f)[__i] = 0;                                                         \
+      }                                                                                          \
+      break;                                                                                     \
+      case TST_TYPE_SET_MAX:                                                                     \
+      for(__i=0; __i < TST_MPI_TYPE_MIX_ARRAY_NUM; __i++){                                       \
+        ((*(c_type*)buffer).a)[__i] = CHAR_MAX;                                                  \
+        ((*(c_type*)buffer).b)[__i] = SHRT_MAX;                                                  \
+        ((*(c_type*)buffer).c)[__i] = INT_MAX;                                                   \
+        ((*(c_type*)buffer).d)[__i] = LONG_MAX;                                                  \
+        ((*(c_type*)buffer).e)[__i] = FLT_MAX;                                                   \
+        ((*(c_type*)buffer).f)[__i] = DBL_MAX;                                                   \
+      }                                                                                          \
+      break;                                                                                     \
+      case TST_TYPE_SET_MIN:                                                                     \
+      for(__i=0; __i < TST_MPI_TYPE_MIX_ARRAY_NUM; __i++) {                                      \
+        ((*(c_type*)buffer).a)[__i] = CHAR_MIN;                                                  \
+        ((*(c_type*)buffer).b)[__i] = SHRT_MIN;                                                  \
+        ((*(c_type*)buffer).c)[__i] = INT_MIN;                                                   \
+        ((*(c_type*)buffer).d)[__i] = LONG_MIN;                                                  \
+        ((*(c_type*)buffer).e)[__i] = FLT_MIN;                                                   \
+        ((*(c_type*)buffer).f)[__i] = DBL_MIN;                                                   \
+      }                                                                                          \
+      break;                                                                                     \
+      case TST_TYPE_SET_VALUE:                                                                   \
+      for(__i=0; __i < TST_MPI_TYPE_MIX_ARRAY_NUM; __i++) {                                      \
+        ((*(c_type*)buffer).a)[__i] = direct_value;                                              \
+        ((*(c_type*)buffer).b)[__i] = direct_value;                                              \
+        ((*(c_type*)buffer).c)[__i] = direct_value;                                              \
+        ((*(c_type*)buffer).d)[__i] = direct_value;                                              \
+        ((*(c_type*)buffer).e)[__i] = direct_value;                                              \
+        ((*(c_type*)buffer).f)[__i] = direct_value;                                              \
+      }                                                                                          \
+      break;                                                                                     \
+      default:                                                                                   \
+      return -1;                                                                                 \
+      }                                                                                          \
+      break;                                                                                     \
+    }
+
+
+
 int tst_type_setvalue (int type, char * buffer, int type_set, long long direct_value)
 {
   CHECK_ARG (type, -1);
 
-  memset (buffer, 0, tst_type_gettypesize (type));
+  memset (buffer, DEFAULT_INIT_BYTE, tst_type_gettypesize (type));
 
   switch (types[type].type_class)
     {
@@ -309,8 +705,8 @@ int tst_type_setvalue (int type, char * buffer, int type_set, long long direct_v
 #endif /* HAVE_MPI_LONG_LONG */
       TST_TYPE_SET (TST_MPI_PACKED, char, CHAR);
       /*
-	TST_TYPE_SET (TST_MPI_LB, char, CHAR);
-	TST_TYPE_SET (TST_MPI_UB, char, CHAR);
+        TST_TYPE_SET (TST_MPI_LB, char, CHAR);
+        TST_TYPE_SET (TST_MPI_UB, char, CHAR);
       */
 
       TST_TYPE_SET_STRUCT (TST_MPI_FLOAT_INT, struct tst_mpi_float_int, FLT);
@@ -321,6 +717,16 @@ int tst_type_setvalue (int type, char * buffer, int type_set, long long direct_v
 #if 0 && defined(HAVE_LONG_DOUBLE) && defined (LDBL_MAX)
       TST_TYPE_SET_STRUCT (TST_MPI_LONG_DOUBLE_INT, struct tst_mpi_long_double_int, LDBL);
 #endif
+
+      TST_TYPE_SET_CONTI (TST_MPI_INT_CONTI, int, INT);
+      TST_TYPE_SET_CONTI (TST_MPI_INT_VECTOR, int, INT);
+      TST_TYPE_SET_CONTI (TST_MPI_INT_HVECTOR, int, INT);
+      TST_TYPE_SET_CONTI (TST_MPI_INT_INDEXED, int, INT);
+      TST_TYPE_SET_CONTI (TST_MPI_INT_HINDEXED, int, INT);
+      TST_TYPE_SET_CONTI (TST_MPI_INT_STRUCT, int, INT);
+      TST_TYPE_SET_STRUCT_MIX (TST_MPI_TYPE_MIX, struct tst_mpi_type_mix, NOT_USED);
+      TST_TYPE_SET_STRUCT_MIX_ARRAY (TST_MPI_TYPE_MIX_ARRAY, struct tst_mpi_type_mix_array, NOT_USED);
+
 /*
       TST_TYPE_SET (TST_MPI_COMPLEX
       TST_TYPE_SET (TST_MPI_DOUBLE_COMPLEX
@@ -437,13 +843,16 @@ int tst_type_checkstandardarray (int type, int values_num, char * buffer, int co
   return 0;
 }
 
+
+/*
+ * Currently unused
 static int tst_type_getvalue (int type, char * buffer1, char * buffer2)
 {
   CHECK_ARG (type, -1);
 
   return 0;
 }
-
+*/
 
 
 void tst_type_list (void)
@@ -452,14 +861,14 @@ void tst_type_list (void)
   for (i = 0; i < TST_TYPES_NUM; i++)
     {
       if (types[i].description[0] == '\0')
-	break;
+        break;
       printf ("type:%d %s\n",
-	      i, types[i].description);
+              i, types[i].description);
     }
 
   for (i = 0; i < TST_TYPES_CLASS_NUM; i++)
     printf ("Type-Class:%d %s\n",
-	    i, tst_types_class_strings[i].class_string);
+            i, tst_types_class_strings[i].class_string);
 
 }
 
@@ -476,7 +885,7 @@ static int tst_type_search (const int search_test, const int * test_list, const 
 
 
 int tst_type_select (const char * type_string,
-		     int * type_list, int * type_list_num, const int type_list_max)
+                     int * type_list, int * type_list_num, const int type_list_max)
 {
   int i;
 
@@ -489,35 +898,35 @@ int tst_type_select (const char * type_string,
        * In case we match a complete class of types, include every one!
        */
       if (!strcasecmp (type_string, tst_types_class_strings[i].class_string))
-	{
-	  int j;
-	  DEBUG (printf ("type_string:%s matched with tst_types_class_strings[%d]:%s\n",
-			 type_string, i, tst_types_class_strings[i].class_string));
-	  for (j = 0; j < TST_TYPES_NUM; j++)
-	    {
-	      /*
-	       * First search for this test in the type_list -- if already in, continue!
-	       */
-	      if (tst_type_search (j, type_list, *type_list_num))
-		{
-		  WARNING (printf ("Type:%s selected through class:%s was already "
-				   "included in list -- not including\n",
-				   types[j].description,
-				   tst_types_class_strings[i].class_string));
-		  continue;
-		}
-	      if (types[j].type_class & tst_types_class_strings[i].class)
-		{
-		  DEBUG (printf ("type_string:%s test j:%d i:%d with class:%d matches, type_list_num:%d\n",
-				 type_string, j, (1 << i), types[j].type_class, *type_list_num));
-		  type_list[*type_list_num] = j;
-		  (*type_list_num)++;
-		  if (*type_list_num == type_list_max)
-		    ERROR (EINVAL, "Too many user selected types");
-		}
-	    }
-	  return 0;
-	}
+        {
+          int j;
+          DEBUG (printf ("type_string:%s matched with tst_types_class_strings[%d]:%s\n",
+                         type_string, i, tst_types_class_strings[i].class_string));
+          for (j = 0; j < TST_TYPES_NUM; j++)
+            {
+              /*
+               * First search for this test in the type_list -- if already in, continue!
+               */
+              if (tst_type_search (j, type_list, *type_list_num))
+                {
+                  WARNING (printf ("Type:%s selected through class:%s was already "
+                                   "included in list -- not including\n",
+                                   types[j].description,
+                                   tst_types_class_strings[i].class_string));
+                  continue;
+                }
+              if (types[j].type_class & tst_types_class_strings[i].class)
+                {
+                  DEBUG (printf ("type_string:%s test j:%d i:%d with class:%d matches, type_list_num:%d\n",
+                                 type_string, j, (1 << i), types[j].type_class, *type_list_num));
+                  type_list[*type_list_num] = j;
+                  (*type_list_num)++;
+                  if (*type_list_num == type_list_max)
+                    ERROR (EINVAL, "Too many user selected types");
+                }
+            }
+          return 0;
+        }
     }
 
   /*
@@ -526,29 +935,29 @@ int tst_type_select (const char * type_string,
   for (i = 0; i < TST_TYPES_NUM; i++)
     {
       if (!strcasecmp (type_string, types[i].description))
-	{
-	  if (tst_type_search (i, type_list, *type_list_num))
-	    {
-	      WARNING (printf ("Type:%s was already included in list -- not including\n",
-			       types[i].description));
-	      return 0;
-	    }
+        {
+          if (tst_type_search (i, type_list, *type_list_num))
+            {
+              WARNING (printf ("Type:%s was already included in list -- not including\n",
+                               types[i].description));
+              return 0;
+            }
 
-	  type_list[*type_list_num] = i;
-	  (*type_list_num)++;
-	  if (*type_list_num == type_list_max)
-	    ERROR (EINVAL, "Too many user selected types");
+          type_list[*type_list_num] = i;
+          (*type_list_num)++;
+          if (*type_list_num == type_list_max)
+            ERROR (EINVAL, "Too many user selected types");
 
-	  DEBUG (printf ("type_string:%s matched with type_list_num:%d\n",
-			 type_string, *type_list_num));
-	  return 0;
-	}
+          DEBUG (printf ("type_string:%s matched with type_list_num:%d\n",
+                         type_string, *type_list_num));
+          return 0;
+        }
     }
 
   {
     char buffer[128];
     sprintf (buffer, "Datatype %s not recognized",
-	     type_string);
+             type_string);
     ERROR (EINVAL, buffer);
   }
   return -1;

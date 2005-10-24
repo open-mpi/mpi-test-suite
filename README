@@ -228,7 +228,7 @@ These tests must adhere to the following rules:
 1.) They must run with an arbitrary number of processes!
     Even if it means, that some processes are just hanging in the MPI_Barrier if it needs_sync!
 
-2.) They MUST adhere to their specification in tst_tests!
+2.) They MUST adhere to their specification in tst_tests.c!
 
 3.) They should run with as many communicators as possible (like declaring run_with_comm:
     (TST_MPI_COMM_SELF | TST_MPI_COMM_NULL | TST_MPI_INTRA_COMM | TST_MPI_INTER_COMM) or more ,-]

@@ -100,7 +100,7 @@ int tst_p2p_simple_ring_run (const struct tst_env * env)
       (recv_from != MPI_PROC_NULL && status.MPI_TAG != 4711) ||
       (recv_from == MPI_PROC_NULL && status.MPI_TAG != MPI_ANY_TAG))
     ERROR (EINVAL, "Error in status");
-  
+
   if (recv_from != MPI_PROC_NULL)
     tst_type_checkstandardarray (env->type, env->values_num, recv_buffer, recv_from);
 

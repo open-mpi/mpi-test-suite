@@ -108,7 +108,7 @@ int tst_comm_init (int * num_comms)
 
     DEBUG (printf ("\n"));
     MPI_CHECK (MPI_Comm_dup (MPI_COMM_WORLD, &comms[count_comms].mpi_comm));
-    
+
     /*
      * Remark, that if the communicator's size is one, we are also an TST_MPI_COMM_SELF
      */
@@ -119,7 +119,7 @@ int tst_comm_init (int * num_comms)
 
     comms[count_comms].other_size = 0;
     comms[count_comms].other_mapping = NULL;
-    
+
     INTERNAL_CHECK
       (
        int tmp_rank;
@@ -129,11 +129,11 @@ int tst_comm_init (int * num_comms)
        if (tmp_size != comm_size || tmp_rank != comm_rank)
          ERROR (EINVAL, "CHECK for Reversed MPI_COMM_WORLD failed");
        );
-    
+
     if (++count_comms > COMM_NUM)
       ERROR (EINVAL, "Too many communicators, increase COMM_NUM");
   }
-  
+
   /*
    * Create a communicator, which is reversed
    */
@@ -162,13 +162,13 @@ int tst_comm_init (int * num_comms)
     comms[count_comms].other_mapping = NULL;
 
     INTERNAL_CHECK (
-		    int tmp_rank;
-		    int tmp_size;
-		    MPI_Comm_size (comms[count_comms].mpi_comm, &tmp_size);
-		    MPI_Comm_rank (comms[count_comms].mpi_comm, &tmp_rank);
-		    if (tmp_size != comm_size || tmp_rank != comm_size - comm_rank)
-		    ERROR (EINVAL, "CHECK for Reversed MPI_COMM_WORLD failed");
-		    );
+                    int tmp_rank;
+                    int tmp_size;
+                    MPI_Comm_size (comms[count_comms].mpi_comm, &tmp_size);
+                    MPI_Comm_rank (comms[count_comms].mpi_comm, &tmp_rank);
+                    if (tmp_size != comm_size || tmp_rank != comm_size - comm_rank)
+                    ERROR (EINVAL, "CHECK for Reversed MPI_COMM_WORLD failed");
+                    );
 
     if (++count_comms > COMM_NUM)
       ERROR (EINVAL, "Too many communicators, increase COMM_NUM");
@@ -185,9 +185,9 @@ int tst_comm_init (int * num_comms)
       ERROR (errno, "malloc");
     for (i = 0; i < comms[count_comms].size; i++)
       comms[count_comms].mapping[i] = i;
-  
+
     MPI_CHECK (MPI_Comm_split (MPI_COMM_WORLD, comm_rank >= comm_size / 2,
-			       comm_rank, &comms[count_comms].mpi_comm));
+                               comm_rank, &comms[count_comms].mpi_comm));
 
     /*
      * Remark, that if the communicator's size is one, we are also an TST_MPI_COMM_SELF
@@ -218,13 +218,13 @@ int tst_comm_init (int * num_comms)
       }
     else
       comms[count_comms].size = comm_size / 2;
-  
+
     if ((comms[count_comms].mapping = malloc (comms[count_comms].size * sizeof(int))) == NULL)
       ERROR (errno, "malloc");
-  
+
     for (i = 0; i < comms[count_comms].size; i++)
       comms[count_comms].mapping[i] = i*2 + (comm_rank % 2);
-  
+
     MPI_CHECK (MPI_Comm_split (MPI_COMM_WORLD, comm_rank % 2, comm_rank, &comms[count_comms].mpi_comm));
 
 
@@ -252,7 +252,7 @@ int tst_comm_init (int * num_comms)
       if (tmp_comm != MPI_COMM_NULL)
         MPI_CHECK (MPI_Comm_free (&tmp_comm));
       strncpy (comms[count_comms].description, "Zero-and-Rest Intercommunicator", TST_DESCRIPTION_LEN);
-  
+
       if (comm_rank == 0)
         {
           comms[count_comms].size = 1;
@@ -263,17 +263,17 @@ int tst_comm_init (int * num_comms)
           comms[count_comms].size = comm_size-1;
           comms[count_comms].other_size = 1;
         }
-  
+
       if ((comms[count_comms].mapping = malloc (comms[count_comms].size * sizeof(int))) == NULL)
         ERROR (errno, "malloc");
-  
+
       if ((comms[count_comms].other_mapping = malloc (comms[count_comms].other_size * sizeof(int))) == NULL)
         ERROR (errno, "malloc");
-  
+
       if (comm_rank == 0)
         {
           comms[count_comms].mapping[0] = 0;
-    
+
           for (i = 0; i < comms[count_comms].other_size; i++)
             comms[count_comms].other_mapping[i] = i+1;
           rrank = 1;
@@ -282,17 +282,17 @@ int tst_comm_init (int * num_comms)
         {
           for (i = 0; i < comms[count_comms].size; i++)
             comms[count_comms].mapping[i] = i+1;
-    
+
           comms[count_comms].other_mapping[0] = 0;
           rrank = 0;
         }
-    
+
       MPI_CHECK (MPI_Comm_split (MPI_COMM_WORLD, comm_rank > 0, comm_rank, &tmp_comm));
       MPI_CHECK (MPI_Intercomm_create (tmp_comm, 0, MPI_COMM_WORLD, rrank, count_comms,
                                       &comms[count_comms].mpi_comm));
-  
+
       MPI_CHECK (MPI_Comm_free (&tmp_comm));
-      comms[count_comms].class = TST_MPI_INTER_COMM; 
+      comms[count_comms].class = TST_MPI_INTER_COMM;
       if (++count_comms > COMM_NUM)
         ERROR (EINVAL, "Too many communicators, increase COMM_NUM");
     }
@@ -305,9 +305,9 @@ int tst_comm_init (int * num_comms)
     {
       {
         INTERCOMM_TO_MERGE = count_comms;
-    
+
         strncpy (comms[count_comms].description, "Halfed Intercommunicator", TST_DESCRIPTION_LEN);
-    
+
         if (comm_rank > comm_size / 2)
           {
             comms[count_comms].size = comm_size / 2 + comm_size % 2;
@@ -318,23 +318,23 @@ int tst_comm_init (int * num_comms)
             comms[count_comms].size = comm_size / 2;
             comms[count_comms].other_size = comm_size/2 + comm_size % 2;
           }
-        
+
         if ((comms[count_comms].mapping = malloc (comms[count_comms].size * sizeof(int))) == NULL)
           ERROR (errno, "malloc");
         for (i = 0; i < comms[count_comms].size; i++)
           comms[count_comms].mapping[i] = i;
-    
+
         if ((comms[count_comms].other_mapping = malloc (comms[count_comms].other_size * sizeof(int))) == NULL)
           ERROR (errno, "malloc");
         for (i = 0; i < comms[count_comms].other_size; i++)
           comms[count_comms].other_mapping[i] = comms[count_comms].size + i;
-        
+
         MPI_CHECK (MPI_Comm_split (MPI_COMM_WORLD, comm_rank >= comm_size / 2, comm_rank, &tmp_comm));
-    
+
         /*
         * The MPI-standard doesn't require the remote_leader to be the same on all processes.
         * Here, we specify for process zero the correct value, all others
-        * (including the process comm_size/2 gets the value 0 -- which is correct for him, but 
+        * (including the process comm_size/2 gets the value 0 -- which is correct for him, but
         * not the others).
         *
         * More correct would be: (comm_rank < comm_size/2 ? comm_size/2 : 0).
@@ -345,15 +345,15 @@ int tst_comm_init (int * num_comms)
                                         (comm_rank == 0) ? comm_size / 2 : 0,
                                         count_comms,
                                         &comms[count_comms].mpi_comm));
-    
-    
+
+
         MPI_CHECK (MPI_Comm_free (&tmp_comm));
-        
-        comms[count_comms].class = TST_MPI_INTER_COMM; 
+
+        comms[count_comms].class = TST_MPI_INTER_COMM;
         if (++count_comms > COMM_NUM)
           ERROR (EINVAL, "Too many communicators, increase COMM_NUM");
       }
-    
+
       /*
       * Create an Intra-communicator merged out of the communicator created above...
       */
@@ -362,20 +362,20 @@ int tst_comm_init (int * num_comms)
         comms[count_comms].size = comm_size;
         comms[count_comms].other_size = 0;
         comms[count_comms].other_mapping = NULL;
-    
+
         if ((comms[count_comms].mapping = malloc (comms[count_comms].size * sizeof(int))) == NULL)
           ERROR (errno, "malloc");
         for (i = 0; i < comm_size; i++)
           comms[count_comms].mapping[i] = i;
-    
+
         MPI_CHECK (MPI_Intercomm_merge (comms[INTERCOMM_TO_MERGE].mpi_comm,
-                                        /*				    (comm_rank > comm_size/2),*/
+                                        /*                                    (comm_rank > comm_size/2),*/
                                         0,
                                         &comms[count_comms].mpi_comm));
         /*
         * A merged intercommunicator must have at least two processes!
         */
-        comms[count_comms].class = TST_MPI_INTRA_COMM; 
+        comms[count_comms].class = TST_MPI_INTRA_COMM;
         if (++count_comms > COMM_NUM)
           ERROR (EINVAL, "Too many communicators, increase COMM_NUM");
       }
@@ -456,7 +456,7 @@ int tst_comm_init (int * num_comms)
         MPI_Comm_size (comms[count_comms].mpi_comm, &tmp_size);
         MPI_Comm_rank (comms[count_comms].mpi_comm, &tmp_rank);
         if (tmp_size != j)
-          ERROR (EINVAL, "Invalid size for local communicator after cluster_color MPI_Comm_split"); 
+          ERROR (EINVAL, "Invalid size for local communicator after cluster_color MPI_Comm_split");
       );
       free (tmp_array);
 
@@ -503,14 +503,14 @@ void tst_comm_list (void)
   for (i = 0; i < TST_COMMS_NUM; i++)
     {
       if (comms[i].description[0] == '\0')
-	break;
+        break;
       printf ("Communicator:%d %s\n",
-	      i, comms[i].description);
+              i, comms[i].description);
     }
 
   for (i = 0; i < TST_COMMS_CLASS_NUM; i++)
     printf ("Communicator-Class:%d %s\n",
-	    i, tst_comms_class_strings[i]);
+            i, tst_comms_class_strings[i]);
 }
 
 
@@ -537,64 +537,64 @@ int tst_comm_select (const char * comm_string, int * comm_list, int * comm_list_
        * In case we match a complete class of tests, include every one!
        */
       if (!strcasecmp (comm_string, tst_comms_class_strings[i]))
-	{
-	  int j;
-	  DEBUG (printf ("comm_string:%s matched with tst_comms_class_strings[%d]:%s\n",
-			 comm_string, i, tst_comms_class_strings[i]));
-	  for (j = 0; j < TST_COMMS_NUM; j++)
-	    {
-	      /*
-	       * First search for this test in the comm_list -- if already in, continue!
-	       */
-	      if (tst_comm_search (j, comm_list, *comm_list_num))
-		{
-		  WARNING (printf ("Comm:%s selected through class:%s was already "
-				   "included in list -- not including\n",
-				   comms[j].description,
-				   tst_comms_class_strings[i]));
-		  continue;
-		}
+        {
+          int j;
+          DEBUG (printf ("comm_string:%s matched with tst_comms_class_strings[%d]:%s\n",
+                         comm_string, i, tst_comms_class_strings[i]));
+          for (j = 0; j < TST_COMMS_NUM; j++)
+            {
+              /*
+               * First search for this test in the comm_list -- if already in, continue!
+               */
+              if (tst_comm_search (j, comm_list, *comm_list_num))
+                {
+                  WARNING (printf ("Comm:%s selected through class:%s was already "
+                                   "included in list -- not including\n",
+                                   comms[j].description,
+                                   tst_comms_class_strings[i]));
+                  continue;
+                }
 
-	      if (comms[j].class & (1 << i))
-		{
-		  DEBUG (printf ("comm_string:%s test j:%d i:%d with class:%d matches, comm_list_num:%d\n",
-				 comm_string, j, (1 << i), comms[j].class, *comm_list_num));
-		  comm_list[*comm_list_num] = j;
-		  (*comm_list_num)++;
-		  if (*comm_list_num == comm_list_max)
-		    ERROR (EINVAL, "Too many user selected tests");
-		}
-	    }
-	  return 0;
-	}
+              if (comms[j].class & (1 << i))
+                {
+                  DEBUG (printf ("comm_string:%s test j:%d i:%d with class:%d matches, comm_list_num:%d\n",
+                                 comm_string, j, (1 << i), comms[j].class, *comm_list_num));
+                  comm_list[*comm_list_num] = j;
+                  (*comm_list_num)++;
+                  if (*comm_list_num == comm_list_max)
+                    ERROR (EINVAL, "Too many user selected tests");
+                }
+            }
+          return 0;
+        }
     }
 
   for (i = 0; i < TST_COMMS_NUM; i++)
     {
       if (!strcasecmp (comm_string, comms[i].description))
-	{
-	  if (tst_comm_search (i, comm_list, *comm_list_num))
-	    {
-	      WARNING (printf ("Comm:%s was already included in list -- not including\n",
-			       comms[i].description));
-	      return 0;
-	    }
-	  comm_list[*comm_list_num] = i;
-	  (*comm_list_num)++;
-	  if (*comm_list_num == comm_list_max)
-	    ERROR (EINVAL, "Too many user selected tests");
+        {
+          if (tst_comm_search (i, comm_list, *comm_list_num))
+            {
+              WARNING (printf ("Comm:%s was already included in list -- not including\n",
+                               comms[i].description));
+              return 0;
+            }
+          comm_list[*comm_list_num] = i;
+          (*comm_list_num)++;
+          if (*comm_list_num == comm_list_max)
+            ERROR (EINVAL, "Too many user selected tests");
 
-	  DEBUG (printf ("comm_string:%s matched with comm_list_num:%d\n",
-			 comm_string, *comm_list_num));
-	  
-	  return 0;
-	}
+          DEBUG (printf ("comm_string:%s matched with comm_list_num:%d\n",
+                         comm_string, *comm_list_num));
+
+          return 0;
+        }
     }
 
   {
     char buffer[128];
     sprintf (buffer, "Communicator %s not recognized",
-	     comm_string);
+             comm_string);
     ERROR (EINVAL, buffer);
   }
   return 0;

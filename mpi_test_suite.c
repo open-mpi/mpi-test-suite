@@ -26,26 +26,26 @@ int tst_tag_ub = 32766;
 int tst_hash_value (const struct tst_env * env)
 {
   return (env->comm * 65521 + /* Smallest prime smaller than 2^16 */
-	  env->type * 32749  + /* Smallest prime smaller than 2^16 */
-	  env->test) % tst_tag_ub;
+          env->type * 32749  + /* Smallest prime smaller than 2^16 */
+          env->test) % tst_tag_ub;
 }
 
 static int usage (void)
 {
   fprintf (stderr, "Usage: mpi_test_suite [-t tst] [-c comm] [-d datatype] [-n num_values] [-v] [-l] [-h]\n"
-	   "test:\t\tone (or more) tests or test-classes (see option -l) and\n"
-	   "comm:\t\tone (or more) communicator or communicator-classes (see option -l)\n"
-	   "datatype:\tone (or more) datatype or datatype-classes (see option -l)\n"
-	   "num_values:\thow many elements to communicate (default:%d)\n"
-	   "\n"
-	   "All multiple test/comm/datatype-declarations must be separated by commas\n"
-	   "The option -l/--list lists all available tests, communicators and datatypes\n"
-	   "and corresponding classes.\n"
-	   "\n"
-	   "The option -v, verbose mode is turned on\n"
-	   "The option -h shows this help\n",
-	   NUM_VALUES);
-  MPI_Finalize ();
+           "test:\t\tone (or more) tests or test-classes (see option -l) and\n"
+           "comm:\t\tone (or more) communicator or communicator-classes (see option -l)\n"
+           "datatype:\tone (or more) datatype or datatype-classes (see option -l)\n"
+           "num_values:\thow many elements to communicate (default:%d)\n"
+           "\n"
+           "All multiple test/comm/datatype-declarations must be separated by commas\n"
+           "The option -l/--list lists all available tests, communicators and datatypes\n"
+           "and corresponding classes.\n"
+           "\n"
+           "The option -v, verbose mode is turned on\n"
+           "The option -h shows this help\n",
+           NUM_VALUES);
+  MPI_Abort (MPI_COMM_WORLD, 0);
   exit (0);
   return 0;
 }
@@ -75,6 +75,10 @@ int main (int argc, char * argv[])
   MPI_Init (&argc, &argv);
   MPI_Comm_rank (MPI_COMM_WORLD, &tst_global_rank);
   MPI_Comm_size (MPI_COMM_WORLD, &tst_global_size);
+
+  printf ("(Rank:%d) pid:%ld Going to sleep\n", tst_global_rank, getpid());
+  sleep (30);
+
   MPI_CHECK (MPI_Attr_get (MPI_COMM_WORLD, MPI_TAG_UB, &val, &flag));
   if (!flag)
     ERROR (EINVAL, "Couldn't retrieve MPI_TAG_UB attribute");
@@ -82,8 +86,8 @@ int main (int argc, char * argv[])
   tst_tag_ub = *val;
 
   DEBUG (printf ("(Rank:%d) MPI_TAG_UB:%d\n",
-		 tst_global_rank, tst_tag_ub));
-  
+                 tst_global_rank, tst_tag_ub));
+
   tst_comm_init (&num_comms);
   tst_type_init (&num_types);
 
@@ -131,144 +135,144 @@ int main (int argc, char * argv[])
       /*
       int option_index = 0;
       const static struct option long_options[] = {
-	{"test", 1, NULL, 0},
-	{"communicator", 1, NULL, 0},
-	{"datatype", 1, NULL, 0},
-	{"list", 0, NULL, 0},
-	{"verbose", 0, NULL, 0},
-	{"help", 0, NULL, 0},
-	{NULL, 0, NULL, 0}
+        {"test", 1, NULL, 0},
+        {"communicator", 1, NULL, 0},
+        {"datatype", 1, NULL, 0},
+        {"list", 0, NULL, 0},
+        {"verbose", 0, NULL, 0},
+        {"help", 0, NULL, 0},
+        {NULL, 0, NULL, 0}
       };
       */
 
       c = getopt (argc, argv, "t:c:d:n:lvh");
- 
+
       if (c == -1)
-	break;
+        break;
 
       switch (c)
-	{
-      	case 't':
-	  {
-	    char * str;
-	    /*
-	     * At first, reset the tst_test_array
-	     */
-	    memset (tst_test_array, 0, sizeof (int)*num_tests);
-	    num_tests = 0;
-	    
-	    str = strtok (optarg, ",");
-	    while (str)
-	      {
-		tst_test_select (str, tst_test_array, &num_tests, tst_test_array_max);
-		str = strtok (NULL, ",");
-	      }
-	    break;
-	  }
+        {
+              case 't':
+          {
+            char * str;
+            /*
+             * At first, reset the tst_test_array
+             */
+            memset (tst_test_array, 0, sizeof (int)*num_tests);
+            num_tests = 0;
 
-	case 'c':
-	  {
-	    char * str;
-	    /*
-	     * At first, reset the tst_comm_array
-	     */
-	    memset (tst_comm_array, 0, sizeof (int)*num_comms);
-	    num_comms = 0;
-	    
-	    str = strtok (optarg, ",");
-	    while (str)
-	      {
-		tst_comm_select (str, tst_comm_array, &num_comms, tst_comm_array_max);
-		str = strtok (NULL, ",");
-	      }
-	    
-	    break;
-	  }
-	case 'd':
-	  {
-	    char * str;
-	    /*
-	     * At first, reset the tst_comm_array
-	     */
-	    memset (tst_type_array, 0, sizeof (int)*num_types);
-	    num_types = 0;
+            str = strtok (optarg, ",");
+            while (str)
+              {
+                tst_test_select (str, tst_test_array, &num_tests, tst_test_array_max);
+                str = strtok (NULL, ",");
+              }
+            break;
+          }
 
-	    str = strtok (optarg, ",");
-	    while (str)
-	      {
-		tst_type_select (str, tst_type_array, &num_types, tst_type_array_max);
-		str = strtok (NULL, ",");
-	      }
-	    break;
-	  }
-	case 'n':
-	  num_values = atoi (optarg);
-	  break;
-	case 'l':
-	  if (!tst_global_rank)
-	    {
-	      tst_test_list ();
-	      tst_comm_list ();
-	      tst_type_list ();
-	    }
-	  MPI_Finalize ();
-	  exit (0);
-	  break;
-	case 'v':
-	  tst_verbose = 1;
-	  break;
-	case '?':
-	case 'h':
-	  if (!tst_global_rank)
-	    usage();
-	  break;
-	default:
-	  if (!tst_global_rank)
-	    {
-	      printf ("UNKNOWN flag c:%c\n", c);
-	      usage ();
-	    }
-	}
+        case 'c':
+          {
+            char * str;
+            /*
+             * At first, reset the tst_comm_array
+             */
+            memset (tst_comm_array, 0, sizeof (int)*num_comms);
+            num_comms = 0;
+
+            str = strtok (optarg, ",");
+            while (str)
+              {
+                tst_comm_select (str, tst_comm_array, &num_comms, tst_comm_array_max);
+                str = strtok (NULL, ",");
+              }
+
+            break;
+          }
+        case 'd':
+          {
+            char * str;
+            /*
+             * At first, reset the tst_comm_array
+             */
+            memset (tst_type_array, 0, sizeof (int)*num_types);
+            num_types = 0;
+
+            str = strtok (optarg, ",");
+            while (str)
+              {
+                tst_type_select (str, tst_type_array, &num_types, tst_type_array_max);
+                str = strtok (NULL, ",");
+              }
+            break;
+          }
+        case 'n':
+          num_values = atoi (optarg);
+          break;
+        case 'l':
+          if (!tst_global_rank)
+            {
+              tst_test_list ();
+              tst_comm_list ();
+              tst_type_list ();
+            }
+          MPI_Finalize ();
+          exit (0);
+          break;
+        case 'v':
+          tst_verbose = 1;
+          break;
+        case '?':
+        case 'h':
+          if (!tst_global_rank)
+            usage();
+          break;
+        default:
+          if (!tst_global_rank)
+            {
+              printf ("UNKNOWN flag c:%c\n", c);
+              usage ();
+            }
+        }
     }
 
   /*
    * For every test included in the tst_*_array, check if runnable and run!
    */
   DEBUG (printf ("num_tests:%d num_comms:%d num_types:%d\n",
-		 num_tests, num_comms, num_types));
+                 num_tests, num_comms, num_types));
   for (i = 0; i < num_tests; i++)
     for (j = 0; j < num_comms; j++)
       for (k = 0; k < num_types; k++)
-	{
-	  tst_env.comm = tst_comm_array[j];
-	  tst_env.type = tst_type_array[k];
-	  tst_env.test = tst_test_array[i];
-	  tst_env.values_num = num_values;
+        {
+          tst_env.comm = tst_comm_array[j];
+          tst_env.type = tst_type_array[k];
+          tst_env.test = tst_test_array[i];
+          tst_env.values_num = num_values;
 
-	  if (!tst_test_check_run (&tst_env))
-	    {
-	      DEBUG(printf ("Not running tst_env.test:%d\n", tst_env.test));
-	      continue;
-	    }
+          if (!tst_test_check_run (&tst_env))
+            {
+              DEBUG(printf ("Not running tst_env.test:%d\n", tst_env.test));
+              continue;
+            }
 
-	  fflush (stderr);
-	  fflush (stdout);
-	  if (tst_test_check_sync (&tst_env))
-	    MPI_Barrier (MPI_COMM_WORLD);
+          fflush (stderr);
+          fflush (stdout);
+          if (tst_test_check_sync (&tst_env))
+            MPI_Barrier (MPI_COMM_WORLD);
 
-	  if (tst_global_rank == 0)
-	    printf ("%s tests %s (%d/%d), comm %s (%d/%d), type %s (%d/%d)\n",
-		    tst_test_getclass (tst_env.test),
-		    tst_test_getdescription (tst_env.test), tst_env.test+1, num_tests,
-		    tst_comm_getdescription (tst_env.comm), tst_env.comm+1, num_comms,
-		    tst_type_getdescription (tst_env.type), tst_env.type+1, num_types);
-	  tst_test_init_func (&tst_env);
-	  tst_test_run_func (&tst_env);
-	  tst_test_cleanup_func (&tst_env);
-	  if (tst_test_check_sync (&tst_env))
-	    MPI_Barrier (MPI_COMM_WORLD);
-	}
-  
+          if (tst_global_rank == 0)
+            printf ("%s tests %s (%d/%d), comm %s (%d/%d), type %s (%d/%d)\n",
+                    tst_test_getclass (tst_env.test),
+                    tst_test_getdescription (tst_env.test), tst_env.test+1, num_tests,
+                    tst_comm_getdescription (tst_env.comm), tst_env.comm+1, num_comms,
+                    tst_type_getdescription (tst_env.type), tst_env.type+1, num_types);
+          tst_test_init_func (&tst_env);
+          tst_test_run_func (&tst_env);
+          tst_test_cleanup_func (&tst_env);
+          if (tst_test_check_sync (&tst_env))
+            MPI_Barrier (MPI_COMM_WORLD);
+        }
+
   MPI_Finalize ();
   return 0;
 }
