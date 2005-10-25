@@ -100,7 +100,7 @@ int tst_p2p_simple_ring_bsend_cleanup (const struct tst_env * env)
   mpi_buffer = NULL;
   mpi_buffer_size = 0;
 
-  free (send_buffer);
-  free (recv_buffer);
+  tst_type_freevalues (env->type, send_buffer, env->values_num);
+  tst_type_freevalues (env->type, recv_buffer, env->values_num);
   return 0;
 }

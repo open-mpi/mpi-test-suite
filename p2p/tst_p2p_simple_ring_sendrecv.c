@@ -100,7 +100,7 @@ int tst_p2p_simple_ring_sendrecv_run (const struct tst_env * env)
 
 int tst_p2p_simple_ring_sendrecv_cleanup (const struct tst_env * env)
 {
-  free (send_buffer);
-  free (recv_buffer);
+  tst_type_freevalues (env->type, send_buffer, env->values_num);
+  tst_type_freevalues (env->type, recv_buffer, env->values_num);
   return 0;
 }

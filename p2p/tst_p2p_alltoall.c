@@ -137,9 +137,9 @@ int tst_p2p_alltoall_cleanup (const struct tst_env * env)
   int i;
   int comm_size;
 
-  free (send_buffer);
-
   comm = tst_comm_getcomm (env->comm);
+
+  tst_type_freevalues (env->type, send_buffer, env->values_num);
 
   if (tst_comm_getcommclass (env->comm) == TST_MPI_INTER_COMM)
     MPI_CHECK (MPI_Comm_remote_size (comm, &comm_size));
@@ -147,7 +147,7 @@ int tst_p2p_alltoall_cleanup (const struct tst_env * env)
     MPI_CHECK (MPI_Comm_size (comm, &comm_size));
 
   for (i = 0; i < comm_size; i++)
-    free (recv_buffer[i]);
+    tst_type_freevalues (env->type, recv_buffer[i], env->values_num);
 
   free (recv_buffer);
   free (req_buffer);

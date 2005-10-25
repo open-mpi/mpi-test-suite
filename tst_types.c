@@ -455,6 +455,16 @@ char * tst_type_allocvalues (const int type, const int values_num)
   return buffer;
 }
 
+int tst_type_freevalues (const int type, char * buffer, const int values_num)
+{
+  CHECK_ARG (type, -1);
+
+  buffer += tst_type_gettypelb(type);
+  free (buffer);
+
+  return 0;
+}
+
 #define TST_TYPE_SET(tst_type,c_type,c_type_caps)                                                \
   case tst_type:                                                                                 \
     {                                                                                            \

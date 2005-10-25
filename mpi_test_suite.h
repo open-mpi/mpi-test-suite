@@ -320,6 +320,7 @@ extern void tst_type_hexdump (const char * text, const char * data, int num);
 extern int tst_type_setvalue (int type, char * buffer, int mode, long long direct_value);
 extern int tst_type_cmpvalue (int type, const char * buffer1, const char * buffer2);
 extern char * tst_type_allocvalues (const int type, const int values_num);
+extern int tst_type_freevalues (const int type, char * buffer, const int values_num);
 extern int tst_type_checkstandardarray (int type, int values_num, char * buffer, int comm_rank);
 extern int tst_type_setstandardarray (int type, int values_num, char * buffer, int comm_rank);
 extern void tst_type_list (void);

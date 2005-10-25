@@ -17,9 +17,9 @@
 
 
 static int tst_coll_alltoall_setarray (int type, int values_num, char * send_buffer,
-				       int comm_rank, int comm_size);
+                                       int comm_rank, int comm_size);
 static int tst_coll_alltoall_checkarray (int type, int values_num, char * recv_buffer,
-					 int comm_rank, int comm_size);
+                                         int comm_rank, int comm_size);
 
 
 static char * send_buffer = NULL;
@@ -70,7 +70,7 @@ static int tst_coll_alltoall_setarray (int type, int values_num, char * send_buf
 
 
 static int tst_coll_alltoall_checkarray (int type, int values_num, char * recv_buffer,
-					 int comm_rank, int comm_size)
+                                         int comm_rank, int comm_size)
 {
   const int type_size = tst_type_gettypesize (type);
   char * cmp_value;
@@ -150,7 +150,7 @@ int tst_coll_alltoall_run (const struct tst_env * env)
 
 int tst_coll_alltoall_cleanup (const struct tst_env * env)
 {
-  free (send_buffer);
-  free (recv_buffer);
+  tst_type_freevalues (env->type, send_buffer, env->values_num);
+  tst_type_freevalues (env->type, recv_buffer, env->values_num);
   return 0;
 }

@@ -61,7 +61,7 @@ int tst_p2p_direct_partner_intercomm_run (const struct tst_env * env)
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
   MPI_CHECK (MPI_Comm_size (comm, &comm_size));
   MPI_CHECK (MPI_Comm_remote_size (comm, &remote_size));
-      
+
   if (comm_rank < remote_size)
     {
       send_to = comm_rank;
@@ -74,16 +74,16 @@ int tst_p2p_direct_partner_intercomm_run (const struct tst_env * env)
     }
 
   DEBUG (printf ("(Rank:%d) comm_rank:%d comm_size:%d remote_size:%d "
-		 "send_to:%d recv_from:%d\n",
+                 "send_to:%d recv_from:%d\n",
                  tst_global_rank, comm_rank, comm_size, remote_size,
-		 send_to, recv_from));
+                 send_to, recv_from));
 
   /*
    * In case of an Inter communicator, we need to send, then recv!!!!
    * Otherwise (for processes > 0) both will wait in MPI_Recv
    */
   MPI_CHECK (MPI_Sendrecv (send_buffer, env->values_num, type, send_to, 4711,
-			   recv_buffer, env->values_num, type, recv_from, 4711, comm, &status));
+                           recv_buffer, env->values_num, type, recv_from, 4711, comm, &status));
 
   if (status.MPI_SOURCE != recv_from ||
       (recv_from != MPI_PROC_NULL && status.MPI_TAG != 4711) ||
@@ -98,7 +98,7 @@ int tst_p2p_direct_partner_intercomm_run (const struct tst_env * env)
 
 int tst_p2p_direct_partner_intercomm_cleanup (const struct tst_env * env)
 {
-  free (send_buffer);
-  free (recv_buffer);
+  tst_type_freevalues (env->type, send_buffer, env->values_num);
+  tst_type_freevalues (env->type, recv_buffer, env->values_num);
   return 0;
 }

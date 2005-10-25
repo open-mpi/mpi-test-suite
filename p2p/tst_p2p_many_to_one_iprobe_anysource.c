@@ -98,6 +98,6 @@ int tst_p2p_many_to_one_iprobe_anysource_run (const struct tst_env * env)
 
 int tst_p2p_many_to_one_iprobe_anysource_cleanup (const struct tst_env * env)
 {
-  free (buffer);
+  tst_type_freevalues (env->type, buffer, env->values_num);
   return 0;
 }

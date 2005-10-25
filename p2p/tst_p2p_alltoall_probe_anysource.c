@@ -187,8 +187,8 @@ int tst_p2p_alltoall_probe_anysource_cleanup (const struct tst_env * env)
 
   for (i=0; i < comm_size; i++)
     {
-      free (buffer_send[i]);
-      free (buffer_recv[i]);
+      tst_type_freevalues (env->type, buffer_recv[i], env->values_num);
+      tst_type_freevalues (env->type, buffer_send[i], env->values_num);
     }
 
   free (buffer_send);
