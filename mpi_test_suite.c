@@ -76,8 +76,11 @@ int main (int argc, char * argv[])
   MPI_Comm_rank (MPI_COMM_WORLD, &tst_global_rank);
   MPI_Comm_size (MPI_COMM_WORLD, &tst_global_size);
 
-  printf ("(Rank:%d) pid:%ld Going to sleep\n", tst_global_rank, getpid());
-  sleep (30);
+  if (NULL != getenv ("MPI_TEST_SUITE_SLEEP"))
+    {
+      printf ("(Rank:%d) pid:%ld Going to sleep\n", tst_global_rank, getpid());
+      sleep (30);
+    }
 
   MPI_CHECK (MPI_Attr_get (MPI_COMM_WORLD, MPI_TAG_UB, &val, &flag));
   if (!flag)

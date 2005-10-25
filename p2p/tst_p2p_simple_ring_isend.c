@@ -66,7 +66,7 @@ int tst_p2p_simple_ring_isend_run (const struct tst_env * env)
     {
       MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
       MPI_CHECK (MPI_Comm_size (comm, &comm_size));
-      
+
       send_to = (comm_rank + 1) % comm_size;
       recv_from = (comm_rank + comm_size - 1) % comm_size;
     }
@@ -74,9 +74,9 @@ int tst_p2p_simple_ring_isend_run (const struct tst_env * env)
     ERROR (EINVAL, "tst_p2p_simple_ring_isend cannot run with this kind of communicator");
 
   DEBUG (printf ("(Rank:%d) comm_rank:%d comm_size:%d "
-		 "send_to:%d recv_from:%d 4711:%d\n",
+                 "send_to:%d recv_from:%d 4711:%d\n",
                  tst_global_rank, comm_rank, comm_size,
-		 send_to, recv_from, 4711));
+                 send_to, recv_from, 4711));
 
   MPI_CHECK (MPI_Isend (send_buffer, env->values_num, type, send_to, 4711, comm, &requests[0]));
   MPI_CHECK (MPI_Irecv (recv_buffer, env->values_num, type, recv_from, 4711, comm, &requests[1]));
@@ -91,7 +91,7 @@ int tst_p2p_simple_ring_isend_run (const struct tst_env * env)
       (recv_from != MPI_PROC_NULL && statuses[1].MPI_TAG != 4711) ||
       (recv_from == MPI_PROC_NULL && statuses[1].MPI_TAG != MPI_ANY_TAG))
     ERROR (EINVAL, "Error in statuses");
-  
+
   if (recv_from != MPI_PROC_NULL)
     tst_type_checkstandardarray (env->type, env->values_num, recv_buffer, recv_from);
 

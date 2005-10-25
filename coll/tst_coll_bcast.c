@@ -65,7 +65,7 @@ int tst_coll_bcast_run (const struct tst_env * env)
         }
 #else
       root = 0; /* Just to satisfy gcc -- this shouldn't get called with TST_MPI_INTER_COMM,
-		   if we don't HAVE_MPI_EXTENDED_COLLECTIVES */
+                   if we don't HAVE_MPI_EXTENDED_COLLECTIVES */
 #endif /* HAVE_MPI_EXTENDED_COLLECTIVES */
 
       DEBUG (printf ("(Rank:%d) Going to Bcast with root:%d\n",

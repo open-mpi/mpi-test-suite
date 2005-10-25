@@ -41,7 +41,7 @@ int tst_p2p_alltoall_irsend_init (const struct tst_env * env)
    */
   comm = tst_comm_getcomm (env->comm);
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
-  
+
   if (tst_comm_getcommclass (env->comm) == TST_MPI_INTRA_COMM)
     MPI_CHECK (MPI_Comm_size (comm, &comm_size));
   else
@@ -49,7 +49,7 @@ int tst_p2p_alltoall_irsend_init (const struct tst_env * env)
 
   send_buffer = tst_type_allocvalues (env->type, env->values_num);
   tst_type_setstandardarray (env->type, env->values_num,
-			     send_buffer, comm_rank);
+                             send_buffer, comm_rank);
 
   if ((req_buffer = malloc (2 * sizeof (MPI_Request) * comm_size)) == NULL)
     ERROR (errno, "malloc");
@@ -59,7 +59,7 @@ int tst_p2p_alltoall_irsend_init (const struct tst_env * env)
 
   if ((recv_buffer = malloc (sizeof (char*) * comm_size)) == NULL)
     ERROR (errno, "malloc");
-  
+
   for (i=0; i < comm_size; i++)
     {
       recv_buffer[i] = tst_type_allocvalues (env->type, env->values_num);
@@ -96,11 +96,11 @@ int tst_p2p_alltoall_irsend_run (const struct tst_env * env)
     {
       req_buffer[2*rank + 1] = MPI_REQUEST_NULL;
       MPI_CHECK (MPI_Irecv (recv_buffer[rank], env->values_num, type,
-			    comm_size - rank - 1, 4711, comm,
-			    &(req_buffer[2*rank + 1])));
+                            comm_size - rank - 1, 4711, comm,
+                            &(req_buffer[2*rank + 1])));
 
       if (req_buffer[2*rank + 1] == MPI_REQUEST_NULL)
-	ERROR (EINVAL, "Error in request after MPI_Irecv");
+        ERROR (EINVAL, "Error in request after MPI_Irecv");
     }
 
   MPI_Barrier (comm);
@@ -112,13 +112,12 @@ int tst_p2p_alltoall_irsend_run (const struct tst_env * env)
     {
       req_buffer[2*rank + 0] = MPI_REQUEST_NULL;
       MPI_CHECK (MPI_Irsend (send_buffer, env->values_num, type,
-			     rank, 4711, comm,
-			     &(req_buffer[2*rank + 0])));
+                             rank, 4711, comm,
+                             &(req_buffer[2*rank + 0])));
       if (req_buffer[2*rank + 0] == MPI_REQUEST_NULL)
-	ERROR (EINVAL, "Error in request after MPI_Isend");
+        ERROR (EINVAL, "Error in request after MPI_Isend");
     }
 
-  
   MPI_CHECK (MPI_Waitall (comm_size*2, req_buffer, status_buffer));
 
   for (rank = 0; rank < comm_size; rank++)
@@ -128,17 +127,17 @@ int tst_p2p_alltoall_irsend_run (const struct tst_env * env)
         ERROR (EINVAL, "Requests are not reset to MPI_REQUEST_NULL");
 
       if (status_buffer[2*rank+1].MPI_SOURCE != comm_size - rank - 1  ||
-	  status_buffer[2*rank+1].MPI_TAG != 4711)
-	{
-	  DEBUG (printf ("(Rank:%d) rank:%d comm_size:%d should be:%d "
-			 "MPI_SOURCE:%d MPI_TAG:%d\n",
-			 comm_rank, rank, comm_size, comm_size - rank-1,
-			 status_buffer[2*rank+1].MPI_SOURCE,
-			 status_buffer[2*rank+1].MPI_TAG));
-	  ERROR (EINVAL, "Error in communication");
-	}
+          status_buffer[2*rank+1].MPI_TAG != 4711)
+        {
+          DEBUG (printf ("(Rank:%d) rank:%d comm_size:%d should be:%d "
+                         "MPI_SOURCE:%d MPI_TAG:%d\n",
+                         comm_rank, rank, comm_size, comm_size - rank-1,
+                         status_buffer[2*rank+1].MPI_SOURCE,
+                         status_buffer[2*rank+1].MPI_TAG));
+          ERROR (EINVAL, "Error in communication");
+        }
       tst_type_checkstandardarray (env->type, env->values_num,
-				   recv_buffer[rank], comm_size - rank - 1);
+                                   recv_buffer[rank], comm_size - rank - 1);
     }
   return 0;
 }
@@ -149,7 +148,7 @@ int tst_p2p_alltoall_irsend_cleanup (const struct tst_env * env)
   int i;
   int comm_size;
 
-  free (send_buffer);    
+  free (send_buffer);
   free (req_buffer);
   free (status_buffer);
 
@@ -162,7 +161,7 @@ int tst_p2p_alltoall_irsend_cleanup (const struct tst_env * env)
 
   for (i = 0; i < comm_size; i++)
     free (recv_buffer[i]);
-    
+
   free (recv_buffer);
 
   return 0;

@@ -81,9 +81,9 @@ int tst_p2p_simple_ring_sendrecv_run (const struct tst_env * env)
     ERROR (EINVAL, "tst_p2p_simple_ring cannot run with this kind of communicator");
 
   DEBUG (printf ("(Rank:%d) comm_rank:%d comm_size:%d "
-		 "send_to:%d recv_from:%d 4711:%d\n",
+                 "send_to:%d recv_from:%d 4711:%d\n",
                  tst_global_rank, comm_rank, comm_size,
-		 send_to, recv_from, 4711));
+                 send_to, recv_from, 4711));
 
   MPI_CHECK (MPI_Sendrecv (send_buffer, env->values_num, type, send_to, 4711, recv_buffer, env->values_num, type, recv_from, 4711, comm, &status));
 

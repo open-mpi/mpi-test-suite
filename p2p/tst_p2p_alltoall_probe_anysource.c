@@ -115,32 +115,32 @@ int tst_p2p_alltoall_probe_anysource_run (const struct tst_env * env)
       int flag;
 
       DEBUG (printf ("(Rank:%d) Going to MPI_Ibsend to dest:%d\n",
-		     comm_rank, dest));
-      
+                     comm_rank, dest));
+
       MPI_CHECK (MPI_Ibsend (buffer_send[dest], env->values_num, type, dest, comm_rank, comm, &requests[dest]));
       MPI_CHECK (MPI_Iprobe (MPI_ANY_SOURCE, MPI_ANY_TAG, comm, &flag, &status));
       if (flag)
-	{
-	  DEBUG (printf ("(Rank:%d) Early finish from source:%d received_num:%d\n",
-			 comm_rank, status.MPI_SOURCE, received_num));
-	  if (status.MPI_SOURCE < 0 ||
-	      status.MPI_SOURCE >= comm_size ||
-	      status.MPI_SOURCE == comm_rank ||
-	      status.MPI_TAG != status.MPI_SOURCE)
-	    ERROR (EINVAL, "Error in status after MPI_Iprobe");
+        {
+          DEBUG (printf ("(Rank:%d) Early finish from source:%d received_num:%d\n",
+                         comm_rank, status.MPI_SOURCE, received_num));
+          if (status.MPI_SOURCE < 0 ||
+              status.MPI_SOURCE >= comm_size ||
+              status.MPI_SOURCE == comm_rank ||
+              status.MPI_TAG != status.MPI_SOURCE)
+            ERROR (EINVAL, "Error in status after MPI_Iprobe");
 
-	  source = status.MPI_SOURCE;
-	  tag = status.MPI_TAG;
-	  
-	  MPI_CHECK (MPI_Recv (buffer_recv[source], env->values_num, type, source, tag, comm, &status));
-	  if (source != tag ||
-	      status.MPI_SOURCE != source ||
-	      status.MPI_TAG != tag)
-	    ERROR (EINVAL, "Error in status after MPI_Recv");
-	  tst_type_checkstandardarray (env->type, env->values_num, buffer_recv[source], source + comm_rank);
-	  
-	  received_num--;
-	}
+          source = status.MPI_SOURCE;
+          tag = status.MPI_TAG;
+
+          MPI_CHECK (MPI_Recv (buffer_recv[source], env->values_num, type, source, tag, comm, &status));
+          if (source != tag ||
+              status.MPI_SOURCE != source ||
+              status.MPI_TAG != tag)
+            ERROR (EINVAL, "Error in status after MPI_Recv");
+          tst_type_checkstandardarray (env->type, env->values_num, buffer_recv[source], source + comm_rank);
+
+          received_num--;
+        }
     }
 
   MPI_CHECK (MPI_Waitall (comm_size, requests, statuses));
@@ -150,19 +150,19 @@ int tst_p2p_alltoall_probe_anysource_run (const struct tst_env * env)
       MPI_CHECK (MPI_Probe (MPI_ANY_SOURCE, MPI_ANY_TAG, comm, &status));
 
       if (status.MPI_SOURCE < 0 ||
-	  status.MPI_SOURCE >= comm_size ||
-	  status.MPI_SOURCE == comm_rank ||
-	  status.MPI_TAG != status.MPI_SOURCE)
-	ERROR (EINVAL, "Error in status after MPI_Probe");
-      
+          status.MPI_SOURCE >= comm_size ||
+          status.MPI_SOURCE == comm_rank ||
+          status.MPI_TAG != status.MPI_SOURCE)
+        ERROR (EINVAL, "Error in status after MPI_Probe");
+
       source = status.MPI_SOURCE;
       tag = status.MPI_TAG;
-      
+
       MPI_CHECK (MPI_Recv (buffer_recv[source], env->values_num, type, source, tag, comm, &status));
       if (source != tag ||
-	  status.MPI_SOURCE != source ||
-	  status.MPI_TAG != tag)
-	ERROR (EINVAL, "Error in status after MPI_Recv");
+          status.MPI_SOURCE != source ||
+          status.MPI_TAG != tag)
+        ERROR (EINVAL, "Error in status after MPI_Recv");
       tst_type_checkstandardarray (env->type, env->values_num, buffer_recv[source], source + comm_rank);
 
       received_num--;
@@ -190,7 +190,7 @@ int tst_p2p_alltoall_probe_anysource_cleanup (const struct tst_env * env)
       free (buffer_send[i]);
       free (buffer_recv[i]);
     }
-    
+
   free (buffer_send);
   free (buffer_recv);
   free (received);

@@ -273,7 +273,7 @@ struct tst_mpi_type_mix {
     struct tst_mpi_2int k;
 };
 
-#define TST_MPI_TYPE_MIX_ARRAY_NUM 3
+#define TST_MPI_TYPE_MIX_ARRAY_NUM 10
 struct tst_mpi_type_mix_array {
     char a[TST_MPI_TYPE_MIX_ARRAY_NUM];
     short b[TST_MPI_TYPE_MIX_ARRAY_NUM];

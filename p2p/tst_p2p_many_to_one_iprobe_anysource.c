@@ -2,7 +2,7 @@
  * File: tst_p2p_many_to_one.c
  *
  * Functionality:
- *  Simple point-to-point many-to-one test, with everyone in the comm sending blocking to 
+ *  Simple point-to-point many-to-one test, with everyone in the comm sending blocking to
  *  process zero, which receives with MPI_ANY_SOURCE.
  *  Works with intra- and inter- communicators and up to now with any C (standard and struct) type.
  *
@@ -68,24 +68,24 @@ int tst_p2p_many_to_one_iprobe_anysource_run (const struct tst_env * env)
 
       for (rank = 0; rank < comm_size-1; rank++)
         {
-	  int source;
-	  int tag;
-	  int flag;
+          int source;
+          int tag;
+          int flag;
 
-	  for (flag=0; !flag; )
-	    MPI_CHECK (MPI_Iprobe (MPI_ANY_SOURCE, MPI_ANY_TAG, comm, &flag, &status));
+          for (flag=0; !flag; )
+            MPI_CHECK (MPI_Iprobe (MPI_ANY_SOURCE, MPI_ANY_TAG, comm, &flag, &status));
 
-	  if (status.MPI_SOURCE == 0 ||
-	      status.MPI_SOURCE >= comm_size ||
-	      status.MPI_TAG != hash_value)
-	    ERROR (EINVAL, "Error in status after MPI_Probe");
+          if (status.MPI_SOURCE == 0 ||
+              status.MPI_SOURCE >= comm_size ||
+              status.MPI_TAG != hash_value)
+            ERROR (EINVAL, "Error in status after MPI_Probe");
 
-	  source = status.MPI_SOURCE;
-	  tag = status.MPI_TAG;
+          source = status.MPI_SOURCE;
+          tag = status.MPI_TAG;
 
           MPI_CHECK (MPI_Recv (buffer, env->values_num, type, source, tag, comm, &status));
           if (status.MPI_SOURCE != source ||
-	      status.MPI_TAG != tag)
+              status.MPI_TAG != tag)
             ERROR (EINVAL, "Error in status after MPI_Recv");
           tst_type_checkstandardarray (env->type, env->values_num, buffer, source);
         }
