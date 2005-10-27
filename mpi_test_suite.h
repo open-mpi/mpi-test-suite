@@ -117,6 +117,7 @@
 #define TST_MPI_INT_STRUCT        ((tst_uint64)0x1 << 37)
 #define TST_MPI_TYPE_MIX          ((tst_uint64)0x1 << 38)
 #define TST_MPI_TYPE_MIX_ARRAY    ((tst_uint64)0x1 << 39)
+#define TST_MPI_TYPE_MIX_LB_UB    ((tst_uint64)0x1 << 40)
 
 
 #define TST_MPI_STANDARD_C_INT_TYPES \
@@ -165,7 +166,8 @@
 
 #define TST_MPI_DERIVED_MIXED_TYPES \
   (TST_MPI_TYPE_MIX | \
-   TST_MPI_TYPE_MIX_ARRAY)
+   TST_MPI_TYPE_MIX_ARRAY | \
+   TST_MPI_TYPE_MIX_LB_UB)
 
 
 #define TST_MPI_STANDARD_FORTRAN_INT_TYPES TST_MPI_INTEGER
