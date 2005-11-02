@@ -72,6 +72,12 @@ static struct tst_test tst_tests[] = {
    TST_NONE,
    &tst_p2p_simple_ring_sendrecv_init, &tst_p2p_simple_ring_sendrecv_run, &tst_p2p_simple_ring_sendrecv_cleanup},
 
+  {TST_CLASS_P2P, "Ring same value",
+   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   TST_MPI_ALL_C_TYPES,
+   TST_SYNC,
+   &tst_p2p_simple_ring_xsend_init, &tst_p2p_simple_ring_xsend_run, &tst_p2p_simple_ring_xsend_cleanup},
+
   {TST_CLASS_P2P, "Direct Partner Intercomm",
    TST_MPI_INTER_COMM,
    TST_MPI_ALL_C_TYPES,

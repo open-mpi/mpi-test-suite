@@ -53,7 +53,8 @@ OBJ =	mpi_test_suite.o			\
 	p2p/tst_p2p_simple_ring_bsend.o		\
 	p2p/tst_p2p_simple_ring_isend.o		\
 	p2p/tst_p2p_simple_ring_ssend.o		\
-	p2p/tst_p2p_simple_ring_sendrecv.o
+	p2p/tst_p2p_simple_ring_sendrecv.o	\
+	p2p/tst_p2p_simple_ring_xsend.o
 
 
 ####################################################################
