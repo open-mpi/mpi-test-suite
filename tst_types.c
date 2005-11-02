@@ -367,7 +367,7 @@ int tst_type_init (int * num_types)
 	    MPI_DOUBLE,
 	    MPI_UB };
     for(i=0 ; i <  8; i++) block_mix[i]=1;
-    MPI_Type_struct(8, block_mix, disp_array, mix_type, &(types[num].mpi_datatype)); 
+    MPI_Type_struct(8, block_mix, disp_array, mix_type, &(types[num].mpi_datatype));
     MPI_Type_commit(&(types[num].mpi_datatype));
     types[num].type_num = 6;
     types[num].type_mapping[0] = TST_MPI_CHAR;
@@ -378,7 +378,7 @@ int tst_type_init (int * num_types)
     types[num].type_mapping[5] = TST_MPI_DOUBLE;
     MPI_Type_lb ((types[num].mpi_datatype), &(types[num].lb));
     MPI_Type_ub ((types[num].mpi_datatype), &(types[num].ub));
-    
+
     num++;
   }
 
@@ -792,8 +792,7 @@ int tst_type_freevalues (const int type, char * buffer, const int values_num)
       return -1;                                                                                 \
       }                                                                                          \
       break;                                                                                     \
-    }                                                                                             
-
+    }
 
 
 int tst_type_setvalue (int type, char * buffer, int type_set, long long direct_value)
@@ -1048,7 +1047,8 @@ int tst_type_select (const char * type_string,
               if (types[j].type_class & tst_types_class_strings[i].class)
                 {
                   DEBUG (printf ("type_string:%s test j:%d i:%d with class:%d matches, type_list_num:%d\n",
-                                 type_string, j, (1 << i), types[j].type_class, *type_list_num));
+                                 type_string, j, (1 << i), types[j].type_class,
+                                 *type_list_num));
                   type_list[*type_list_num] = j;
                   (*type_list_num)++;
                   if (*type_list_num == type_list_max)
