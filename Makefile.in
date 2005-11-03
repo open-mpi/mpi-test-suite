@@ -37,6 +37,7 @@ OBJ =	mpi_test_suite.o			\
 	coll/tst_coll_alltoall.o		\
 	coll/tst_coll_bcast.o			\
 	coll/tst_coll_gather.o			\
+	coll/tst_coll_scan_sum.o			\
 	coll/tst_coll_scatter.o			\
 	coll/tst_coll_scatterv.o		\
 	coll/tst_coll_scatterv_stride.o		\

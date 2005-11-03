@@ -154,6 +154,19 @@ static struct tst_test tst_tests[] = {
    * XXX should allow TST_MPI_INTER_COMM depending on whether the underlying
    * MPI supports it!
    */
+  {TST_CLASS_COLL, "Scan sum",
+   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   (TST_MPI_STANDARD_C_INT_TYPES |
+     TST_MPI_STANDARD_C_FLOAT_TYPES |
+     TST_MPI_STANDARD_FORTRAN_COMPLEX_TYPES) &
+   ~(TST_MPI_CHAR | TST_MPI_UNSIGNED_CHAR | TST_MPI_BYTE),
+   TST_SYNC,            /* No synchronization needed */
+   &tst_coll_scan_sum_init, &tst_coll_scan_sum_run, &tst_coll_scan_sum_cleanup},
+
+  /*
+   * XXX should allow TST_MPI_INTER_COMM depending on whether the underlying
+   * MPI supports it!
+   */
   {TST_CLASS_COLL, "Scatter",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
    TST_MPI_ALL_C_TYPES,
