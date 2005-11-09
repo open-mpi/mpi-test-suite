@@ -202,8 +202,6 @@ case "$host" in
       lib_mpi="mpi"
     elif test -f "$mpi_lib_dir/libmpi.so" ; then
       lib_mpi="mpi"
-    elif test -f "$mpi_lib_dir/libmpi.so" ; then
-      lib_mpi="mpi"
     elif test -f "$mpi_lib_dir/libmpich.a" ; then
       lib_mpi="mpich"
     else
