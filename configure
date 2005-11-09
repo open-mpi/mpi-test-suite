@@ -4212,6 +4212,14 @@ echo "$as_me: error: neither libmpi nor libmpi_ss found; check path for MPI pack
    { (exit 1); exit 1; }; }
     fi
   ;;
+  *-apple-*)                     if test -f "$mpi_lib_dir/libmpi.dylib" ; then
+      lib_mpi="mpi"
+    else
+      { { echo "$as_me:$LINENO: error: neither libmpi nor libmpi_ss found; check path for MPI package first..." >&5
+echo "$as_me: error: neither libmpi nor libmpi_ss found; check path for MPI package first..." >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+  ;;
   *)                             if test -f "$mpi_lib_dir/libmpi.a" ; then
       lib_mpi="mpi"
     elif test -f "$mpi_lib_dir/libmpi.so" ; then

@@ -197,6 +197,13 @@ case "$host" in
       AC_MSG_ERROR([neither libmpi nor libmpi_ss found; check path for MPI package first...])
     fi
   ;;
+  *-apple-*)                 dnl MAC OS 10.*
+    if test -f "$mpi_lib_dir/libmpi.dylib" ; then
+      lib_mpi="mpi"
+    else
+      AC_MSG_ERROR([neither libmpi nor libmpi_ss found; check path for MPI package first...])
+    fi
+  ;;
   *)                         dnl All other machines
     if test -f "$mpi_lib_dir/libmpi.a" ; then
       lib_mpi="mpi"
