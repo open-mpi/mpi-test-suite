@@ -162,6 +162,16 @@ static struct tst_test tst_tests[] = {
    * XXX should allow TST_MPI_INTER_COMM depending on whether the underlying
    * MPI supports it!
    */
+  {TST_CLASS_COLL, "Allgather",
+   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   TST_MPI_ALL_C_TYPES,
+   TST_NONE,            /* No synchronization needed */
+   &tst_coll_allgather_init, &tst_coll_allgather_run, &tst_coll_allgather_cleanup},
+
+  /*
+   * XXX should allow TST_MPI_INTER_COMM depending on whether the underlying
+   * MPI supports it!
+   */
   {TST_CLASS_COLL, "Scan sum",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
    (TST_MPI_STANDARD_C_INT_TYPES |
@@ -190,7 +200,11 @@ static struct tst_test tst_tests[] = {
    TST_MPI_ALL_C_TYPES,
    TST_NONE,            /* No synchronization needed */
    &tst_coll_scatterv_init, &tst_coll_scatterv_run, &tst_coll_scatterv_cleanup},
-
+  
+  /*
+   * XXX should allow TST_MPI_INTER_COMM depending on whether the underlying
+   * MPI supports it!
+   */
   {TST_CLASS_COLL, "Scatterv_stride",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
    TST_MPI_ALL_C_TYPES,

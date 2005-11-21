@@ -407,6 +407,10 @@ extern int tst_coll_gather_init (const struct tst_env * env);
 extern int tst_coll_gather_run (const struct tst_env * env);
 extern int tst_coll_gather_cleanup (const struct tst_env * env);
 
+extern int tst_coll_allgather_init (const struct tst_env * env);
+extern int tst_coll_allgather_run (const struct tst_env * env);
+extern int tst_coll_allgather_cleanup (const struct tst_env * env);
+
 extern int tst_coll_scan_sum_init (const struct tst_env * env);
 extern int tst_coll_scan_sum_run (const struct tst_env * env);
 extern int tst_coll_scan_sum_cleanup (const struct tst_env * env);
