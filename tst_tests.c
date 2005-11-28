@@ -48,6 +48,12 @@ static struct tst_test tst_tests[] = {
    TST_SYNC,
    &tst_p2p_simple_ring_init, &tst_p2p_simple_ring_run, &tst_p2p_simple_ring_cleanup},
 
+{TST_CLASS_P2P, "Ring Send Bottom",
+   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   TST_MPI_ALL_C_TYPES,
+   TST_SYNC,
+   &tst_p2p_simple_ring_bottom_init, &tst_p2p_simple_ring_bottom_run, &tst_p2p_simple_ring_bottom_cleanup},
+
   {TST_CLASS_P2P, "Ring Isend",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
    TST_MPI_ALL_C_TYPES,

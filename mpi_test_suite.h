@@ -379,6 +379,10 @@ extern int tst_p2p_simple_ring_init (const struct tst_env * env);
 extern int tst_p2p_simple_ring_run (const struct tst_env * env);
 extern int tst_p2p_simple_ring_cleanup (const struct tst_env * env);
 
+extern int tst_p2p_simple_ring_bottom_init (const struct tst_env * env);
+extern int tst_p2p_simple_ring_bottom_run (const struct tst_env * env);
+extern int tst_p2p_simple_ring_bottom_cleanup (const struct tst_env * env);
+
 extern int tst_p2p_simple_ring_bsend_init (const struct tst_env * env);
 extern int tst_p2p_simple_ring_bsend_run (const struct tst_env * env);
 extern int tst_p2p_simple_ring_bsend_cleanup (const struct tst_env * env);
