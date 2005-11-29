@@ -87,7 +87,7 @@ int tst_p2p_many_to_one_iprobe_anysource_run (const struct tst_env * env)
           if (status.MPI_SOURCE != source ||
               status.MPI_TAG != tag)
             ERROR (EINVAL, "Error in status after MPI_Recv");
-          tst_type_checkstandardarray (env->type, env->values_num, buffer, source);
+          tst_test_checkstandardarray (env, buffer, source);
         }
     }
   else

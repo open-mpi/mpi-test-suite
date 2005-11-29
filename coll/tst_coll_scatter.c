@@ -65,7 +65,7 @@ int tst_coll_scatter_run (const struct tst_env * env)
                               recv_buffer, env->values_num, type,
                               i, comm));
 
-      tst_type_checkstandardarray (env->type, env->values_num, recv_buffer, i);
+      tst_test_checkstandardarray (env, recv_buffer, i);
     }
 
   return 0;

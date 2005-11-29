@@ -115,15 +115,22 @@ int tst_p2p_simple_ring_xsend_run (const struct tst_env * env)
     {
       const int type_size = tst_type_gettypesize (env->type);
       int i;
+      int errors=0;
 
       tst_type_setvalue (env->type, check_buffer, TST_TYPE_SET_VALUE, recv_from);
 
       for (i = 0; i < env->values_num; i++)
         if (0 != tst_type_cmpvalue (env->type, check_buffer, &recv_buffer[i*type_size]))
           {
-            tst_type_hexdump ("Expected cmp_value", check_buffer, type_size);
-            tst_type_hexdump ("Received buffer", &(recv_buffer[i*type_size]), type_size);
+            if (tst_report >= TST_REPORT_FULL)
+              {
+                tst_type_hexdump ("Expected cmp_value", check_buffer, type_size);
+                tst_type_hexdump ("Received buffer", &(recv_buffer[i*type_size]), type_size);
+              }
+            errors++;
           }
+      if (errors)
+        tst_test_recordfailure (env);
     }
 
   return 0;

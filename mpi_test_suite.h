@@ -285,9 +285,20 @@ struct tst_mpi_type_mix_array {
     double f[TST_MPI_TYPE_MIX_ARRAY_NUM];
 };
 
+
+extern char * tst_reports[];
 extern int tst_global_rank;
 extern int tst_verbose;
+extern int tst_report;
 
+enum {
+  TST_REPORT_SUMMARY=0,     /* No output, except for failed tests at the end of the run */
+  TST_REPORT_RUN,           /* Output every test that runs, plus the previous */
+  TST_REPORT_FULL,          /* Full output, including the hexdump of wrong memory */
+  TST_REPORT_MAX
+} tst_report_types;
+
+#define TST_TESTS_NUM_FAILED_MAX 1000
 
 /*
  * Global function definitions
@@ -312,6 +323,11 @@ extern int tst_test_check_sync (struct tst_env * env);
 extern void tst_test_list (void);
 extern int tst_test_select (const char * test_string,
                             int * test_list, int * test_list_num, const int test_list_max);
+extern int tst_test_checkstandardarray (const struct tst_env * env,
+                                        char * buffer,
+                                        int comm_rank);
+extern int tst_test_recordfailure (const struct tst_env * env);
+extern int tst_test_print_failed (void);
 
 extern int tst_type_init (int * num_types);
 extern MPI_Datatype tst_type_getdatatype (int type);

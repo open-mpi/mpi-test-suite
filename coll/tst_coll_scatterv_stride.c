@@ -107,7 +107,7 @@ int tst_coll_scatterv_stride_run (const struct tst_env * env)
                                recv_buffer, comm_rank, type,
                                root, comm));
 
-      tst_type_checkstandardarray (env->type, comm_rank, recv_buffer, comm_rank);
+      tst_test_checkstandardarray (env, recv_buffer, comm_rank);
 
       /*
        * Now, check the send_buffer for the values NOT send, whether they still are the same

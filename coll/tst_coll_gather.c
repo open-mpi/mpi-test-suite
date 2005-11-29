@@ -65,7 +65,7 @@ int tst_coll_gather_run (const struct tst_env * env)
                              i, comm));
       if (comm_rank == i)
         for (j = 0; j < comm_size; j++)
-          tst_type_checkstandardarray (env->type, env->values_num, &(recv_buffer[j * env->values_num * type_size]), j);
+          tst_test_checkstandardarray (env, &(recv_buffer[j * env->values_num * type_size]), j);
     }
 
   return 0;

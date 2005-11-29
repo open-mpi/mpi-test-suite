@@ -137,7 +137,7 @@ int tst_p2p_alltoall_probe_anysource_run (const struct tst_env * env)
               status.MPI_SOURCE != source ||
               status.MPI_TAG != tag)
             ERROR (EINVAL, "Error in status after MPI_Recv");
-          tst_type_checkstandardarray (env->type, env->values_num, buffer_recv[source], source + comm_rank);
+          tst_test_checkstandardarray (env, buffer_recv[source], source + comm_rank);
 
           received_num--;
         }
@@ -163,7 +163,7 @@ int tst_p2p_alltoall_probe_anysource_run (const struct tst_env * env)
           status.MPI_SOURCE != source ||
           status.MPI_TAG != tag)
         ERROR (EINVAL, "Error in status after MPI_Recv");
-      tst_type_checkstandardarray (env->type, env->values_num, buffer_recv[source], source + comm_rank);
+      tst_test_checkstandardarray (env, buffer_recv[source], source + comm_rank);
 
       received_num--;
     }

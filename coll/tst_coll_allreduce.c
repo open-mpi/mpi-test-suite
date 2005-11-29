@@ -53,7 +53,7 @@ int tst_coll_allreduce_run (const struct tst_env * env)
 
   MPI_CHECK (MPI_Allreduce (send_buffer, recv_buffer, env->values_num, type, MPI_MAX, comm));
 
-  tst_type_checkstandardarray (env->type, env->values_num, recv_buffer, (comm_size - 1));
+  tst_test_checkstandardarray (env, recv_buffer, (comm_size - 1));
 
   return 0;
 }

@@ -106,7 +106,7 @@ int tst_p2p_alltoall_xisend_run (const struct tst_env * env)
   for (rank = 0; rank < comm_size; rank++)
     {
       req_buffer[2*rank + 0] = MPI_REQUEST_NULL;
-      MPI_CHECK (MPI_Isend (send_buffer, 1 , send_type,
+      MPI_CHECK (MPI_Isend (send_buffer, 1, send_type,
                             rank, 4711, comm,
                             &(req_buffer[2*rank + 0])));
 
@@ -140,22 +140,27 @@ int tst_p2p_alltoall_xisend_run (const struct tst_env * env)
                          status_buffer[2*rank+1].MPI_TAG));
           ERROR (EINVAL, "Error in communication");
         }
-      /* tst_type_checkstandardarray (env->type, env->values_num,
+      /*
+       * We cannot check using tst_type_checkstandardarray
+       * tst_type_checkstandardarray (env->type, env->values_num,
                                    recv_buffer[rank], comm_size - rank - 1);
-      */
-     
-      {
-	const int type_size = tst_type_gettypesize (env->type);
-	int i;
-	tst_type_setvalue (env->type, check_buffer, TST_TYPE_SET_VALUE, comm_size - rank - 1);
-	for (i = 0; i < env->values_num; i++)
-	  if (0 != tst_type_cmpvalue (env->type, check_buffer, &((recv_buffer[rank])[i*type_size])))
-	    {
-	      tst_type_hexdump ("Expected cmp_value", check_buffer, type_size);
-	      tst_type_hexdump ("Received buffer", &((recv_buffer[rank])[i*type_size]) , type_size);
-	    }
-      }
+       */
 
+      {
+        const int type_size = tst_type_gettypesize (env->type);
+        int i;
+        tst_type_setvalue (env->type, check_buffer, TST_TYPE_SET_VALUE, comm_size - rank - 1);
+        for (i = 0; i < env->values_num; i++)
+          if (0 != tst_type_cmpvalue (env->type, check_buffer, &((recv_buffer[rank])[i*type_size])))
+            {
+              if (tst_report >= TST_REPORT_FULL)
+                {
+                  tst_type_hexdump ("Expected cmp_value", check_buffer, type_size);
+                  tst_type_hexdump ("Received buffer", &((recv_buffer[rank])[i*type_size]) , type_size);
+                }
+              tst_test_recordfailure (env);
+            }
+      }
     }
   return 0;
 }

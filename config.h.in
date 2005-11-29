@@ -21,6 +21,9 @@
 /* Define to 1 if you don't have `vprintf' but do have `_doprnt.' */
 #undef HAVE_DOPRNT
 
+/* Define to 1 if you have the <float.h> header file. */
+#undef HAVE_FLOAT_H
+
 /* Define if MPI supports the optional Fortran datatype MPI_DOUBLE_COMPLEX */
 #undef HAVE_FORTRAN_MPI_DOUBLE_COMPLEX
 
@@ -62,6 +65,9 @@
 
 /* Define to 1 if you have the `kill' function. */
 #undef HAVE_KILL
+
+/* Define to 1 if you have the <limits.h> header file. */
+#undef HAVE_LIMITS_H
 
 /* Define to 1 if long double works and has more range or precision than
    double. */
@@ -126,6 +132,9 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* Define to 1 if you have the <values.h> header file. */
+#undef HAVE_VALUES_H
 
 /* Define to 1 if you have the `vprintf' function. */
 #undef HAVE_VPRINTF

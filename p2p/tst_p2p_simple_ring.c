@@ -102,7 +102,7 @@ int tst_p2p_simple_ring_run (const struct tst_env * env)
     ERROR (EINVAL, "Error in status");
 
   if (recv_from != MPI_PROC_NULL)
-    tst_type_checkstandardarray (env->type, env->values_num, recv_buffer, recv_from);
+    tst_test_checkstandardarray (env, recv_buffer, recv_from);
 
   return 0;
 }

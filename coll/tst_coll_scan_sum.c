@@ -64,6 +64,7 @@ int tst_coll_scan_sum_run (const struct tst_env * env)
   int i;
   MPI_Comm comm;
   MPI_Datatype type;
+  int errors = 0;
 
   comm = tst_comm_getcomm (env->comm);
   type = tst_type_getdatatype (env->type);
@@ -81,10 +82,16 @@ int tst_coll_scan_sum_run (const struct tst_env * env)
     if (0 != tst_type_cmpvalue(env->type,
                                &recv_buffer[i*type_size], &check_buffer[i*type_size]))
       {
-        printf ("(Rank:%d) Error at pos:%d\n", tst_global_rank, i);
-        tst_type_hexdump ("Expected cmp_value", &check_buffer[i*type_size], type_size);
-        tst_type_hexdump ("Received buffer", &recv_buffer[i*type_size], type_size);
+        if (tst_report >= TST_REPORT_FULL)
+          {
+            printf ("(Rank:%d) Error at pos:%d\n", tst_global_rank, i);
+            tst_type_hexdump ("Expected cmp_value", &check_buffer[i*type_size], type_size);
+            tst_type_hexdump ("Received buffer", &recv_buffer[i*type_size], type_size);
+          }
+        errors++;
       }
+  if (errors)
+    tst_test_recordfailure (env);
 
   return 0;
 }

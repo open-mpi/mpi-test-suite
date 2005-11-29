@@ -243,9 +243,17 @@ static struct tst_test tst_tests[] = {
    &tst_coll_alltoall_init, &tst_coll_alltoall_run, &tst_coll_alltoall_cleanup}
 };
 
+static struct tst_env * tst_tests_failed = NULL;
+static int tst_tests_failed_num = 0;
+
+
 int tst_test_init (int * num_tests)
 {
   *num_tests = TST_TESTS_NUM;
+
+  if ((tst_tests_failed = malloc (sizeof (struct tst_env) * TST_TESTS_NUM_FAILED_MAX)) == NULL)
+    ERROR (errno, "Could not allocate memory");
+
   return 0;
 }
 
@@ -428,4 +436,68 @@ int tst_test_select (const char * test_string, int * test_list, int * test_list_
     ERROR (EINVAL, buffer);
   }
   return 0;
+}
+
+int tst_test_recordfailure (const struct tst_env * env)
+{
+  int i;
+  /*
+   * First make sure, that this combination is not already
+   * in the failed-list
+   */
+/*
+  for (i = 0; i < tst_tests_failed_num; i++)
+    if (tst_tests_failed[i].comm == env->comm &&
+        tst_tests_failed[i].type == env->type &&
+        tst_tests_failed[i].test == env->test &&
+        tst_tests_failed[i].values_num == env->values_num)
+      break;
+  if (i == tst_tests_failed_num)
+    {
+      if (tst_report >= TST_REPORT_FULL)
+        printf ("ERROR test:%s (%d), comm %s (%d), type %s (%d)\n",
+                tst_test_getdescription (env->test), env->test+1,
+                tst_comm_getdescription (env->comm), env->comm+1,
+                tst_type_getdescription (env->type), env->type+1);
+
+      tst_tests_failed[tst_tests_failed_num].comm = env->comm;
+      tst_tests_failed[tst_tests_failed_num].type = env->type;
+      tst_tests_failed[tst_tests_failed_num].test = env->test;
+      tst_tests_failed[tst_tests_failed_num].values_num= env->values_num;
+      tst_tests_failed_num++;
+
+      if (tst_tests_failed_num == TST_TESTS_NUM_FAILED_MAX)
+        ERROR (EINVAL, "Maximum Error limit reached");
+    }
+*/
+  return 0;
+}
+
+int tst_test_print_failed (void)
+{
+  int i;
+  printf ("Number of failed tests:%d summary of failed tests:\n",
+          tst_tests_failed_num);
+  for (i = 0; i < tst_tests_failed_num; i++)
+    {
+      const int test = tst_tests_failed[i].test;
+      const int comm = tst_tests_failed[i].comm;
+      const int type = tst_tests_failed[i].type;
+      const int values_num= tst_tests_failed[i].values_num;
+
+      printf ("ERROR test:%s (%d), comm %s (%d), type %s (%d) num of values:%d\n",
+              tst_test_getdescription (test), test+1,
+              tst_comm_getdescription (comm), comm+1,
+              tst_type_getdescription (type), type+1, values_num);
+    }
+  return 0;
+}
+
+int tst_test_checkstandardarray (const struct tst_env * env, char * buffer, int comm_rank)
+{
+  int ret;
+  ret = tst_type_checkstandardarray (env->type, env->values_num, buffer, comm_rank);
+  if (0 != ret)
+    tst_test_recordfailure (env);
+  return ret;
 }

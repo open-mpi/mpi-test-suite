@@ -17,6 +17,17 @@
 int tst_global_rank = 0;
 int tst_global_size = 0;
 int tst_verbose = 0;
+int tst_report = TST_REPORT_SUMMARY;
+
+/*
+ * This should correspond to the enum tst_report
+ */
+char * tst_reports[] = {
+  "Summary",
+  "Run",
+  "Full"
+};
+
 int tst_tag_ub = 32766;
 
 
@@ -32,11 +43,12 @@ int tst_hash_value (const struct tst_env * env)
 
 static int usage (void)
 {
-  fprintf (stderr, "Usage: mpi_test_suite [-t tst] [-c comm] [-d datatype] [-n num_values] [-v] [-l] [-h]\n"
-           "test:\t\tone (or more) tests or test-classes (see option -l) and\n"
-           "comm:\t\tone (or more) communicator or communicator-classes (see option -l)\n"
-           "datatype:\tone (or more) datatype or datatype-classes (see option -l)\n"
+  fprintf (stderr, "Usage: mpi_test_suite [-t test] [-c comm] [-d datatype] [-n num_values] [-r report] [-v] [-l] [-h]\n"
+           "test:\t\tone (or more) tests or test-classes (see -l) and\n"
+           "comm:\t\tone (or more) communicator or communicator-classes (see -l)\n"
+           "datatype:\tone (or more) datatype or datatype-classes (see -l)\n"
            "num_values:\thow many elements to communicate (default:%d)\n"
+           "report:\t\tlevel of detail for tests being run, see -l (default:SUMMARY)\n"
            "\n"
            "All multiple test/comm/datatype-declarations must be separated by commas\n"
            "The option -l/--list lists all available tests, communicators and datatypes\n"
@@ -148,14 +160,14 @@ int main (int argc, char * argv[])
       };
       */
 
-      c = getopt (argc, argv, "t:c:d:n:lvh");
+      c = getopt (argc, argv, "t:c:d:n:r:lvh");
 
       if (c == -1)
         break;
 
       switch (c)
         {
-              case 't':
+        case 't':
           {
             char * str;
             /*
@@ -217,9 +229,24 @@ int main (int argc, char * argv[])
               tst_test_list ();
               tst_comm_list ();
               tst_type_list ();
+              for (i = 0; i < TST_REPORT_MAX; i++)
+                printf ("Report:%d %s\n", i, tst_reports[i]);
             }
           MPI_Finalize ();
           exit (0);
+          break;
+        case 'r':
+          for (tst_report=TST_REPORT_SUMMARY; tst_report < TST_REPORT_MAX; tst_report++)
+            {
+              if (0 == strcasecmp (optarg, tst_reports[tst_report]))
+                break;
+            }
+          if (tst_report == TST_REPORT_MAX)
+            {
+              printf ("Unknown report type selected:%s\n",
+                      optarg);
+              usage ();
+            }
           break;
         case 'v':
           tst_verbose = 1;
@@ -263,7 +290,7 @@ int main (int argc, char * argv[])
           if (tst_test_check_sync (&tst_env))
             MPI_Barrier (MPI_COMM_WORLD);
 
-          if (tst_global_rank == 0)
+          if (tst_global_rank == 0 && tst_report > TST_REPORT_SUMMARY)
             printf ("%s tests %s (%d/%d), comm %s (%d/%d), type %s (%d/%d)\n",
                     tst_test_getclass (tst_env.test),
                     tst_test_getdescription (tst_env.test), tst_env.test+1, num_tests,
@@ -275,7 +302,8 @@ int main (int argc, char * argv[])
           if (tst_test_check_sync (&tst_env))
             MPI_Barrier (MPI_COMM_WORLD);
         }
-
+  if (tst_global_rank == 0 && tst_report == TST_REPORT_SUMMARY)
+    tst_test_print_failed ();
   MPI_Finalize ();
   return 0;
 }

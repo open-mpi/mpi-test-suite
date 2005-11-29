@@ -104,7 +104,7 @@ int tst_p2p_alltoall_sendrecv_run (const struct tst_env * env)
                              status.MPI_TAG));
               ERROR (EINVAL, "Error in communication");
             }
-          tst_type_checkstandardarray (env->type, env->values_num,
+          tst_test_checkstandardarray (env,
                                  recv_buffer[partner], comm_size - partner - 1);
         }
     }
@@ -129,7 +129,7 @@ int tst_p2p_alltoall_sendrecv_run (const struct tst_env * env)
                              status.MPI_TAG));
               ERROR (EINVAL, "Error in communication");
             }
-          tst_type_checkstandardarray (env->type, env->values_num,
+          tst_test_checkstandardarray (env,
                                  recv_buffer[partner], comm_size - partner - 1);
         }
     }

@@ -1,7 +1,12 @@
 #include "config.h"
-#include <values.h>
+#ifdef HAVE_VALUES_H
+#  include <values.h>
+#endif
 #ifdef HAVE_LIMITS_H
 #  include <limits.h>
+#endif
+#ifdef HAVE_FLOAT_H
+#  include <float.h>
 #endif
 #ifdef HAVE_STRING_H
 #  include <string.h>
@@ -498,13 +503,14 @@ char * tst_type_allocvalues (const int type, const int values_num)
   char * buffer;
   int type_size;
   CHECK_ARG (type, NULL);
+  const int OVERHEAD=2;
   type_size = tst_type_gettypesize(type);
 
-  buffer = malloc ((values_num+2) * type_size);
+  buffer = malloc ((values_num+OVERHEAD) * type_size);
   if (buffer == NULL)
       ERROR (errno, "malloc");
 
-  memset (buffer, DEFAULT_INIT_BYTE, (values_num+2) * type_size);
+  memset (buffer, DEFAULT_INIT_BYTE, (values_num+OVERHEAD) * type_size);
   buffer -= tst_type_gettypelb(type);
 
   return buffer;
@@ -907,6 +913,7 @@ int tst_type_cmpvalue (int type, const char * buffer1, const char * buffer2)
 int tst_type_checkstandardarray (int type, int values_num, char * buffer, int comm_rank)
 {
   const int type_size = tst_type_gettypesize (type);
+  int errors = 0;
   char err[128];
   char * cmp_value;
   int i;
@@ -918,21 +925,27 @@ int tst_type_checkstandardarray (int type, int values_num, char * buffer, int co
 
   if (values_num > 0 && tst_type_cmpvalue (type, &buffer[0*type_size], cmp_value))
     {
-      printf ("(Rank:%d) Error in MIN:\n",
-              tst_global_rank);
-      tst_type_hexdump ("Expected cmp_value", cmp_value, type_size);
-      tst_type_hexdump ("Received buffer", &(buffer[0*type_size]), type_size);
-      // return -1;
+      if (tst_report >= TST_REPORT_FULL)
+        {
+          printf ("(Rank:%d) Error in MIN:\n",
+                  tst_global_rank);
+          tst_type_hexdump ("Expected cmp_value", cmp_value, type_size);
+          tst_type_hexdump ("Received buffer", &(buffer[0*type_size]), type_size);
+        }
+      errors++;
     }
 
   tst_type_setvalue (type, cmp_value, TST_TYPE_SET_MAX, 0);
   if (values_num > 1 && tst_type_cmpvalue (type, &buffer[1*type_size], cmp_value))
     {
-      printf ("(Rank:%d) Error in MAX:\n",
-              tst_global_rank);
-      tst_type_hexdump ("Expected cmp_value", cmp_value, type_size);
-      tst_type_hexdump ("Received buffer", &(buffer[0*type_size]), type_size);
-      // return -1;
+      if (tst_report >= TST_REPORT_FULL)
+        {
+          printf ("(Rank:%d) Error in MAX:\n",
+                  tst_global_rank);
+          tst_type_hexdump ("Expected cmp_value", cmp_value, type_size);
+          tst_type_hexdump ("Received buffer", &(buffer[0*type_size]), type_size);
+        }
+      errors++;
     }
 
   for (i = 2; i < values_num; i++)
@@ -943,14 +956,15 @@ int tst_type_checkstandardarray (int type, int values_num, char * buffer, int co
         {
           /* struct tst_mpi_float_int * tmp = (struct tst_mpi_float_int*) &(buffer[i*type_size]); */
           /* ((struct tst_mpi_float_int*)cmp_value)->a, */
+          if (tst_report >= TST_REPORT_FULL)
+            {
+              snprintf (err, sizeof (err), "(Rank:%d) Error at i:%d expected ", tst_global_rank, i);
+              tst_type_hexdump (err, cmp_value, type_size);
 
-          snprintf (err, sizeof (err), "(Rank:%d) Error at i:%d expected ", tst_global_rank, i);
-          tst_type_hexdump (err, cmp_value, type_size);
-
-          snprintf (err, sizeof (err), "(Rank:%d) Error at i:%d but received ", tst_global_rank, i);
-          tst_type_hexdump (err, &(buffer[i*type_size]), type_size);
-
-          return -1;
+              snprintf (err, sizeof (err), "(Rank:%d) Error at i:%d but received ", tst_global_rank, i);
+              tst_type_hexdump (err, &(buffer[i*type_size]), type_size);
+            }
+          errors++;
         }
 /*
       else
@@ -963,7 +977,7 @@ int tst_type_checkstandardarray (int type, int values_num, char * buffer, int co
     }
 
   tst_type_freevalues (type, cmp_value, 1);
-  return 0;
+  return errors;
 }
 
 
@@ -992,7 +1006,7 @@ void tst_type_list (void)
     {
       if (types[i].description[0] == '\0')
         break;
-      printf ("type:%d %s\n",
+      printf ("Type:%d %s\n",
               i, types[i].description);
     }
 

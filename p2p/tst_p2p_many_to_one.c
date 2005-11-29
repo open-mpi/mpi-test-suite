@@ -86,7 +86,7 @@ int tst_p2p_many_to_one_run (const struct tst_env * env)
             ERROR (EINVAL, "Error in status");
           DEBUG (printf ("(Rank:%d) going to check array from source:%d\n",
                          comm_rank, status.MPI_SOURCE));
-          tst_type_checkstandardarray (env->type, env->values_num, buffer, status.MPI_SOURCE);
+          tst_test_checkstandardarray (env, buffer, status.MPI_SOURCE);
         }
     }
   else

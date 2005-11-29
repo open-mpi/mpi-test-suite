@@ -72,7 +72,7 @@ int tst_coll_bcast_run (const struct tst_env * env)
                      tst_global_rank, root));
 
       MPI_CHECK (MPI_Bcast (buffer, env->values_num, type, root, comm));
-      tst_type_checkstandardarray (env->type, env->values_num, buffer, i);
+      tst_test_checkstandardarray (env, buffer, i);
     }
 
   return 0;
