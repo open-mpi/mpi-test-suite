@@ -17,15 +17,22 @@
 int tst_global_rank = 0;
 int tst_global_size = 0;
 int tst_verbose = 0;
-int tst_report = TST_REPORT_SUMMARY;
+tst_report_types tst_report = TST_REPORT_SUMMARY;
+tst_mode_types tst_mode = TST_MODE_RELAXED;
 
 /*
  * This should correspond to the enum tst_report
  */
-char * tst_reports[] = {
+const char * tst_reports[] = {
   "Summary",
   "Run",
   "Full"
+};
+
+const char * tst_modes[] = {
+  "disabled",
+  "strict",
+  "relaxed"
 };
 
 int tst_tag_ub = 32766;
@@ -160,7 +167,7 @@ int main (int argc, char * argv[])
       };
       */
 
-      c = getopt (argc, argv, "t:c:d:n:r:lvh");
+      c = getopt (argc, argv, "t:c:d:n:r:x:lvh");
 
       if (c == -1)
         break;
@@ -237,13 +244,22 @@ int main (int argc, char * argv[])
           break;
         case 'r':
           for (tst_report=TST_REPORT_SUMMARY; tst_report < TST_REPORT_MAX; tst_report++)
-            {
-              if (0 == strcasecmp (optarg, tst_reports[tst_report]))
-                break;
-            }
+            if (0 == strcasecmp (optarg, tst_reports[tst_report]))
+              break;
           if (tst_report == TST_REPORT_MAX)
             {
               printf ("Unknown report type selected:%s\n",
+                      optarg);
+              usage ();
+            }
+          break;
+        case 'x':
+          for (tst_mode = TST_MODE_DISABLED; tst_mode < TST_MODE_MAX; tst_mode++)
+            if (0 == strcasecmp (optarg, tst_modes[tst_mode]))
+              break;
+          if (tst_mode == TST_MODE_MAX)
+            {
+              printf ("Unknown test mode selected:%s\n",
                       optarg);
               usage ();
             }

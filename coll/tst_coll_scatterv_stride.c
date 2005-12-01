@@ -25,7 +25,7 @@ static char * recv_buffer = NULL;
 static int * send_counts = NULL;
 static int * send_displs = NULL;
 
-int tst_coll_scatterv_stride_init (const struct tst_env * env)
+int tst_coll_scatterv_stride_init (struct tst_env * env)
 {
   int comm_size;
   int comm_rank;
@@ -46,6 +46,12 @@ int tst_coll_scatterv_stride_init (const struct tst_env * env)
 
   send_counts = malloc (comm_size * sizeof (int));
   send_displs = malloc (comm_size * sizeof (int));
+
+  /*
+   * Every process only receives comm_rank values -- needed for
+   * the check internally.
+   */
+  env->values_num = comm_rank;
 
   return 0;
 }

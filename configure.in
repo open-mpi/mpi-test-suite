@@ -511,6 +511,7 @@ esac
 AC_CONFIG_FILES([Makefile])
 
 AS_MKDIR_P([coll])
+AS_MKDIR_P([env])
 AS_MKDIR_P([p2p])
 
 AC_OUTPUT

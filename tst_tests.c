@@ -32,6 +32,7 @@ struct tst_test {
   const char * description;
   int run_with_comm;
   tst_uint64 run_with_type;
+  int mode;
   int needs_sync;
   int (*tst_init_func) (const struct tst_env * env);
   int (*tst_run_func) (const struct tst_env * env);
@@ -40,53 +41,71 @@ struct tst_test {
 
 static struct tst_test tst_tests[] = {
   /*
+   * Here come the ENV-tests
+   */
+  {TST_CLASS_ENV, "Status",
+   TST_MPI_COMM_SELF,
+   TST_MPI_CHAR,
+   TST_MODE_STRICT,
+   TST_SYNC,
+   &tst_env_status_check_init, &tst_env_status_check_run, &tst_env_status_check_cleanup},
+
+  /*
    * Here come the P2P-tests
    */
   {TST_CLASS_P2P, "Ring",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
    TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
    TST_SYNC,
    &tst_p2p_simple_ring_init, &tst_p2p_simple_ring_run, &tst_p2p_simple_ring_cleanup},
 
 {TST_CLASS_P2P, "Ring Send Bottom",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
    TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
    TST_SYNC,
    &tst_p2p_simple_ring_bottom_init, &tst_p2p_simple_ring_bottom_run, &tst_p2p_simple_ring_bottom_cleanup},
 
   {TST_CLASS_P2P, "Ring Isend",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
    TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
    TST_SYNC,
    &tst_p2p_simple_ring_isend_init, &tst_p2p_simple_ring_isend_run, &tst_p2p_simple_ring_isend_cleanup},
 
   {TST_CLASS_P2P, "Ring Bsend",
    TST_MPI_INTRA_COMM,
    TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
    TST_NONE,
    &tst_p2p_simple_ring_bsend_init, &tst_p2p_simple_ring_bsend_run, &tst_p2p_simple_ring_bsend_cleanup},
 
   {TST_CLASS_P2P, "Ring Ssend",
    TST_MPI_INTRA_COMM,
    TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
    TST_NONE,
    &tst_p2p_simple_ring_ssend_init, &tst_p2p_simple_ring_ssend_run, &tst_p2p_simple_ring_ssend_cleanup},
 
   {TST_CLASS_P2P, "Ring Sendrecv",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
    TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
    TST_NONE,
    &tst_p2p_simple_ring_sendrecv_init, &tst_p2p_simple_ring_sendrecv_run, &tst_p2p_simple_ring_sendrecv_cleanup},
 
   {TST_CLASS_P2P, "Ring same value",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
    TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
    TST_SYNC,
    &tst_p2p_simple_ring_xsend_init, &tst_p2p_simple_ring_xsend_run, &tst_p2p_simple_ring_xsend_cleanup},
 
   {TST_CLASS_P2P, "Direct Partner Intercomm",
    TST_MPI_INTER_COMM,
    TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
    TST_SYNC,
    &tst_p2p_direct_partner_intercomm_init,
    &tst_p2p_direct_partner_intercomm_run,
@@ -95,24 +114,28 @@ static struct tst_test tst_tests[] = {
   {TST_CLASS_P2P, "Many-to-one",
    TST_MPI_INTRA_COMM | TST_MPI_INTER_COMM,
    TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed, done with hash */
    &tst_p2p_many_to_one_init, &tst_p2p_many_to_one_run, &tst_p2p_many_to_one_cleanup},
 
   {TST_CLASS_P2P, "Many-to-one with MPI_Probe (MPI_ANY_SOURCE)",
    TST_MPI_INTRA_COMM | TST_MPI_INTER_COMM,
    TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
    TST_SYNC,            /* No synchronization needed, done with hash */
    &tst_p2p_many_to_one_probe_anysource_init, &tst_p2p_many_to_one_probe_anysource_run, &tst_p2p_many_to_one_probe_anysource_cleanup},
 
   {TST_CLASS_P2P, "Many-to-one with MPI_Iprobe (MPI_ANY_SOURCE)",
    TST_MPI_INTRA_COMM | TST_MPI_INTER_COMM,
    TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
    TST_SYNC,            /* Receiving with MPI_ANY_SOURCE and MPI_ANY_TAG */
    &tst_p2p_many_to_one_iprobe_anysource_init, &tst_p2p_many_to_one_iprobe_anysource_run, &tst_p2p_many_to_one_iprobe_anysource_cleanup},
 
   {TST_CLASS_P2P, "Alltoall",
    TST_MPI_INTRA_COMM | TST_MPI_INTER_COMM,
    TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed, done with hash */
    &tst_p2p_alltoall_init, &tst_p2p_alltoall_run, &tst_p2p_alltoall_cleanup},
 
@@ -120,6 +143,7 @@ static struct tst_test tst_tests[] = {
   {TST_CLASS_P2P, "Alltoall - xIsend",
    TST_MPI_INTRA_COMM | TST_MPI_INTER_COMM,
    TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed, done with hash */
    &tst_p2p_alltoall_xisend_init, &tst_p2p_alltoall_xisend_run, &tst_p2p_alltoall_xisend_cleanup},
 
@@ -127,18 +151,21 @@ static struct tst_test tst_tests[] = {
   {TST_CLASS_P2P, "Alltoall - Irsend",
    TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
    TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
    &tst_p2p_alltoall_irsend_init, &tst_p2p_alltoall_irsend_run, &tst_p2p_alltoall_irsend_cleanup},
 
   {TST_CLASS_P2P, "Alltoall - Issend",
    TST_MPI_INTRA_COMM | TST_MPI_INTER_COMM,
    TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed -- everyone waits */
    &tst_p2p_alltoall_issend_init, &tst_p2p_alltoall_issend_run, &tst_p2p_alltoall_issend_cleanup},
 
   {TST_CLASS_P2P, "Alltoall with MPI_Probe (MPI_ANY_SOURCE)",
    TST_MPI_INTRA_COMM,
    TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
    TST_SYNC,            /* Probing for MPI_ANY_SOURCE and MPI_ANY_TAG */
    &tst_p2p_alltoall_probe_anysource_init, &tst_p2p_alltoall_probe_anysource_run, &tst_p2p_alltoall_probe_anysource_cleanup},
 
@@ -151,6 +178,7 @@ static struct tst_test tst_tests[] = {
   {TST_CLASS_COLL, "Bcast",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
    TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
    &tst_coll_bcast_init, &tst_coll_bcast_run, &tst_coll_bcast_cleanup},
 
@@ -161,6 +189,7 @@ static struct tst_test tst_tests[] = {
   {TST_CLASS_COLL, "Gather",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
    TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
    &tst_coll_gather_init, &tst_coll_gather_run, &tst_coll_gather_cleanup},
 
@@ -171,6 +200,7 @@ static struct tst_test tst_tests[] = {
   {TST_CLASS_COLL, "Allgather",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
    TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
    &tst_coll_allgather_init, &tst_coll_allgather_run, &tst_coll_allgather_cleanup},
 
@@ -184,6 +214,7 @@ static struct tst_test tst_tests[] = {
      TST_MPI_STANDARD_C_FLOAT_TYPES |
      TST_MPI_STANDARD_FORTRAN_COMPLEX_TYPES) &
    ~(TST_MPI_CHAR | TST_MPI_UNSIGNED_CHAR | TST_MPI_BYTE),
+   TST_MODE_RELAXED,
    TST_SYNC,            /* No synchronization needed */
    &tst_coll_scan_sum_init, &tst_coll_scan_sum_run, &tst_coll_scan_sum_cleanup},
 
@@ -194,6 +225,7 @@ static struct tst_test tst_tests[] = {
   {TST_CLASS_COLL, "Scatter",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
    TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
    &tst_coll_scatter_init, &tst_coll_scatter_run, &tst_coll_scatter_cleanup},
 
@@ -204,9 +236,10 @@ static struct tst_test tst_tests[] = {
   {TST_CLASS_COLL, "Scatterv",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
    TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
    &tst_coll_scatterv_init, &tst_coll_scatterv_run, &tst_coll_scatterv_cleanup},
-  
+
   /*
    * XXX should allow TST_MPI_INTER_COMM depending on whether the underlying
    * MPI supports it!
@@ -214,6 +247,7 @@ static struct tst_test tst_tests[] = {
   {TST_CLASS_COLL, "Scatterv_stride",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
    TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
    &tst_coll_scatterv_stride_init, &tst_coll_scatterv_stride_run, &tst_coll_scatterv_stride_cleanup},
 
@@ -229,6 +263,7 @@ static struct tst_test tst_tests[] = {
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
    (TST_MPI_STANDARD_C_TYPES | TST_MPI_STANDARD_FORTRAN_INT_TYPES | TST_MPI_STANDARD_FORTRAN_FLOAT_TYPES) &
    ~(TST_MPI_CHAR | TST_MPI_UNSIGNED_CHAR | TST_MPI_BYTE),
+   TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
    &tst_coll_allreduce_init, &tst_coll_allreduce_run, &tst_coll_allreduce_cleanup},
 
@@ -239,6 +274,7 @@ static struct tst_test tst_tests[] = {
   {TST_CLASS_COLL, "Alltoall",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
    TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
    &tst_coll_alltoall_init, &tst_coll_alltoall_run, &tst_coll_alltoall_cleanup}
 };
@@ -284,6 +320,13 @@ const char * tst_test_getdescription (int i)
   return tst_tests[i].description;
 }
 
+int tst_test_getmode (int i)
+{
+  CHECK_ARG (i, -1);
+
+  return tst_tests[i].mode;
+}
+
 int tst_test_init_func (struct tst_env * env)
 {
   CHECK_ARG (env->test, -1);
@@ -314,6 +357,7 @@ int tst_test_check_run (struct tst_env * env)
    */
   if (env->test < 0 ||
       env->test > TST_TESTS_NUM ||
+      tst_test_getmode (env->test) < tst_mode ||
       (tst_comm_getcommclass (env->comm) & tst_tests[env->test].run_with_comm) == (tst_uint64)0 ||
       (tst_type_gettypeclass (env->type) & tst_tests[env->test].run_with_type) == (tst_uint64)0)
     {

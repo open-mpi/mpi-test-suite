@@ -285,18 +285,26 @@ struct tst_mpi_type_mix_array {
     double f[TST_MPI_TYPE_MIX_ARRAY_NUM];
 };
 
-
-extern char * tst_reports[];
 extern int tst_global_rank;
 extern int tst_verbose;
-extern int tst_report;
 
-enum {
+extern const char * tst_reports[];
+typedef enum {
   TST_REPORT_SUMMARY=0,     /* No output, except for failed tests at the end of the run */
   TST_REPORT_RUN,           /* Output every test that runs, plus the previous */
   TST_REPORT_FULL,          /* Full output, including the hexdump of wrong memory */
   TST_REPORT_MAX
 } tst_report_types;
+extern tst_report_types tst_report;
+
+extern const char * tst_modes[];
+typedef enum {
+  TST_MODE_DISABLED=0,      /* Just dsiable this test for the moment (or read: Run the disabled!) */
+  TST_MODE_STRICT,          /* Check for anal stuff in MPI-standard */
+  TST_MODE_RELAXED,         /* Leave out tests for strict conformance to MPI standard */
+  TST_MODE_MAX
+} tst_mode_types;
+extern tst_mode_types tst_mode;
 
 #define TST_TESTS_NUM_FAILED_MAX 1000
 
@@ -315,6 +323,7 @@ extern int tst_comm_select (const char * comm_string,
 extern int tst_test_init (int * num_tests);
 extern const char * tst_test_getclass (int i);
 extern const char * tst_test_getdescription (int i);
+extern int tst_test_getmode (int i);
 extern int tst_test_init_func (struct tst_env * env);
 extern int tst_test_run_func (struct tst_env * env);
 extern int tst_test_cleanup_func (struct tst_env * env);
@@ -351,6 +360,10 @@ extern int tst_hash_value (const struct tst_env * env);
 /*
  * Test functions
  */
+extern int tst_env_status_check_init (const struct tst_env * env);
+extern int tst_env_status_check_run (const struct tst_env * env);
+extern int tst_env_status_check_cleanup (const struct tst_env * env);
+
 extern int tst_p2p_alltoall_init (const struct tst_env * env);
 extern int tst_p2p_alltoall_run (const struct tst_env * env);
 extern int tst_p2p_alltoall_cleanup (const struct tst_env * env);
@@ -439,11 +452,11 @@ extern int tst_coll_scatter_init (const struct tst_env * env);
 extern int tst_coll_scatter_run (const struct tst_env * env);
 extern int tst_coll_scatter_cleanup (const struct tst_env * env);
 
-extern int tst_coll_scatterv_init (const struct tst_env * env);
+extern int tst_coll_scatterv_init (struct tst_env * env);
 extern int tst_coll_scatterv_run (const struct tst_env * env);
 extern int tst_coll_scatterv_cleanup (const struct tst_env * env);
 
-extern int tst_coll_scatterv_stride_init (const struct tst_env * env);
+extern int tst_coll_scatterv_stride_init (struct tst_env * env);
 extern int tst_coll_scatterv_stride_run (const struct tst_env * env);
 extern int tst_coll_scatterv_stride_cleanup (const struct tst_env * env);
 

@@ -15456,6 +15456,31 @@ echo "$as_me: error: cannot create directory coll" >&2;}
    { (exit 1); exit 1; }; }; }
 
 { if $as_mkdir_p; then
+    mkdir -p env
+  else
+    as_dir=env
+    as_dirs=
+    while test ! -d "$as_dir"; do
+      as_dirs="$as_dir $as_dirs"
+      as_dir=`(dirname "$as_dir") 2>/dev/null ||
+$as_expr X"$as_dir" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
+	 X"$as_dir" : 'X\(//\)[^/]' \| \
+	 X"$as_dir" : 'X\(//\)$' \| \
+	 X"$as_dir" : 'X\(/\)' \| \
+	 .     : '\(.\)' 2>/dev/null ||
+echo X"$as_dir" |
+    sed '/^X\(.*[^/]\)\/\/*[^/][^/]*\/*$/{ s//\1/; q; }
+  	  /^X\(\/\/\)[^/].*/{ s//\1/; q; }
+  	  /^X\(\/\/\)$/{ s//\1/; q; }
+  	  /^X\(\/\).*/{ s//\1/; q; }
+  	  s/.*/./; q'`
+    done
+    test ! -n "$as_dirs" || mkdir $as_dirs
+  fi || { { echo "$as_me:$LINENO: error: cannot create directory env" >&5
+echo "$as_me: error: cannot create directory env" >&2;}
+   { (exit 1); exit 1; }; }; }
+
+{ if $as_mkdir_p; then
     mkdir -p p2p
   else
     as_dir=p2p
