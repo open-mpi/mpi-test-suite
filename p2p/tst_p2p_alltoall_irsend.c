@@ -32,7 +32,6 @@ int tst_p2p_alltoall_irsend_init (const struct tst_env * env)
   int comm_size;
   int i;
 
-
   DEBUG (printf ("(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
                  tst_global_rank, env->comm, env->type, env->values_num));
 
@@ -73,6 +72,7 @@ int tst_p2p_alltoall_irsend_run (const struct tst_env * env)
   int comm_size;
   int comm_rank;
   int rank;
+  int recv_count;
   MPI_Comm comm;
   MPI_Datatype type;
 
@@ -135,6 +135,12 @@ int tst_p2p_alltoall_irsend_run (const struct tst_env * env)
                          status_buffer[2*rank+1].MPI_SOURCE,
                          status_buffer[2*rank+1].MPI_TAG));
           ERROR (EINVAL, "Error in communication");
+        }
+      if (tst_mode == TST_MODE_STRICT)
+        {
+           MPI_CHECK(MPI_Get_count(&(status_buffer[2*rank+1]), type, &recv_count));
+           if(recv_count != env->values_num)
+              ERROR(EINVAL, "Error in Count");
         }
       tst_test_checkstandardarray (env,
                                    recv_buffer[rank], comm_size - rank - 1);

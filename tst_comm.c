@@ -13,7 +13,7 @@
 #include "mpi_test_suite.h"
 
 
-#define COMM_NUM 16
+#define COMM_NUM 20
 
 /*#define HAVE_MPI_CLUSTER_SIZE*/
 
@@ -296,6 +296,107 @@ int tst_comm_init (int * num_comms)
       if (++count_comms > COMM_NUM)
         ERROR (EINVAL, "Too many communicators, increase COMM_NUM");
     }
+
+
+
+ /*
+   * Create a 2 dimensional communicator, with MPI_Cart_create.
+   */
+  if (comm_size > 1)
+  {
+    int dims[2] = {0, 0};           /* Set to zero in order to receive value */
+    int periods[2] = {1, 1};
+      
+    strncpy (comms[count_comms].description, "Two dimensional Cartesian", TST_DESCRIPTION_LEN);
+    comms[count_comms].size = comm_size;
+    if ((comms[count_comms].mapping = malloc (comms[count_comms].size * sizeof(int))) == NULL)
+      ERROR (errno, "malloc");
+    for (i = 0; i < comms[count_comms].size; i++)
+      comms[count_comms].mapping[i] = i;
+
+    MPI_CHECK(MPI_Dims_create(comm_size, 2, dims));
+    MPI_CHECK(MPI_Cart_create(MPI_COMM_WORLD, 2, dims, periods, 1, &comms[count_comms].mpi_comm));
+    
+    comms[count_comms].class = TST_MPI_CART_COMM;
+    
+    comms[count_comms].other_size = 0;
+    comms[count_comms].other_mapping = NULL;
+
+    if (++count_comms > COMM_NUM)
+      ERROR (EINVAL, "Too many communicators, increase COMM_NUM");
+  }
+
+
+  /*
+   * Create a 3 dimensional communicator, with MPI_Cart_create.
+   */
+  if (comm_size > 1)
+  {
+    int dims[3] = {0, 0, 0};         /* Set to zero in order to receive value */
+    int periods[3] = {0, 0, 0};
+      
+    strncpy (comms[count_comms].description, "Three dimensional Cartesian", TST_DESCRIPTION_LEN);
+    comms[count_comms].size = comm_size;
+    if ((comms[count_comms].mapping = malloc (comms[count_comms].size * sizeof(int))) == NULL)
+      ERROR (errno, "malloc");
+    for (i = 0; i < comms[count_comms].size; i++)
+      comms[count_comms].mapping[i] = i;
+
+    MPI_CHECK(MPI_Dims_create(comm_size, 3, dims));
+    MPI_CHECK(MPI_Cart_create(MPI_COMM_WORLD, 3, dims, periods, 1, &comms[count_comms].mpi_comm));
+    
+    comms[count_comms].class = TST_MPI_CART_COMM;
+    
+    comms[count_comms].other_size = 0;
+    comms[count_comms].other_mapping = NULL;
+
+    if (++count_comms > COMM_NUM)
+      ERROR (EINVAL, "Too many communicators, increase COMM_NUM");
+  }
+
+  /*
+   * Create a TOPO communication with MPI_Graph_create
+   */
+
+  {
+    int myid;
+    int proz_num;
+    int *index=NULL;
+    int *edges=NULL;
+    int i,j, num;
+    MPI_CHECK(MPI_Comm_rank(MPI_COMM_WORLD, &myid));
+    MPI_CHECK(MPI_Comm_size(MPI_COMM_WORLD, &proz_num));
+    /*allocate index*/
+    if((index=(int *)malloc(sizeof(int) * proz_num))==NULL)
+      ERROR(errno, "malloc");
+    for (i=0; i < proz_num; i++)
+      index[i] = (i+1)*(proz_num-1);
+    /*allocate edges*/
+    if((edges=(int *)malloc(sizeof(int) * proz_num * (proz_num-1)))==NULL)
+      ERROR(errno,"malloc");
+    num=0;
+    for(i=0; i<proz_num; i++)
+      {
+        for(j=0; j<proz_num;j++)
+          {
+            if(j==i)
+                continue;
+            edges[num]=j;
+            num++;
+          }
+      }
+    MPI_CHECK(MPI_Graph_create(MPI_COMM_WORLD, proz_num, index,
+                               edges, 1, &comms[count_comms].mpi_comm));
+    comms[count_comms].class = TST_MPI_TOPO_COMM;
+    comms[count_comms].other_size = 0;
+    comms[count_comms].other_mapping = NULL;
+
+    if (++count_comms > COMM_NUM)
+        ERROR (EINVAL, "Too many communicators, increase COMM_NUM");
+    free(index);
+    free(edges);
+  }
+
 
   /*
    * Create a halfed inter-communicator with all processes < comm_size/2 on one side

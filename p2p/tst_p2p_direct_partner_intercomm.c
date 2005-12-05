@@ -47,6 +47,7 @@ int tst_p2p_direct_partner_intercomm_run (const struct tst_env * env)
   int send_to;
   int recv_from;
   int remote_size;
+  int recv_count;
   MPI_Comm comm;
   MPI_Datatype type;
   MPI_Status status;
@@ -55,7 +56,7 @@ int tst_p2p_direct_partner_intercomm_run (const struct tst_env * env)
   type = tst_type_getdatatype (env->type);
 
   /*
-   * In case of Intercommunicator, we just send to our 
+   * In case of Intercommunicator, we just send to our
    * equivalent process in the remote group -- NO ring communication.
    */
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
@@ -67,7 +68,7 @@ int tst_p2p_direct_partner_intercomm_run (const struct tst_env * env)
       send_to = comm_rank;
       recv_from = comm_rank;
     }
-  else 
+  else
     {
       send_to = MPI_PROC_NULL;
       recv_from = MPI_PROC_NULL;
@@ -89,6 +90,12 @@ int tst_p2p_direct_partner_intercomm_run (const struct tst_env * env)
       (recv_from != MPI_PROC_NULL && status.MPI_TAG != 4711) ||
       (recv_from == MPI_PROC_NULL && status.MPI_TAG != MPI_ANY_TAG))
     ERROR (EINVAL, "Error in status");
+  if (tst_mode == TST_MODE_STRICT)
+    {
+       MPI_CHECK(MPI_Get_count(&status, type, &recv_count));
+       if(recv_count != env->values_num)
+          ERROR(EINVAL, "Error in Count");
+    }
 
   if (recv_from != MPI_PROC_NULL)
     tst_test_checkstandardarray (env, recv_buffer, recv_from);

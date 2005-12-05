@@ -43,6 +43,7 @@ int tst_p2p_many_to_one_run (const struct tst_env * env)
   int comm_size;
   int comm_rank;
   int hash_value;
+  int recv_count;
   MPI_Comm comm;
   MPI_Datatype type;
   MPI_Status status;
@@ -86,6 +87,12 @@ int tst_p2p_many_to_one_run (const struct tst_env * env)
             ERROR (EINVAL, "Error in status");
           DEBUG (printf ("(Rank:%d) going to check array from source:%d\n",
                          comm_rank, status.MPI_SOURCE));
+          if (tst_mode == TST_MODE_STRICT)
+            {
+               MPI_CHECK(MPI_Get_count(&status, type, &recv_count));
+               if(recv_count != env->values_num)
+                  ERROR(EINVAL, "Error in Count");
+            }
           tst_test_checkstandardarray (env, buffer, status.MPI_SOURCE);
         }
     }

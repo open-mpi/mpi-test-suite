@@ -388,6 +388,10 @@ extern int tst_p2p_alltoall_sendrecv_init (const struct tst_env * env);
 extern int tst_p2p_alltoall_sendrecv_run (const struct tst_env * env);
 extern int tst_p2p_alltoall_sendrecv(const struct tst_env * env);
 
+extern int tst_p2p_alltoall_graph_init (const struct tst_env * env);
+extern int tst_p2p_alltoall_graph_run (const struct tst_env * env);
+extern int tst_p2p_alltoall_graph_cleanup (const struct tst_env * env);
+
 extern int tst_p2p_direct_partner_intercomm_init (const struct tst_env * env);
 extern int tst_p2p_direct_partner_intercomm_run (const struct tst_env * env);
 extern int tst_p2p_direct_partner_intercomm_cleanup (const struct tst_env * env);
@@ -427,6 +431,10 @@ extern int tst_p2p_simple_ring_ssend_cleanup (const struct tst_env * env);
 extern int tst_p2p_simple_ring_sendrecv_init (const struct tst_env * env);
 extern int tst_p2p_simple_ring_sendrecv_run (const struct tst_env * env);
 extern int tst_p2p_simple_ring_sendrecv_cleanup (const struct tst_env * env);
+
+extern int tst_p2p_simple_ring_shift_init (const struct tst_env * env);
+extern int tst_p2p_simple_ring_shift_run (const struct tst_env * env);
+extern int tst_p2p_simple_ring_shift_cleanup (const struct tst_env * env);
 
 extern int tst_p2p_simple_ring_xsend_init (const struct tst_env * env);
 extern int tst_p2p_simple_ring_xsend_run (const struct tst_env * env);

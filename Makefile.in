@@ -44,11 +44,12 @@ OBJ =	mpi_test_suite.o			\
 	coll/tst_coll_scatterv_stride.o		\
 	env/tst_env_status_check.o		\
 	p2p/tst_p2p_alltoall.o			\
-        p2p/tst_p2p_alltoall_xisend.o	        \
+	p2p/tst_p2p_alltoall_xisend.o		\
 	p2p/tst_p2p_alltoall_irsend.o		\
 	p2p/tst_p2p_alltoall_issend.o		\
 	p2p/tst_p2p_alltoall_probe_anysource.o	\
 	p2p/tst_p2p_alltoall_sendrecv.o		\
+	p2p/tst_p2p_alltoall_graph.o		\
 	p2p/tst_p2p_direct_partner_intercomm.o	\
 	p2p/tst_p2p_many_to_one.o		\
 	p2p/tst_p2p_many_to_one_iprobe_anysource.o	\
@@ -57,6 +58,7 @@ OBJ =	mpi_test_suite.o			\
 	p2p/tst_p2p_simple_ring_bottom.o	\
 	p2p/tst_p2p_simple_ring_bsend.o		\
 	p2p/tst_p2p_simple_ring_isend.o		\
+	p2p/tst_p2p_simple_ring_shift.o		\
 	p2p/tst_p2p_simple_ring_ssend.o		\
 	p2p/tst_p2p_simple_ring_sendrecv.o	\
 	p2p/tst_p2p_simple_ring_xsend.o

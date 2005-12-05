@@ -58,6 +58,7 @@ int tst_p2p_simple_ring_bsend_run (const struct tst_env * env)
   int comm_rank;
   int send_to;
   int recv_from;
+  int recv_count;
   MPI_Comm comm;
   MPI_Datatype type;
   MPI_Status status;
@@ -87,6 +88,12 @@ int tst_p2p_simple_ring_bsend_run (const struct tst_env * env)
   if (status.MPI_SOURCE != recv_from ||
       status.MPI_TAG != 4711)
     ERROR (EINVAL, "Error in status");
+  if (tst_mode == TST_MODE_STRICT)
+    {
+      MPI_CHECK(MPI_Get_count(&status, type, &recv_count));
+      if(recv_count != env->values_num)
+         ERROR(EINVAL, "Error in Count");
+    }
 
   tst_test_checkstandardarray (env, recv_buffer, recv_from);
 

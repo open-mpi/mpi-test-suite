@@ -68,6 +68,7 @@ int tst_p2p_alltoall_issend_run (const struct tst_env * env)
   int comm_size;
   int comm_rank;
   int rank;
+  int recv_count;
   MPI_Comm comm;
   MPI_Datatype type;
 
@@ -123,6 +124,12 @@ int tst_p2p_alltoall_issend_run (const struct tst_env * env)
                          status_buffer[2*rank+1].MPI_SOURCE,
                          status_buffer[2*rank+1].MPI_TAG));
           ERROR (EINVAL, "Error in communication");
+        }
+      if (tst_mode == TST_MODE_STRICT)
+        {
+           MPI_CHECK(MPI_Get_count(&(status_buffer[2*rank+1]), type, &recv_count));
+           if(recv_count != env->values_num)
+              ERROR(EINVAL, "Error in Count");
         }
       tst_test_checkstandardarray (env,
                                    recv_buffer[rank], comm_size - rank - 1);

@@ -43,6 +43,7 @@ int tst_p2p_many_to_one_iprobe_anysource_run (const struct tst_env * env)
   int comm_size;
   int comm_rank;
   int hash_value;
+  int recv_count;
   MPI_Comm comm;
   MPI_Datatype type;
   MPI_Status status;
@@ -87,6 +88,12 @@ int tst_p2p_many_to_one_iprobe_anysource_run (const struct tst_env * env)
           if (status.MPI_SOURCE != source ||
               status.MPI_TAG != tag)
             ERROR (EINVAL, "Error in status after MPI_Recv");
+          if (tst_mode == TST_MODE_STRICT)
+            {
+               MPI_CHECK(MPI_Get_count(&status, type, &recv_count));
+               if(recv_count != env->values_num)
+                  ERROR(EINVAL, "Error in Count");
+            }
           tst_test_checkstandardarray (env, buffer, source);
         }
     }

@@ -169,6 +169,21 @@ static struct tst_test tst_tests[] = {
    TST_SYNC,            /* Probing for MPI_ANY_SOURCE and MPI_ANY_TAG */
    &tst_p2p_alltoall_probe_anysource_init, &tst_p2p_alltoall_probe_anysource_run, &tst_p2p_alltoall_probe_anysource_cleanup},
 
+  {TST_CLASS_P2P, "Ring Send with cart comm",
+   TST_MPI_CART_COMM,
+   TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
+   TST_SYNC,
+   &tst_p2p_simple_ring_shift_init, &tst_p2p_simple_ring_shift_run, &tst_p2p_simple_ring_shift_cleanup},
+
+  {TST_CLASS_P2P, "Alltoall on topo comm",
+   TST_MPI_TOPO_COMM,
+   TST_MPI_ALL_C_TYPES,
+   TST_MODE_STRICT, /* XXX raY should be TST_MODE_RELAXED; as soon as verified */
+   TST_SYNC,
+   &tst_p2p_alltoall_graph_init, &tst_p2p_alltoall_graph_run, &tst_p2p_alltoall_graph_cleanup},
+
+
   /*
    * Here come the collective tests
    *

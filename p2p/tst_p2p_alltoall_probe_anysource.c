@@ -87,6 +87,7 @@ int tst_p2p_alltoall_probe_anysource_run (const struct tst_env * env)
   int source;
   int dest;
   int tag;
+  int recv_count;
   MPI_Comm comm;
   MPI_Datatype type;
   MPI_Status status;
@@ -137,6 +138,12 @@ int tst_p2p_alltoall_probe_anysource_run (const struct tst_env * env)
               status.MPI_SOURCE != source ||
               status.MPI_TAG != tag)
             ERROR (EINVAL, "Error in status after MPI_Recv");
+          if (tst_mode == TST_MODE_STRICT)
+            {
+              MPI_CHECK(MPI_Get_count(&status, type, &recv_count));
+              if(recv_count != env->values_num)
+                ERROR(EINVAL, "Error in Count");
+            }
           tst_test_checkstandardarray (env, buffer_recv[source], source + comm_rank);
 
           received_num--;
@@ -163,6 +170,13 @@ int tst_p2p_alltoall_probe_anysource_run (const struct tst_env * env)
           status.MPI_SOURCE != source ||
           status.MPI_TAG != tag)
         ERROR (EINVAL, "Error in status after MPI_Recv");
+      if (tst_mode == TST_MODE_STRICT)
+        {
+          MPI_CHECK(MPI_Get_count(&status, type, &recv_count));
+          if(recv_count != env->values_num)
+              ERROR(EINVAL, "Error in Count");
+        }
+
       tst_test_checkstandardarray (env, buffer_recv[source], source + comm_rank);
 
       received_num--;
