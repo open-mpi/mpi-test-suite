@@ -43,6 +43,7 @@ OBJ =	mpi_test_suite.o			\
 	coll/tst_coll_scatterv.o		\
 	coll/tst_coll_scatterv_stride.o		\
 	env/tst_env_status_check.o		\
+	env/tst_env_request_null.o		\
 	p2p/tst_p2p_alltoall.o			\
 	p2p/tst_p2p_alltoall_xisend.o		\
 	p2p/tst_p2p_alltoall_irsend.o		\

@@ -1,12 +1,12 @@
 /*
- * File: tst_p2p_simple_ring.c
+ * File: tst_env_status_check.c
  *
  * Functionality:
  *   Checks, that the entry of MPI_ERROR is left untouched in the MPI_Status
  *
  * Author: Rainer Keller
  *
- * Date: Aug 8th 2003
+ * Date: Dec. 1., 2005
  */
 #include "mpi.h"
 #include "mpi_test_suite.h"

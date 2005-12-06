@@ -50,6 +50,13 @@ static struct tst_test tst_tests[] = {
    TST_SYNC,
    &tst_env_status_check_init, &tst_env_status_check_run, &tst_env_status_check_cleanup},
 
+  {TST_CLASS_ENV, "Request_Null",
+   TST_MPI_COMM_SELF,
+   TST_MPI_CHAR,
+   TST_MODE_STRICT,
+   TST_SYNC,
+   &tst_env_request_null_init, &tst_env_request_null_run, &tst_env_request_null_cleanup},
+
   /*
    * Here come the P2P-tests
    */

@@ -359,11 +359,19 @@ extern int tst_hash_value (const struct tst_env * env);
 
 /*
  * Test functions
+ * First the environment functions
  */
 extern int tst_env_status_check_init (const struct tst_env * env);
 extern int tst_env_status_check_run (const struct tst_env * env);
 extern int tst_env_status_check_cleanup (const struct tst_env * env);
 
+extern int tst_env_request_null_init (const struct tst_env * env);
+extern int tst_env_request_null_run (const struct tst_env * env);
+extern int tst_env_request_null_cleanup (const struct tst_env * env);
+
+/*
+ * Following all p2p-functions
+ */
 extern int tst_p2p_alltoall_init (const struct tst_env * env);
 extern int tst_p2p_alltoall_run (const struct tst_env * env);
 extern int tst_p2p_alltoall_cleanup (const struct tst_env * env);
