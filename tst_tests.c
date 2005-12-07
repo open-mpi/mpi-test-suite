@@ -186,7 +186,7 @@ static struct tst_test tst_tests[] = {
   {TST_CLASS_P2P, "Alltoall on topo comm",
    TST_MPI_TOPO_COMM,
    TST_MPI_ALL_C_TYPES,
-   TST_MODE_STRICT, /* XXX raY should be TST_MODE_RELAXED; as soon as verified */
+   TST_MODE_RELAXED,
    TST_SYNC,
    &tst_p2p_alltoall_graph_init, &tst_p2p_alltoall_graph_run, &tst_p2p_alltoall_graph_cleanup},
 

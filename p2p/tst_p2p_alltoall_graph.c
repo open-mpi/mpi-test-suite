@@ -42,13 +42,13 @@ int tst_p2p_alltoall_graph_init (const struct tst_env * env)
   tst_type_setstandardarray (env->type, env->values_num,
                              send_buffer, comm_rank);
 
-  if ((status_buffer = malloc (sizeof (MPI_Status) * neighbors_num)) == NULL)
+  if ((status_buffer = (MPI_Status *)malloc (sizeof (MPI_Status) * neighbors_num)) == NULL)
     ERROR (errno, "malloc");
 
-  if ((recv_buffer = malloc (sizeof (char *) * neighbors_num)) == NULL)
+  if ((recv_buffer = (char **)malloc (sizeof (char *) * neighbors_num)) == NULL)
     ERROR (errno, "malloc");
 
-  if((neighbors=(int *)malloc(sizeof(int)*neighbors_num))==NULL)
+  if((neighbors = (int *)malloc(sizeof (int) * neighbors_num))==NULL)
     ERROR(errno, "malloc");
 
   for (i=0; i < neighbors_num; i++)
@@ -82,13 +82,12 @@ int tst_p2p_alltoall_graph_run (const struct tst_env * env)
   for (rank = 0; rank < neighbors_num; rank++)
     {
       MPI_CHECK (MPI_Sendrecv(send_buffer, env->values_num, type, neighbors[rank], 4711,
-                              &(recv_buffer[rank]), env->values_num, type, neighbors[rank], 4711,
+                              recv_buffer[rank], env->values_num, type, neighbors[rank], 4711,
                               comm, &(status_buffer[rank])));
     }
 
   for (rank = 0; rank < neighbors_num; rank++)
     {
-
       if (status_buffer[rank].MPI_SOURCE != neighbors[rank]  ||
           status_buffer[rank].MPI_TAG != 4711)
         {
