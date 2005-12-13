@@ -376,6 +376,10 @@ extern int tst_p2p_alltoall_init (const struct tst_env * env);
 extern int tst_p2p_alltoall_run (const struct tst_env * env);
 extern int tst_p2p_alltoall_cleanup (const struct tst_env * env);
 
+extern int tst_p2p_alltoall_persistent_init (const struct tst_env * env);
+extern int tst_p2p_alltoall_persistent_run (const struct tst_env * env);
+extern int tst_p2p_alltoall_persistent_cleanup (const struct tst_env * env);
+
 extern int tst_p2p_alltoall_xisend_init (const struct tst_env * env);
 extern int tst_p2p_alltoall_xisend_run (const struct tst_env * env);
 extern int tst_p2p_alltoall_xisend_cleanup (const struct tst_env * env);

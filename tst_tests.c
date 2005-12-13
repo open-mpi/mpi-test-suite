@@ -153,6 +153,12 @@ static struct tst_test tst_tests[] = {
    TST_NONE,            /* No synchronization needed, done with hash */
    &tst_p2p_alltoall_init, &tst_p2p_alltoall_run, &tst_p2p_alltoall_cleanup},
 
+  {TST_CLASS_P2P, "Alltoall - Persistent",
+   TST_MPI_INTRA_COMM | TST_MPI_INTER_COMM,
+   TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
+   TST_NONE,            /* No synchronization needed, done with hash */
+   &tst_p2p_alltoall_persistent_init, &tst_p2p_alltoall_persistent_run, &tst_p2p_alltoall_persistent_cleanup},
 
   {TST_CLASS_P2P, "Alltoall - xIsend",
    TST_MPI_INTRA_COMM | TST_MPI_INTER_COMM,
