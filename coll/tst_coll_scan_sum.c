@@ -18,7 +18,6 @@
 static char * send_buffer = NULL;
 static char * recv_buffer = NULL;
 static char * check_buffer = NULL;
-static int sum = 0;
 
 int tst_coll_scan_sum_init (const struct tst_env * env)
 {

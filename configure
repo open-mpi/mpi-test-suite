@@ -859,6 +859,7 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --enable-fortran        build the Fortran library [default=yes]
   --enable-pacx           build the PACX library [default=no]
+  --enable-mpi2           Check for MPI2 features [default=no]
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -1420,7 +1421,7 @@ rm conftest.sed
 # Check whether --enable-fortran or --disable-fortran was given.
 if test "${enable_fortran+set}" = set; then
   enableval="$enable_fortran"
-  test "$enableval" = no && ENABLE_PACX_FORTRAN=no
+  test "$enableval" = "no" && ENABLE_PACX_FORTRAN=no
 else
   ENABLE_PACX_FORTRAN=yes
 fi;
@@ -1428,9 +1429,17 @@ fi;
 # Check whether --enable-pacx or --disable-pacx was given.
 if test "${enable_pacx+set}" = set; then
   enableval="$enable_pacx"
-  test "$enableval" = yes && ENABLE_PACX=yes
+  test "$enableval" = "yes" && ENABLE_PACX=yes
 else
   ENABLE_PACX=no
+fi;
+
+# Check whether --enable-mpi2 or --disable-mpi2 was given.
+if test "${enable_mpi2+set}" = set; then
+  enableval="$enable_mpi2"
+  test "$enableval" = "yes" && ENABLE_MPI2=yes
+else
+  ENABLE_MPI2=no
 fi;
 
 
@@ -3471,7 +3480,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:3474:" \
+echo "$as_me:3483:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -3667,7 +3676,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_verb"
-(eval echo $as_me:3670: \"$ac_link\") >&5
+(eval echo $as_me:3679: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -3745,7 +3754,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_cv_prog_f77_v"
-(eval echo $as_me:3748: \"$ac_link\") >&5
+(eval echo $as_me:3757: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -4396,6 +4405,8 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
         ac_cv_mpi_version="unkown"
       else
         ac_cv_mpi_version="$VAL"
+        ac_cv_mpi_major_version=`echo $VAL | cut -f1 -d'.'`
+        ac_cv_mpi_minor_version=`echo $VAL | cut -f2 -d'.'`
       fi
 
 else
@@ -4404,7 +4415,7 @@ echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
 
 ( exit $ac_status )
-ac_cv_mpi_version="unknown"
+ac_cv_mpi_version="unknown", ac_cv_mpi_major_version="1", ac_cv_mpi_minor_version="0"
 fi
 rm -f core *.core gmon.out bb.out conftest$ac_exeext conftest.$ac_objext conftest.$ac_ext
 fi
@@ -4418,6 +4429,188 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 fi
 echo "$as_me:$LINENO: result: $ac_cv_mpi_version" >&5
 echo "${ECHO_T}$ac_cv_mpi_version" >&6
+
+
+if test "x$ENABLE_MPI2" = "xyes" ; then
+  if test "x$ac_cv_mpi_major_version" != "x2" ; then
+    { { echo "$as_me:$LINENO: error: MPI Version does not seem to be supporting MPI2 features (maybe version check went wrong -- see config.log for details)..." >&5
+echo "$as_me: error: MPI Version does not seem to be supporting MPI2 features (maybe version check went wrong -- see config.log for details)..." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_MPI2 1
+_ACEOF
+
+
+  echo "$as_me:$LINENO: checking whether MPI supports one-sided communication" >&5
+echo $ECHO_N "checking whether MPI supports one-sided communication... $ECHO_C" >&6
+if test "${ac_cv_have_mpi2_one_sided+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+
+
+    ac_ext=c
+    ac_compile=$ac_cv_mpicc_compile
+    ac_link=$ac_cv_mpicc_link
+    cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+#     include <stdio.h>
+#     include "mpi.h"
+
+int
+main ()
+{
+
+      int a;
+      MPI_Win win;
+
+      MPI_Win_create (&a, sizeof(a), 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win);
+      return 0;
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_have_mpi2_one_sided="yes"
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_have_mpi2_one_sided="no"
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+    ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+
+fi
+echo "$as_me:$LINENO: result: $ac_cv_have_mpi2_one_sided" >&5
+echo "${ECHO_T}$ac_cv_have_mpi2_one_sided" >&6
+  if test "x$ac_cv_have_mpi2_one_sided" = "xyes" ; then
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_MPI2_ONE_SIDED 1
+_ACEOF
+
+  fi
+
+
+  echo "$as_me:$LINENO: checking whether MPI supports dynamic process creation" >&5
+echo $ECHO_N "checking whether MPI supports dynamic process creation... $ECHO_C" >&6
+if test "${ac_cv_have_mpi2_dynamic_processes+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+
+
+    ac_ext=c
+    ac_compile=$ac_cv_mpicc_compile
+    ac_link=$ac_cv_mpicc_link
+    cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+#     include <stdio.h>
+#     include "mpi.h"
+
+int
+main ()
+{
+
+      int a;
+      MPI_Comm comm;
+
+      MPI_Comm_get_parent (&comm);
+      return 0;
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_have_mpi2_dynamic_processes="yes"
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_have_mpi2_dynamic_processes="no"
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+    ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+
+fi
+echo "$as_me:$LINENO: result: $ac_cv_have_mpi2_dynamic_processes" >&5
+echo "${ECHO_T}$ac_cv_have_mpi2_dynamic_processes" >&6
+  if test "x$ac_cv_have_mpi2_dynamic_processes" = "xyes" ; then
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_MPI2_DYNAMIC_PROCESSES 1
+_ACEOF
+
+  fi
+
+fi
 
 
 
@@ -15478,6 +15671,31 @@ echo X"$as_dir" |
     test ! -n "$as_dirs" || mkdir $as_dirs
   fi || { { echo "$as_me:$LINENO: error: cannot create directory env" >&5
 echo "$as_me: error: cannot create directory env" >&2;}
+   { (exit 1); exit 1; }; }; }
+
+{ if $as_mkdir_p; then
+    mkdir -p one-sided
+  else
+    as_dir=one-sided
+    as_dirs=
+    while test ! -d "$as_dir"; do
+      as_dirs="$as_dir $as_dirs"
+      as_dir=`(dirname "$as_dir") 2>/dev/null ||
+$as_expr X"$as_dir" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
+	 X"$as_dir" : 'X\(//\)[^/]' \| \
+	 X"$as_dir" : 'X\(//\)$' \| \
+	 X"$as_dir" : 'X\(/\)' \| \
+	 .     : '\(.\)' 2>/dev/null ||
+echo X"$as_dir" |
+    sed '/^X\(.*[^/]\)\/\/*[^/][^/]*\/*$/{ s//\1/; q; }
+  	  /^X\(\/\/\)[^/].*/{ s//\1/; q; }
+  	  /^X\(\/\/\)$/{ s//\1/; q; }
+  	  /^X\(\/\).*/{ s//\1/; q; }
+  	  s/.*/./; q'`
+    done
+    test ! -n "$as_dirs" || mkdir $as_dirs
+  fi || { { echo "$as_me:$LINENO: error: cannot create directory one-sided" >&5
+echo "$as_me: error: cannot create directory one-sided" >&2;}
    { (exit 1); exit 1; }; }; }
 
 { if $as_mkdir_p; then

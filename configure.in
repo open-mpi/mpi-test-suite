@@ -9,11 +9,15 @@ AC_ARG_PROGRAM
 
 AC_ARG_ENABLE(fortran,
   AS_HELP_STRING([--enable-fortran], [build the Fortran library [[default=yes]]]),
-  [test "$enableval" = no && ENABLE_PACX_FORTRAN=no], ENABLE_PACX_FORTRAN=yes)
+  [test "$enableval" = "no" && ENABLE_PACX_FORTRAN=no], ENABLE_PACX_FORTRAN=yes)
 
 AC_ARG_ENABLE(pacx,
   AS_HELP_STRING([--enable-pacx], [build the PACX library [[default=no]]]),
-  [test "$enableval" = yes && ENABLE_PACX=yes], ENABLE_PACX=no)
+  [test "$enableval" = "yes" && ENABLE_PACX=yes], ENABLE_PACX=no)
+
+AC_ARG_ENABLE(mpi2,
+  AS_HELP_STRING([--enable-mpi2], [Check for MPI2 features [[default=no]]]),
+  [test "$enableval" = "yes" && ENABLE_MPI2=yes], ENABLE_MPI2=no)
 
 
 
@@ -243,6 +247,16 @@ LIBS=${old_LIBS}
 
 
 AC_CHECK_MPI_VERSION
+
+if test "x$ENABLE_MPI2" = "xyes" ; then
+  if test "x$ac_cv_mpi_major_version" != "x2" ; then
+    AC_MSG_ERROR([MPI Version does not seem to be supporting MPI2 features (maybe version check went wrong -- see config.log for details)...])
+  fi
+  AC_DEFINE(HAVE_MPI2, 1, [Define if MPI library supports MPI2])
+  AC_CHECK_MPI2_ONE_SIDED
+  AC_CHECK_MPI2_DYNAMIC_PROCESSES
+fi
+
 
 
 AC_SUBST(CFLAGS)
@@ -512,6 +526,7 @@ AC_CONFIG_FILES([Makefile])
 
 AS_MKDIR_P([coll])
 AS_MKDIR_P([env])
+AS_MKDIR_P([one-sided])
 AS_MKDIR_P([p2p])
 
 AC_OUTPUT

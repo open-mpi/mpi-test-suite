@@ -50,12 +50,13 @@ int tst_hash_value (const struct tst_env * env)
 
 static int usage (void)
 {
-  fprintf (stderr, "Usage: mpi_test_suite [-t test] [-c comm] [-d datatype] [-n num_values] [-r report] [-v] [-l] [-h]\n"
+  fprintf (stderr, "Usage: mpi_test_suite [-t test] [-c comm] [-d datatype] [-n num_values] [-r report] [-x test_mode] [-v] [-l] [-h]\n"
            "test:\t\tone (or more) tests or test-classes (see -l) and\n"
            "comm:\t\tone (or more) communicator or communicator-classes (see -l)\n"
            "datatype:\tone (or more) datatype or datatype-classes (see -l)\n"
            "num_values:\thow many elements to communicate (default:%d)\n"
            "report:\t\tlevel of detail for tests being run, see -l (default:SUMMARY)\n"
+           "test_mode:\tlevel of correctness testing, tests to run and internal tests, see -l (default:RELAXED)\n"
            "\n"
            "All multiple test/comm/datatype-declarations must be separated by commas\n"
            "The option -l/--list lists all available tests, communicators and datatypes\n"
@@ -238,6 +239,8 @@ int main (int argc, char * argv[])
               tst_type_list ();
               for (i = 0; i < TST_REPORT_MAX; i++)
                 printf ("Report:%d %s\n", i, tst_reports[i]);
+              for (i = 0; i < TST_MODE_MAX; i++)
+                printf ("Test mode:%d %s\n", i, tst_modes[i]);
             }
           MPI_Finalize ();
           exit (0);
@@ -318,7 +321,7 @@ int main (int argc, char * argv[])
           if (tst_test_check_sync (&tst_env))
             MPI_Barrier (MPI_COMM_WORLD);
         }
-  if (tst_global_rank == 0 && tst_report == TST_REPORT_SUMMARY)
+  if (tst_global_rank == 0)
     tst_test_print_failed ();
   MPI_Finalize ();
   return 0;

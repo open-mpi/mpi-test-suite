@@ -19,12 +19,13 @@
 #define TST_TESTS_NUM (sizeof (tst_tests) / sizeof (tst_tests[0]))
 #define TST_TEST_CLASS_NUM (sizeof (tst_test_class_strings) / sizeof (tst_test_class_strings[0]))
 
-
+/* This string has to be kept up-to-date with XXX in mpi_test_suite.h */
 static const char * const tst_test_class_strings [] =
   {
     "Environment",
     "P2P",
-    "Collective"
+    "Collective",
+    "One-sided"
   };
 
 struct tst_test {
@@ -287,6 +288,30 @@ static struct tst_test tst_tests[] = {
    &tst_coll_scatterv_stride_init, &tst_coll_scatterv_stride_run, &tst_coll_scatterv_stride_cleanup},
 
   /*
+   * XXX should allow TST_MPI_INTER_COMM depending on whether the underlying
+   * MPI supports it!
+   */
+  {TST_CLASS_COLL, "Reduce Min",
+   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   (TST_MPI_STANDARD_C_TYPES | TST_MPI_STANDARD_FORTRAN_INT_TYPES | TST_MPI_STANDARD_FORTRAN_FLOAT_TYPES) &
+   ~(TST_MPI_CHAR | TST_MPI_UNSIGNED_CHAR | TST_MPI_BYTE),
+   TST_MODE_RELAXED,
+   TST_NONE,            /* No synchronization needed */
+   &tst_coll_reduce_min_init, &tst_coll_reduce_min_run, &tst_coll_reduce_min_cleanup},
+
+  /*
+   * XXX should allow TST_MPI_INTER_COMM depending on whether the underlying
+   * MPI supports it!
+   */
+  {TST_CLASS_COLL, "Reduce Max",
+   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   (TST_MPI_STANDARD_C_TYPES | TST_MPI_STANDARD_FORTRAN_INT_TYPES | TST_MPI_STANDARD_FORTRAN_FLOAT_TYPES) &
+   ~(TST_MPI_CHAR | TST_MPI_UNSIGNED_CHAR | TST_MPI_BYTE),
+   TST_MODE_RELAXED,
+   TST_NONE,            /* No synchronization needed */
+   &tst_coll_reduce_max_init, &tst_coll_reduce_max_run, &tst_coll_reduce_max_cleanup},
+
+  /*
    * The Allreduce call is not valid for MPI_MIN/MPI_MAX and
    * the datatypes MPI_Char, MPI_UNSIGNED_CHAR and MPI_Byte and
    * the struct datatypes
@@ -311,7 +336,39 @@ static struct tst_test tst_tests[] = {
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
-   &tst_coll_alltoall_init, &tst_coll_alltoall_run, &tst_coll_alltoall_cleanup}
+   &tst_coll_alltoall_init, &tst_coll_alltoall_run, &tst_coll_alltoall_cleanup},
+
+#ifdef HAVE_MPI2_ONE_SIDED
+  {TST_CLASS_ONE_SIDED, "One-sided Ring with Get",
+   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM, /* XXX possible with MPI_COMM_SELF?? */
+   TST_MPI_STANDARD_C_TYPES, /* Fails with TST_MPI_ALL_C_TYPES, as the struct-datatypes are not supported */
+   TST_MODE_RELAXED,
+   TST_NONE,            /* No synchronization needed */
+   &tst_one_sided_simple_ring_get_init, &tst_one_sided_simple_ring_get_run, &tst_one_sided_simple_ring_get_cleanup},
+
+  {TST_CLASS_ONE_SIDED, "One-sided Ring with Get using Post",
+   TST_MPI_INTRA_COMM, /* XXX possible with MPI_COMM_SELF?? */
+   TST_MPI_STANDARD_C_TYPES,
+   // (TST_MPI_STANDARD_C_TYPES) & ~(TST_MPI_SHORT | TST_MPI_UNSIGNED_SHORT | TST_MPI_LONG_DOUBLE), /* Fails with TST_MPI_ALL_C_TYPES, as the struct-datatypes are not supported */
+   TST_MODE_RELAXED,
+   TST_NONE,            /* No synchronization needed */
+   &tst_one_sided_simple_ring_get_post_init, &tst_one_sided_simple_ring_get_post_run, &tst_one_sided_simple_ring_get_post_cleanup},
+
+  {TST_CLASS_ONE_SIDED, "One-sided Ring with Put",
+   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM, /* XXX possible with MPI_COMM_SELF?? */
+   TST_MPI_STANDARD_C_TYPES, /* Fails with TST_MPI_ALL_C_TYPES, as the struct-datatypes are not supported */
+   TST_MODE_RELAXED,
+   TST_NONE,            /* No synchronization needed */
+   &tst_one_sided_simple_ring_put_init, &tst_one_sided_simple_ring_put_run, &tst_one_sided_simple_ring_put_cleanup},
+
+#endif
+
+  {TST_CLASS_UNSPEC, "None",
+   0,
+   0,
+   0,
+   0,
+   NULL, NULL, NULL}
 };
 
 static struct tst_env * tst_tests_failed = NULL;
@@ -337,7 +394,8 @@ const char * tst_test_getclass (int i)
     (
      if (tst_tests[i].class != TST_CLASS_ENV &&
          tst_tests[i].class != TST_CLASS_P2P &&
-         tst_tests[i].class != TST_CLASS_COLL)
+         tst_tests[i].class != TST_CLASS_COLL &&
+         tst_tests[i].class != TST_CLASS_ONE_SIDED)
      ERROR (EINVAL, "Class of test is unknown");
      );
   /*
@@ -524,7 +582,6 @@ int tst_test_recordfailure (const struct tst_env * env)
    * First make sure, that this combination is not already
    * in the failed-list
    */
-/*
   for (i = 0; i < tst_tests_failed_num; i++)
     if (tst_tests_failed[i].comm == env->comm &&
         tst_tests_failed[i].type == env->type &&
@@ -548,7 +605,6 @@ int tst_test_recordfailure (const struct tst_env * env)
       if (tst_tests_failed_num == TST_TESTS_NUM_FAILED_MAX)
         ERROR (EINVAL, "Maximum Error limit reached");
     }
-*/
   return 0;
 }
 
@@ -564,7 +620,8 @@ int tst_test_print_failed (void)
       const int type = tst_tests_failed[i].type;
       const int values_num= tst_tests_failed[i].values_num;
 
-      printf ("ERROR test:%s (%d), comm %s (%d), type %s (%d) num of values:%d\n",
+      printf ("ERROR class:%s test:%s (%d), comm %s (%d), type %s (%d) number of values:%d\n",
+              tst_test_getclass (test),
               tst_test_getdescription (test), test+1,
               tst_comm_getdescription (comm), comm+1,
               tst_type_getdescription (type), type+1, values_num);

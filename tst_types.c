@@ -32,6 +32,8 @@
 #endif
 
 #define MAX_TYPES 128                   /* One of the largest type_maaings is for MPI_TYPE_MIX_ARRAY */
+#define TYPES_NUM_REPEAT   7
+#define OVERHEAD 2
 #define DEFAULT_INIT_BYTE 0xa5
 
 #define CHECK_ARG(i,ret) do {           \
@@ -86,90 +88,113 @@ struct type {
 
 static struct type types[32] = {
 /* Standard C Types */
-  {MPI_CHAR,              "MPI_CHAR",             0, sizeof (char), TST_MPI_CHAR, 1, {TST_MPI_CHAR}},
-  {MPI_UNSIGNED_CHAR,     "MPI_UNSIGNED_CHAR",    0, sizeof (unsigned char), TST_MPI_UNSIGNED_CHAR, 1, {TST_MPI_UNSIGNED_CHAR}},
-  {MPI_BYTE,              "MPI_BYTE",             0, sizeof (char), TST_MPI_BYTE, 1, {TST_MPI_BYTE}},
-  {MPI_SHORT,             "MPI_SHORT",            0, sizeof (short), TST_MPI_SHORT, 1, {TST_MPI_SHORT}},
-  {MPI_UNSIGNED_SHORT,    "MPI_UNSIGNED_SHORT",   0, sizeof (unsigned short), TST_MPI_UNSIGNED_SHORT, 1, {TST_MPI_UNSIGNED_SHORT}},
-  {MPI_INT,               "MPI_INT",              0, sizeof (int), TST_MPI_INT, 1, {TST_MPI_INT}},
-  {MPI_UNSIGNED,          "MPI_UNSIGNED",         0, sizeof (unsigned int), TST_MPI_UNSIGNED, 1, {TST_MPI_UNSIGNED}},
-  {MPI_LONG,              "MPI_LONG",             0, sizeof (long), TST_MPI_LONG, 1, {TST_MPI_LONG}},
-  {MPI_UNSIGNED_LONG,     "MPI_UNSIGNED_LONG",    0, sizeof (unsigned long), TST_MPI_UNSIGNED_LONG, 1, {TST_MPI_UNSIGNED_LONG}},
-  {MPI_FLOAT,             "MPI_FLOAT",            0, sizeof (float), TST_MPI_FLOAT, 1, {TST_MPI_FLOAT}},
-  {MPI_DOUBLE,            "MPI_DOUBLE",           0, sizeof (double), TST_MPI_DOUBLE, 1, {TST_MPI_DOUBLE}},
-#if 0 && defined(HAVE_LONG_DOUBLE)
-  {MPI_LONG_DOUBLE,       "MPI_LONG_DOUBLE",      0, sizeof (long double), TST_MPI_LONG_DOUBLE, 1, {TST_MPI_LONG_DOUBLE}},
+      {MPI_CHAR,              "MPI_CHAR",             0, sizeof (char), TST_MPI_CHAR, 1, {TST_MPI_CHAR}},
+#if defined(HAVE_MPI2)
+      {MPI_DATATYPE_NULL,     "Dup MPI_CHAR",         0, sizeof (char), TST_MPI_CHAR, 1, {TST_MPI_CHAR}},
 #else
-  {MPI_DATATYPE_NULL,     "MPI_LONG_DOUBLE n/a",  0, 0, 0, 0, {0}},
+      {MPI_DATATYPE_NULL,     "function MPI_Type_dup() n/a", 0, 0, 0, 0, {0}},
+#endif /* HAVE_MPI2 */
+
+      {MPI_UNSIGNED_CHAR,     "MPI_UNSIGNED_CHAR",    0, sizeof (unsigned char), TST_MPI_UNSIGNED_CHAR, 1, {TST_MPI_UNSIGNED_CHAR}},
+      {MPI_BYTE,              "MPI_BYTE",             0, sizeof (char), TST_MPI_BYTE, 1, {TST_MPI_BYTE}},
+      {MPI_SHORT,             "MPI_SHORT",            0, sizeof (short), TST_MPI_SHORT, 1, {TST_MPI_SHORT}},
+/*5*/ {MPI_UNSIGNED_SHORT,    "MPI_UNSIGNED_SHORT",   0, sizeof (unsigned short), TST_MPI_UNSIGNED_SHORT, 1, {TST_MPI_UNSIGNED_SHORT}},
+      {MPI_INT,               "MPI_INT",              0, sizeof (int), TST_MPI_INT, 1, {TST_MPI_INT}},
+      {MPI_UNSIGNED,          "MPI_UNSIGNED",         0, sizeof (unsigned int), TST_MPI_UNSIGNED, 1, {TST_MPI_UNSIGNED}},
+      {MPI_LONG,              "MPI_LONG",             0, sizeof (long), TST_MPI_LONG, 1, {TST_MPI_LONG}},
+      {MPI_UNSIGNED_LONG,     "MPI_UNSIGNED_LONG",    0, sizeof (unsigned long), TST_MPI_UNSIGNED_LONG, 1, {TST_MPI_UNSIGNED_LONG}},
+/*10*/{MPI_FLOAT,             "MPI_FLOAT",            0, sizeof (float), TST_MPI_FLOAT, 1, {TST_MPI_FLOAT}},
+      {MPI_DOUBLE,            "MPI_DOUBLE",           0, sizeof (double), TST_MPI_DOUBLE, 1, {TST_MPI_DOUBLE}},
+#if defined(HAVE_LONG_DOUBLE)
+      {MPI_LONG_DOUBLE,       "MPI_LONG_DOUBLE",      0, sizeof (long double), TST_MPI_LONG_DOUBLE, 1, {TST_MPI_LONG_DOUBLE}},
+#else
+      {MPI_DATATYPE_NULL,     "MPI_LONG_DOUBLE n/a",  0, 0, 0, 0, {0}},
 #endif
 #ifdef HAVE_MPI_LONG_LONG
-  {MPI_LONG_LONG,         "MPI_LONG_LONG",        0, sizeof (long long int), TST_MPI_LONG_LONG, 1, {TST_MPI_LONG_LONG}},
+      {MPI_LONG_LONG,         "MPI_LONG_LONG",        0, sizeof (long long int), TST_MPI_LONG_LONG, 1, {TST_MPI_LONG_LONG}},
 #else
-  {MPI_DATATYPE_NULL,     "MPI_LONG_LONG n/a",    0, 0, 0, 0, {0}},
+      {MPI_DATATYPE_NULL,     "MPI_LONG_LONG n/a",    0, 0, 0, 0, {0}},
 #endif /* HAVE_MPI_LONG_LONG */
-/*  {MPI_PACKED,          "MPI_PACKED",           0, 0, 0, NULL},
-  {MPI_LB,                "MPI_LB",               0, sizeof (), 1, {TST_}},
-  {MPI_UB,                "MPI_UB",               0, sizeof (), 1, {TST_}},*/
-/* Composed C types */
-  {MPI_FLOAT_INT,         "MPI_FLOAT_INT",        0, sizeof (struct tst_mpi_float_int), TST_MPI_FLOAT_INT, 1, {TST_MPI_FLOAT_INT}},
-  {MPI_DOUBLE_INT,        "MPI_DOUBLE_INT",       0, sizeof (struct tst_mpi_double_int), TST_MPI_DOUBLE_INT, 1, {TST_MPI_DOUBLE_INT}},
-  {MPI_LONG_INT,          "MPI_LONG_INT",         0, sizeof (struct tst_mpi_long_int), TST_MPI_LONG_INT, 1, {TST_MPI_LONG_INT}},
-  {MPI_SHORT_INT,         "MPI_SHORT_INT",        0, sizeof (struct tst_mpi_short_int), TST_MPI_SHORT_INT, 1, {TST_MPI_SHORT_INT}},
-  {MPI_2INT,              "MPI_2INT",             0, sizeof (struct tst_mpi_2int), TST_MPI_2INT, 1, {TST_MPI_2INT}},
-#if 0 && defined(HAVE_LONG_DOUBLE)
-  {MPI_LONG_DOUBLE_INT,   "MPI_LONG_DOUBLE_INT",  0, sizeof (struct tst_mpi_long_double_int), TST_MPI_LONG_DOUBLE_INT, 1, {TST_MPI_LONG_DOUBLE_INT}},*/
+      /*  {MPI_PACKED,          "MPI_PACKED",           0, 0, 0, NULL},
+          {MPI_LB,                "MPI_LB",               0, sizeof (), 1, {TST_}},
+          {MPI_UB,                "MPI_UB",               0, sizeof (), 1, {TST_}},*/
+      /* Composed C types */
+      {MPI_FLOAT_INT,         "MPI_FLOAT_INT",        0, sizeof (struct tst_mpi_float_int), TST_MPI_FLOAT_INT, 1, {TST_MPI_FLOAT_INT}},
+/*15*/{MPI_DOUBLE_INT,        "MPI_DOUBLE_INT",       0, sizeof (struct tst_mpi_double_int), TST_MPI_DOUBLE_INT, 1, {TST_MPI_DOUBLE_INT}},
+      {MPI_LONG_INT,          "MPI_LONG_INT",         0, sizeof (struct tst_mpi_long_int), TST_MPI_LONG_INT, 1, {TST_MPI_LONG_INT}},
+      {MPI_SHORT_INT,         "MPI_SHORT_INT",        0, sizeof (struct tst_mpi_short_int), TST_MPI_SHORT_INT, 1, {TST_MPI_SHORT_INT}},
+      {MPI_2INT,              "MPI_2INT",             0, sizeof (struct tst_mpi_2int), TST_MPI_2INT, 1, {TST_MPI_2INT}},
+#if defined(HAVE_LONG_DOUBLE)
+      {MPI_LONG_DOUBLE_INT,   "MPI_LONG_DOUBLE_INT",  0, sizeof (struct tst_mpi_long_double_int), TST_MPI_LONG_DOUBLE_INT, 1, {TST_MPI_LONG_DOUBLE_INT}},
 #else
-  {MPI_DATATYPE_NULL,     "MPI_LONG_DOUBLE_INT n/a", 0, 0, 0, 0, {0}},
-#endif /* HAVE_MPI_LONG_LONG */
+      {MPI_DATATYPE_NULL,     "MPI_LONG_DOUBLE_INT n/a", 0, 0, 0, 0, {0}},
+#endif /* HAVE_MPI_LONG_DOUBLE */
 
-  /*
-   * First of all a representation of 7 MPI_INTs with different MPI_Type-creation calls
-   */
-  {MPI_DATATYPE_NULL,     "MPI_CONTIGUOUS_INT",   0, 7*sizeof(int), TST_MPI_INT_CONTI, 7, {TST_MPI_INT}},
-  {MPI_DATATYPE_NULL,     "MPI_VECTOR_INT",       0, 7*sizeof(int), TST_MPI_INT_VECTOR, 7, {TST_MPI_INT}},
-  {MPI_DATATYPE_NULL,     "MPI_HVECTOR_INT",      0, 7*sizeof(int), TST_MPI_INT_HVECTOR, 7, {TST_MPI_INT}},
-  {MPI_DATATYPE_NULL,     "MPI_INDEXED_INT",      0, 7*sizeof(int), TST_MPI_INT_INDEXED, 7, {TST_MPI_INT}},
-  {MPI_DATATYPE_NULL,     "MPI_HINDEXED_INT",     0, 7*sizeof(int), TST_MPI_INT_HINDEXED, 7 , {TST_MPI_INT}},
-  {MPI_DATATYPE_NULL,     "MPI_STRUCT_INT",       0, 7*sizeof(int), TST_MPI_INT_STRUCT, 7, {TST_MPI_INT}},
-  /*
-   * Now, more complex derived MPI_Datattypes
-   */
-  {MPI_DATATYPE_NULL,     "MPI_TYPE_MIX",         0, sizeof(struct tst_mpi_type_mix), TST_MPI_TYPE_MIX, 11, {TST_MPI_INT}},
-  {MPI_DATATYPE_NULL,     "MPI_TYPE_MIX_ARRAY",   0, sizeof(struct tst_mpi_type_mix_array), TST_MPI_TYPE_MIX_ARRAY,6 , {TST_MPI_INT}},
-  {MPI_DATATYPE_NULL,     "MPI_TYPE_MIX_LB_UB",   0, 0, TST_MPI_TYPE_MIX_LB_UB, 6 , {TST_MPI_INT}},
+#define PREDEFINED_DATATYPES 20
+      /*
+       * First of all a representation of 7 MPI_INTs with different MPI_Type-creation calls
+       */
+/*20*/{MPI_DATATYPE_NULL,     "MPI_CONTIGUOUS_INT",   0, 7*sizeof(int), TST_MPI_INT_CONTI, 7, {TST_MPI_INT}},
+      {MPI_DATATYPE_NULL,     "MPI_VECTOR_INT",       0, 7*sizeof(int), TST_MPI_INT_VECTOR, 7, {TST_MPI_INT}},
+      {MPI_DATATYPE_NULL,     "MPI_HVECTOR_INT",      0, 7*sizeof(int), TST_MPI_INT_HVECTOR, 7, {TST_MPI_INT}},
+      {MPI_DATATYPE_NULL,     "MPI_INDEXED_INT",      0, 7*sizeof(int), TST_MPI_INT_INDEXED, 7, {TST_MPI_INT}},
+      {MPI_DATATYPE_NULL,     "MPI_HINDEXED_INT",     0, 7*sizeof(int), TST_MPI_INT_HINDEXED, 7, {TST_MPI_INT}},
+/*25*/{MPI_DATATYPE_NULL,     "MPI_STRUCT_INT",       0, 7*sizeof(int), TST_MPI_INT_STRUCT, 7, {TST_MPI_INT}},
+      /*
+       * Now, more complex derived MPI_Datattypes
+       */
+      {MPI_DATATYPE_NULL,     "MPI_TYPE_MIX",         0, sizeof(struct tst_mpi_type_mix), TST_MPI_TYPE_MIX, 11, {TST_MPI_INT}},
+      {MPI_DATATYPE_NULL,     "MPI_TYPE_MIX_ARRAY",   0, sizeof(struct tst_mpi_type_mix_array), TST_MPI_TYPE_MIX_ARRAY, 6, {TST_MPI_INT}},
+      {MPI_DATATYPE_NULL,     "MPI_TYPE_MIX_LB_UB",   0, 0, TST_MPI_TYPE_MIX_LB_UB, 6, {TST_MPI_INT}},
 
-/* Fortran Types */
-/*  {MPI_COMPLEX,           "MPI_COMPLEX",         0, sizeof (complex), 1, {TST_}},
-  {MPI_DOUBLE_COMPLEX,    "MPI_DOUBLE_COMPLEX",    0, sizeof (), 1, {TST_}},
-  {MPI_LOGICAL,           "MPI_LOGICAL",           0, sizeof (), 1, {TST_}},
-  {MPI_REAL,              "MPI_REAL",              0, sizeof (), 1, {TST_}},
-  {MPI_DOUBLE_PRECISION,  "MPI_DOUBLE_PRECISION",  0, sizeof (), 1, {TST_}},
-  {MPI_INTEGER,           "MPI_INTEGER",           0, sizeof (), 1, {TST_}},
-  {MPI_2INTEGER,          "MPI_2INTEGER",          0, sizeof (), 1, {TST_}},
-  {MPI_2COMPLEX,          "MPI_2COMPLEX",          0, sizeof (), 1, {TST_}},
-  {MPI_2DOUBLE_COMPLEX,   "MPI_2DOUBLE_COMPLEX",   0, sizeof (), 1, {TST_}},
-  {MPI_2REAL,             "MPI_2REAL",             0, sizeof (), 1, {TST_}},
-  {MPI_2DOUBLE_PRECISION, "MPI_2DOUBLE_PRECISION", 0, sizeof (), 1, {TST_}},
-  {MPI_CHARACTER,         "MPI_CHARACTER",         0, sizeof (), 1, {TST_}}*/
-  /*
-   * The last element
-   */
-  {MPI_DATATYPE_NULL,     "",                     0, 0, 0, 0, {TST_MPI_INT}}
+#if 0 && defined(HAVE_MPI2)
+      {MPI_DATATYPE_NULL,     "Dup MPI_TYPE_MIX_LB_UB",  0, 0, TST_MPI_TYPE_MIX_LB_UB, 6, {TST_MPI_INT}},
+#else
+      {MPI_DATATYPE_NULL,     "function MPI_Type_dup() n/a", 0, 0, 0, 0, {0}},
+#endif /* HAVE_MPI2 */
+
+    /* Fortran Types */
+    /*  {MPI_COMPLEX,           "MPI_COMPLEX",         0, sizeof (complex), 1, {TST_}},
+      {MPI_DOUBLE_COMPLEX,    "MPI_DOUBLE_COMPLEX",    0, sizeof (), 1, {TST_}},
+      {MPI_LOGICAL,           "MPI_LOGICAL",           0, sizeof (), 1, {TST_}},
+      {MPI_REAL,              "MPI_REAL",              0, sizeof (), 1, {TST_}},
+      {MPI_DOUBLE_PRECISION,  "MPI_DOUBLE_PRECISION",  0, sizeof (), 1, {TST_}},
+      {MPI_INTEGER,           "MPI_INTEGER",           0, sizeof (), 1, {TST_}},
+      {MPI_2INTEGER,          "MPI_2INTEGER",          0, sizeof (), 1, {TST_}},
+      {MPI_2COMPLEX,          "MPI_2COMPLEX",          0, sizeof (), 1, {TST_}},
+      {MPI_2DOUBLE_COMPLEX,   "MPI_2DOUBLE_COMPLEX",   0, sizeof (), 1, {TST_}},
+      {MPI_2REAL,             "MPI_2REAL",             0, sizeof (), 1, {TST_}},
+      {MPI_2DOUBLE_PRECISION, "MPI_2DOUBLE_PRECISION", 0, sizeof (), 1, {TST_}},
+      {MPI_CHARACTER,         "MPI_CHARACTER",         0, sizeof (), 1, {TST_}}*/
+      /*
+      * The last element
+      */
+      {MPI_DATATYPE_NULL,     "",                     0, 0, 0, 0, {TST_MPI_INT}}
 };
 
 int tst_type_init (int * num_types)
 {
   int i;
-  int num = 19;
+  int num = PREDEFINED_DATATYPES;
+
+#if defined(HAVE_MPI2)
+  {
+    /*
+     * Dup MPI_CHAR
+     * Just duplicate the Type -- everthing else is setup already.
+     */
+    MPI_Type_dup (types[0].mpi_datatype, &(types[1].mpi_datatype));
+  }
+#endif /* HAVE_MPI2 */
 
   {
     /*
      * MPI_CONTIGUOUS_INT
      */
-    MPI_Type_contiguous (7, MPI_INT, &(types[num].mpi_datatype));
+    MPI_Type_contiguous (TYPES_NUM_REPEAT, MPI_INT, &(types[num].mpi_datatype));
     MPI_Type_commit (&(types[num].mpi_datatype));
-    types[num].type_num = 7;
-    for(i=0 ; i < 7; i++)
+    types[num].type_num = TYPES_NUM_REPEAT;
+    for(i=0 ; i < TYPES_NUM_REPEAT; i++)
       types[num].type_mapping[i] = TST_MPI_INT;
     num++;
   }
@@ -178,10 +203,10 @@ int tst_type_init (int * num_types)
     /*
      * MPI_VECTOR_INT
      */
-    MPI_Type_vector (7, 1, 1, MPI_INT, &(types[num].mpi_datatype));
+    MPI_Type_vector (TYPES_NUM_REPEAT, 1, 1, MPI_INT, &(types[num].mpi_datatype));
     MPI_Type_commit (&(types[num].mpi_datatype));
-    types[num].type_num = 7;
-    for(i=0; i < 7; i++)
+    types[num].type_num = TYPES_NUM_REPEAT;
+    for(i=0; i < TYPES_NUM_REPEAT; i++)
       types[num].type_mapping[i] = TST_MPI_INT;
     num++;
   }
@@ -190,10 +215,10 @@ int tst_type_init (int * num_types)
     /*
      * MPI_HVECTOR_INT
      */
-    MPI_Type_hvector (7, 1, sizeof(int), MPI_INT, &(types[num].mpi_datatype));
+    MPI_Type_hvector (TYPES_NUM_REPEAT, 1, sizeof(int), MPI_INT, &(types[num].mpi_datatype));
     MPI_Type_commit (&(types[num].mpi_datatype));
-    types[num].type_num = 7;
-    for(i=0; i < 7; i++)
+    types[num].type_num = TYPES_NUM_REPEAT;
+    for(i=0; i < TYPES_NUM_REPEAT; i++)
       types[num].type_mapping[i] = TST_MPI_INT;
     num++;
   }
@@ -202,16 +227,16 @@ int tst_type_init (int * num_types)
     /*
      * MPI_INDEXED_INT
      */
-    int block[7];
-    int dis[7];
-    for(i=0; i < 7; i++) {
+    int block[TYPES_NUM_REPEAT];
+    int dis[TYPES_NUM_REPEAT];
+    for(i=0; i < TYPES_NUM_REPEAT; i++) {
       block[i] = 1;
       dis[i] = i;
     }
-    MPI_Type_indexed (7, block, dis, MPI_INT, &(types[num].mpi_datatype));
+    MPI_Type_indexed (TYPES_NUM_REPEAT, block, dis, MPI_INT, &(types[num].mpi_datatype));
     MPI_Type_commit (&(types[num].mpi_datatype));
-    types[num].type_num = 7;
-    for(i=0; i < 7; i++)
+    types[num].type_num = TYPES_NUM_REPEAT;
+    for(i=0; i < TYPES_NUM_REPEAT; i++)
       types[num].type_mapping[i]=TST_MPI_INT;
     num++;
   }
@@ -220,16 +245,16 @@ int tst_type_init (int * num_types)
     /*
      * MPI_HINDEXED_INT
      */
-    int block[7];
-    MPI_Aint dis[7];
-    for(i=0; i < 7; i++) {
+    int block[TYPES_NUM_REPEAT];
+    MPI_Aint dis[TYPES_NUM_REPEAT];
+    for(i=0; i < TYPES_NUM_REPEAT; i++) {
       block[i] = 1;
       dis[i] = i*sizeof(int);
     }
-    MPI_Type_hindexed (7, block, dis, MPI_INT,&(types[num].mpi_datatype));
+    MPI_Type_hindexed (TYPES_NUM_REPEAT, block, dis, MPI_INT, &(types[num].mpi_datatype));
     MPI_Type_commit (&(types[num].mpi_datatype));
-    types[num].type_num = 7;
-    for(i=0 ; i < 7; i++)
+    types[num].type_num = TYPES_NUM_REPEAT;
+    for(i=0 ; i < TYPES_NUM_REPEAT; i++)
       types[num].type_mapping[i]=TST_MPI_INT;
     num++;
   }
@@ -242,15 +267,15 @@ int tst_type_init (int * num_types)
     MPI_Aint dis_struct[1];
     MPI_Datatype dtype[1];
 
-    block_struct[0] = 7;
+    block_struct[0] = TYPES_NUM_REPEAT;
     dis_struct[0] = 0;
     dtype[0] = MPI_INT;
 
     MPI_Type_struct (1, block_struct, dis_struct, dtype, &(types[num].mpi_datatype));
     MPI_Type_commit (&(types[num].mpi_datatype));
 
-    types[num].type_num = 7;
-    for(i=0; i < 7; i++)
+    types[num].type_num = TYPES_NUM_REPEAT;
+    for(i=0; i < TYPES_NUM_REPEAT; i++)
       types[num].type_mapping[i] = TST_MPI_INT;
     num++;
   }
@@ -352,25 +377,25 @@ int tst_type_init (int * num_types)
      */
 
     int block_mix[8];
-    MPI_Aint disp_array[8]={
-	-1*(sizeof(char)+sizeof(long)+sizeof(double)), /* Position of LB */
-	-1*sizeof(char),                               /* Position of char */
-	0,                                             /* Position of short */
+    MPI_Aint disp_array[8] = {
+        -1*(sizeof(char)+sizeof(long)+sizeof(double)), /* Position of LB */
+        -1*sizeof(char),                               /* Position of char */
+        0,                                             /* Position of short */
         sizeof(short),                                 /* Position of int */
-	-1*(sizeof(char)+sizeof(long)),                /* Position of long */
-	sizeof(short)+sizeof(int),                     /* Position of float */
-	-1*(sizeof(char)+sizeof(long)+sizeof(double)), /* Position of double */
-	sizeof(short)+sizeof(int)+sizeof(float)        /* Position of UB */
+        -1*(sizeof(char)+sizeof(long)),                /* Position of long */
+        sizeof(short)+sizeof(int),                     /* Position of float */
+        -1*(sizeof(char)+sizeof(long)+sizeof(double)), /* Position of double */
+        sizeof(short)+sizeof(int)+sizeof(float)        /* Position of UB */
       };
-    MPI_Datatype mix_type[8] =
-	  { MPI_LB,
-	    MPI_CHAR,
-	    MPI_SHORT,
-	    MPI_INT,
-	    MPI_LONG,
-	    MPI_FLOAT,
-	    MPI_DOUBLE,
-	    MPI_UB };
+    MPI_Datatype mix_type[8] = {
+        MPI_LB,
+        MPI_CHAR,
+        MPI_SHORT,
+        MPI_INT,
+        MPI_LONG,
+        MPI_FLOAT,
+        MPI_DOUBLE,
+        MPI_UB };
     for(i=0 ; i <  8; i++) block_mix[i]=1;
     MPI_Type_struct(8, block_mix, disp_array, mix_type, &(types[num].mpi_datatype));
     MPI_Type_commit(&(types[num].mpi_datatype));
@@ -386,6 +411,27 @@ int tst_type_init (int * num_types)
 
     num++;
   }
+
+#if 0 && defined(HAVE_MPI2)
+  {
+    /*
+     * Dup MPI_TYPE_MIX_LB_UB
+     */
+    MPI_Type_dup (types[num-1].mpi_datatype, &(types[num].mpi_datatype));
+    types[num].type_num = types[num-1].type_num;
+    types[num].type_mapping[0] = types[num-1].type_mapping[0];
+    types[num].type_mapping[1] = types[num-1].type_mapping[1];
+    types[num].type_mapping[2] = types[num-1].type_mapping[2];
+    types[num].type_mapping[3] = types[num-1].type_mapping[3];
+    types[num].type_mapping[4] = types[num-1].type_mapping[4];
+    types[num].type_mapping[5] = types[num-1].type_mapping[5];
+
+    MPI_Type_lb ((types[num].mpi_datatype), &(types[num].lb));
+    MPI_Type_ub ((types[num].mpi_datatype), &(types[num].ub));
+
+    num++;
+  }
+#endif /* HAVE_MPI2 */
 
   *num_types = num;
   return 0;
@@ -502,8 +548,8 @@ char * tst_type_allocvalues (const int type, const int values_num)
 {
   char * buffer;
   int type_size;
+
   CHECK_ARG (type, NULL);
-  const int OVERHEAD=2;
   type_size = tst_type_gettypesize(type);
 
   buffer = malloc ((values_num+OVERHEAD) * type_size);
@@ -820,7 +866,7 @@ int tst_type_setvalue (int type, char * buffer, int type_set, long long direct_v
       TST_TYPE_SET_UNSIGNED (TST_MPI_UNSIGNED_LONG, unsigned long, ULONG);
       TST_TYPE_SET (TST_MPI_FLOAT, float, FLT);
       TST_TYPE_SET (TST_MPI_DOUBLE, double, DBL);
-#if 0 && defined(HAVE_LONG_DOUBLE) && defined (LDBL_MAX)
+#if defined(HAVE_LONG_DOUBLE) && defined (LDBL_MAX)
       TST_TYPE_SET (TST_MPI_LONG_DOUBLE, long double, LDBL);
 #endif
 #ifdef HAVE_MPI_LONG_LONG
@@ -837,7 +883,7 @@ int tst_type_setvalue (int type, char * buffer, int type_set, long long direct_v
       TST_TYPE_SET_STRUCT (TST_MPI_LONG_INT, struct tst_mpi_long_int, LONG);
       TST_TYPE_SET_STRUCT (TST_MPI_SHORT_INT, struct tst_mpi_short_int, SHRT);
       TST_TYPE_SET_STRUCT (TST_MPI_2INT, struct tst_mpi_2int, INT);
-#if 0 && defined(HAVE_LONG_DOUBLE) && defined (LDBL_MAX)
+#if defined(HAVE_LONG_DOUBLE) && defined (LDBL_MAX)
       TST_TYPE_SET_STRUCT (TST_MPI_LONG_DOUBLE_INT, struct tst_mpi_long_double_int, LDBL);
 #endif
 
@@ -877,12 +923,23 @@ int tst_type_setstandardarray (int type, int values_num, char * buffer, int comm
   CHECK_ARG (type, -1);
 
   if (values_num > 0)
-    tst_type_setvalue (type, &buffer[0*type_size], TST_TYPE_SET_MIN, 0);
+    tst_type_setvalue (type, &(buffer[0*type_size]), TST_TYPE_SET_MIN, 0);
   if (values_num > 1)
-    tst_type_setvalue (type, &buffer[1*type_size], TST_TYPE_SET_MAX, 0);
+    tst_type_setvalue (type, &(buffer[1*type_size]), TST_TYPE_SET_MAX, 0);
 
   for (i = 2; i < values_num; i++)
-    tst_type_setvalue (type, &buffer[i*type_size], TST_TYPE_SET_VALUE, comm_rank + i);
+    tst_type_setvalue (type, &(buffer[i*type_size]), TST_TYPE_SET_VALUE, comm_rank + i);
+
+  return 0;
+}
+
+int tst_type_getstandardarray_size (int type, int values_num, MPI_Aint * size)
+{
+  CHECK_ARG (type, -1);
+  if (NULL == size)
+    return -1;
+
+  *size  = (values_num+OVERHEAD) * tst_type_gettypesize(type);
 
   return 0;
 }

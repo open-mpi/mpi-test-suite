@@ -38,12 +38,17 @@ OBJ =   mpi_test_suite.o                        \
         coll/tst_coll_alltoall.o                \
         coll/tst_coll_bcast.o                   \
         coll/tst_coll_gather.o                  \
+        coll/tst_coll_reduce_max.o              \
+        coll/tst_coll_reduce_min.o              \
         coll/tst_coll_scan_sum.o                \
         coll/tst_coll_scatter.o                 \
         coll/tst_coll_scatterv.o                \
         coll/tst_coll_scatterv_stride.o         \
         env/tst_env_status_check.o              \
         env/tst_env_request_null.o              \
+        one-sided/tst_one_sided_simple_ring_get.o      \
+        one-sided/tst_one_sided_simple_ring_get_post.o \
+        one-sided/tst_one_sided_simple_ring_put.o      \
         p2p/tst_p2p_alltoall.o                  \
         p2p/tst_p2p_alltoall_persistent.o       \
         p2p/tst_p2p_alltoall_xisend.o           \
@@ -77,16 +82,16 @@ PROGRAM = mpi_test_suite
 .SUFFIXES: .o .c
 
 all: $(OBJ)
-        $(CC) -o $(PROGRAM) $(OBJ) $(LDFLAGS)
+	$(CC) -o $(PROGRAM) $(OBJ) $(LDFLAGS)
 
 $(OBJ): $(HEADER)
 .c.o:   $(HEADER)
-        $(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean mostlyclean:
-        $(RM) $(OBJ) $(PROGRAM)
+	$(RM) $(OBJ) $(PROGRAM)
 
 distclean extraclean: clean
-        $(RM) patch* *~* *\#* *.orig *.rej *.bak core a.out Makefile
+	$(RM) patch* *~* *\#* *.orig *.rej *.bak core a.out Makefile
 
 .PHONY: install mostlyclean clean distclean extraclean realclean TAGS check

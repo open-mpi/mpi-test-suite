@@ -68,9 +68,11 @@
 #define TST_MPI_CART_COMM  16 /* Same for these */
 #define TST_MPI_TOPO_COMM  32 /* Same for these */
 
+#define TST_CLASS_UNSPEC      0
 #define TST_CLASS_ENV         1
 #define TST_CLASS_P2P         2
 #define TST_CLASS_COLL        4
+#define TST_CLASS_ONE_SIDED   8
 
 /*
  * The internal translation of the used datatypes
@@ -350,6 +352,7 @@ extern char * tst_type_allocvalues (const int type, const int values_num);
 extern int tst_type_freevalues (const int type, char * buffer, const int values_num);
 extern int tst_type_checkstandardarray (int type, int values_num, char * buffer, int comm_rank);
 extern int tst_type_setstandardarray (int type, int values_num, char * buffer, int comm_rank);
+extern int tst_type_getstandardarray_size (int type, int values_num, MPI_Aint * size);
 extern void tst_type_list (void);
 extern int tst_type_select (const char * type_string,
                             int * type_list, int * type_list_num, const int type_list_max);
@@ -398,7 +401,7 @@ extern int tst_p2p_alltoall_probe_anysource_cleanup (const struct tst_env * env)
 
 extern int tst_p2p_alltoall_sendrecv_init (const struct tst_env * env);
 extern int tst_p2p_alltoall_sendrecv_run (const struct tst_env * env);
-extern int tst_p2p_alltoall_sendrecv(const struct tst_env * env);
+extern int tst_p2p_alltoall_sendrecv_cleanup (const struct tst_env * env);
 
 extern int tst_p2p_alltoall_graph_init (const struct tst_env * env);
 extern int tst_p2p_alltoall_graph_run (const struct tst_env * env);
@@ -468,6 +471,14 @@ extern int tst_coll_allgather_init (const struct tst_env * env);
 extern int tst_coll_allgather_run (const struct tst_env * env);
 extern int tst_coll_allgather_cleanup (const struct tst_env * env);
 
+extern int tst_coll_reduce_max_cleanup (const struct tst_env * env);
+extern int tst_coll_reduce_max_run (const struct tst_env * env);
+extern int tst_coll_reduce_max_init (const struct tst_env * env);
+
+extern int tst_coll_reduce_min_cleanup (const struct tst_env * env);
+extern int tst_coll_reduce_min_run (const struct tst_env * env);
+extern int tst_coll_reduce_min_init (const struct tst_env * env);
+
 extern int tst_coll_scan_sum_init (const struct tst_env * env);
 extern int tst_coll_scan_sum_run (const struct tst_env * env);
 extern int tst_coll_scan_sum_cleanup (const struct tst_env * env);
@@ -491,5 +502,19 @@ extern int tst_coll_allreduce_cleanup (const struct tst_env * env);
 extern int tst_coll_alltoall_init (const struct tst_env * env);
 extern int tst_coll_alltoall_run (const struct tst_env * env);
 extern int tst_coll_alltoall_cleanup (const struct tst_env * env);
+
+#ifdef HAVE_MPI2_ONE_SIDED
+extern int tst_one_sided_simple_ring_get_init (const struct tst_env * env);
+extern int tst_one_sided_simple_ring_get_run (const struct tst_env * env);
+extern int tst_one_sided_simple_ring_get_cleanup (const struct tst_env * env);
+
+extern int tst_one_sided_simple_ring_get_post_init (const struct tst_env * env);
+extern int tst_one_sided_simple_ring_get_post_run (const struct tst_env * env);
+extern int tst_one_sided_simple_ring_get_post_cleanup (const struct tst_env * env);
+
+extern int tst_one_sided_simple_ring_put_init (const struct tst_env * env);
+extern int tst_one_sided_simple_ring_put_run (const struct tst_env * env);
+extern int tst_one_sided_simple_ring_put_cleanup (const struct tst_env * env);
+#endif
 
 #endif /* __MPI_TESTSUITE_H__ */

@@ -56,7 +56,7 @@ int tst_p2p_alltoall_persistent_init (const struct tst_env * env)
   if ((recv_buffer = malloc (sizeof (char *) * comm_size)) == NULL)
     ERROR (errno, "malloc");
 
-  if ((reqs = malloc (sizeof (MPI_Request) * 2*(comm_size-1))) == NULL)
+  if ((reqs = malloc (sizeof (MPI_Request) * 2*comm_size)) == NULL)
     ERROR (errno, "malloc");
 
   for (i=0; i < comm_size; i++)

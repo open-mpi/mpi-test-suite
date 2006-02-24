@@ -79,6 +79,15 @@
 /* Define if program for MPI could be compiled and linked */
 #undef HAVE_MPI
 
+/* Define if MPI library supports MPI2 */
+#undef HAVE_MPI2
+
+/* Define to support MPI2's dynamic process management */
+#undef HAVE_MPI2_DYNAMIC_PROCESSES
+
+/* Define to support MPI2's one-sided communication */
+#undef HAVE_MPI2_ONE_SIDED
+
 /* Defined if Fortran MPI_Types are available in C */
 #undef HAVE_MPI_FORTRAN_TYPES_IN_C
 
@@ -117,9 +126,6 @@
 
 /* Define to 1 if you have the `strstr' function. */
 #undef HAVE_STRSTR
-
-/* Define to 1 if we have the limits.h header file */
-#undef HAVE_LIMITS_H
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #undef HAVE_SYS_STAT_H

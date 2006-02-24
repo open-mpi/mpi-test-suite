@@ -1139,6 +1139,9 @@ EOF
     SX-6:SUPER-UX:*:*)
 	echo sx6-nec-superux${UNAME_RELEASE}
 	exit 0 ;;
+    SX-8:SUPER-UX:*:*)
+	echo sx8-nec-superux${UNAME_RELEASE}
+	exit 0 ;;
     Power*:Rhapsody:*:*)
 	echo powerpc-apple-rhapsody${UNAME_RELEASE}
 	exit 0 ;;

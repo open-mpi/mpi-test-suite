@@ -251,7 +251,7 @@ dnl
 dnl This check for support is really lousy,
 dnl just check, whether the test-case compiles.
 dnl
-AC_DEFUN(AC_CHECK_MPI2_ONE_SIDED_COMM,
+AC_DEFUN(AC_CHECK_MPI2_ONE_SIDED,
   [
   AC_CACHE_CHECK([whether MPI supports one-sided communication], [ac_cv_have_mpi2_one_sided],
   [
@@ -263,16 +263,48 @@ AC_DEFUN(AC_CHECK_MPI2_ONE_SIDED_COMM,
 #     include <stdio.h>
 #     include "mpi.h"
 ],[ 
-	int a;
-	MPI_Win win;
+      int a;
+      MPI_Win win;
 
-	MPI_Win_create (&a, sizeof(a), 0, MPI_INFO_NULL, MPI_COMM_WORLD, &win);
-        return 0;
+      MPI_Win_create (&a, sizeof(a), 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win);
+      return 0;
     ], [ac_cv_have_mpi2_one_sided="yes"], [ac_cv_have_mpi2_one_sided="no"])
     AC_LANG_RESTORE()
   ])
   if test "x$ac_cv_have_mpi2_one_sided" = "xyes" ; then
-    AC_DEFINE([PACX_ONE_SIDED], 1, [Define to support MPI2's one-sided-communication])
+    AC_DEFINE([HAVE_MPI2_ONE_SIDED], 1, [Define to support MPI2's one-sided communication])
+  fi
+])
+
+
+dnl
+dnl Check for MPI2's dynamic process creation
+dnl
+dnl This check for support is really lousy,
+dnl just check, whether the test-case compiles.
+dnl
+AC_DEFUN(AC_CHECK_MPI2_DYNAMIC_PROCESSES,
+  [
+  AC_CACHE_CHECK([whether MPI supports dynamic process management], [ac_cv_have_mpi2_dynamic_processes],
+  [
+    AC_LANG_SAVE()
+    ac_ext=c
+    ac_compile=$ac_cv_mpicc_compile
+    ac_link=$ac_cv_mpicc_link
+    AC_TRY_COMPILE([
+#     include <stdio.h>
+#     include "mpi.h"
+],[
+      int a;
+      MPI_Comm comm;
+
+      MPI_Comm_get_parent (&comm);
+      return 0;
+    ], [ac_cv_have_mpi2_dynamic_processes="yes"], [ac_cv_have_mpi2_dynamic_processes="no"])
+    AC_LANG_RESTORE()
+  ])
+  if test "x$ac_cv_have_mpi2_dynamic_processes" = "xyes" ; then
+    AC_DEFINE([HAVE_MPI2_DYNAMIC_PROCESSES], 1, [Define to support MPI2's dynamic process management])
   fi
 ])
 
@@ -455,8 +487,10 @@ AC_DEFUN(AC_CHECK_MPI_VERSION,
         ac_cv_mpi_version="unkown"
       else
         ac_cv_mpi_version="$VAL"
+        ac_cv_mpi_major_version=`echo $VAL | cut -f1 -d'.'`
+        ac_cv_mpi_minor_version=`echo $VAL | cut -f2 -d'.'`
       fi
-    ], [ac_cv_mpi_version="unknown"])
+    ], [ac_cv_mpi_version="unknown", ac_cv_mpi_major_version="1", ac_cv_mpi_minor_version="0"])
     AC_LANG_POP(C)
   ])
 ])
