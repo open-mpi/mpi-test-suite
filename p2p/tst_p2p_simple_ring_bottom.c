@@ -26,15 +26,16 @@ int tst_p2p_simple_ring_bottom_init (const struct tst_env * env)
   int comm_rank;
   MPI_Comm comm;
   int block[1] = {1};
-  MPI_Datatype dtype[1] ;
+  MPI_Datatype dtype[1];
   MPI_Aint disp[1];
   DEBUG (printf ("(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
                  tst_global_rank, env->comm, env->type, env->values_num));
 
   send_buffer = tst_type_allocvalues (env->type, env->values_num);
   recv_buffer = tst_type_allocvalues (env->type, env->values_num);
-  dtype[0]=tst_type_getdatatype (env->type);
-  MPI_Address(send_buffer, disp);
+
+  dtype[0] = tst_type_getdatatype (env->type);
+  MPI_Address(send_buffer, &(disp[0]));
   MPI_Type_struct(1, block, disp, dtype, &send_type);
   MPI_Type_commit(&send_type);
   /*
@@ -115,7 +116,7 @@ int tst_p2p_simple_ring_bottom_run (const struct tst_env * env)
         {
           MPI_CHECK(MPI_Get_count(&status, type, &recv_count));
           if(recv_count != env->values_num)
-              ERROR(EINVAL, "Error in Count");
+            ERROR(EINVAL, "Error in Count");
         }
       tst_test_checkstandardarray (env, recv_buffer, recv_from);
     }
@@ -124,7 +125,7 @@ int tst_p2p_simple_ring_bottom_run (const struct tst_env * env)
 
 int tst_p2p_simple_ring_bottom_cleanup (const struct tst_env * env)
 {
-    MPI_Type_free(&send_type);
+  MPI_Type_free(&send_type);
   tst_type_freevalues (env->type, send_buffer, env->values_num);
   tst_type_freevalues (env->type, recv_buffer, env->values_num);
   return 0;

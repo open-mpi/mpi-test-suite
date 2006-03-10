@@ -92,14 +92,17 @@ int tst_p2p_simple_ring_sendrecv_run (const struct tst_env * env)
       (recv_from != MPI_PROC_NULL && status.MPI_TAG != 4711) ||
       (recv_from == MPI_PROC_NULL && status.MPI_TAG != MPI_ANY_TAG))
     ERROR (EINVAL, "Error in status");
-  if (tst_mode == TST_MODE_STRICT && recv_from != MPI_PROC_NULL)
-    {
-      MPI_CHECK(MPI_Get_count(&status, type, &recv_count));
-      if(recv_count != env->values_num)
-        ERROR(EINVAL, "Error in Count");
-    }
+
   if (recv_from != MPI_PROC_NULL)
-    tst_test_checkstandardarray (env, recv_buffer, recv_from);
+    {
+      if (tst_mode == TST_MODE_STRICT)
+        {
+          MPI_CHECK(MPI_Get_count(&status, type, &recv_count));
+          if(recv_count != env->values_num)
+            ERROR(EINVAL, "Error in Count");
+        }
+      tst_test_checkstandardarray (env, recv_buffer, recv_from);
+    }
 
   return 0;
 }

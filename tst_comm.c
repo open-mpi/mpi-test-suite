@@ -13,7 +13,7 @@
 #include "mpi_test_suite.h"
 
 
-#define COMM_NUM 20
+#define COMM_NUM 32
 
 /*#define HAVE_MPI_CLUSTER_SIZE*/
 
@@ -57,12 +57,13 @@ struct comm {
   int * other_mapping;                     /* In case of intra-comms, the mapping of the other communicator */
 };
 
-static struct comm comms[16] = {
+static struct comm comms[COMM_NUM] = {
   {MPI_COMM_WORLD, "MPI_COMM_WORLD", TST_MPI_INTRA_COMM, -1, NULL, 0, NULL},
   {MPI_COMM_NULL,  "MPI_COMM_NULL",  TST_MPI_COMM_NULL,   0, NULL, 0, NULL},
   {MPI_COMM_SELF,  "MPI_COMM_SELF",  TST_MPI_COMM_SELF,   1, NULL, 0, NULL},
+#define PREDEFINED_COMMUNICATORS 3
   /* The Rest */
-  {MPI_COMM_WORLD, "",               -1,                 -1, NULL, 0, NULL},
+  {MPI_COMM_NULL, "",                -1,                 -1, NULL, 0, NULL},
 };
 
 #define NUM_CONNS *num_conns;
@@ -76,10 +77,6 @@ int tst_comm_init (int * num_comms)
   int i;
   int count_comms;
   int INTERCOMM_TO_MERGE;
-#ifdef HAVE_MPI_CLUSTER_SIZE
-  int cluster_size;
-  int flag;
-#endif
 
   MPI_Comm_size (MPI_COMM_WORLD, &comm_size);
   MPI_Comm_rank (MPI_COMM_WORLD, &comm_rank);
@@ -92,7 +89,8 @@ int tst_comm_init (int * num_comms)
     ERROR (errno, "malloc");
   for (i = 0; i < comm_size; i++)
     comms[0].mapping[i] = i;
-  count_comms = 3;
+
+  count_comms = PREDEFINED_COMMUNICATORS;
 
   /*
    * Create a duplicate of MPI_COMM_WORLD
@@ -306,7 +304,7 @@ int tst_comm_init (int * num_comms)
   {
     int dims[2] = {0, 0};           /* Set to zero in order to receive value */
     int periods[2] = {1, 1};
-      
+
     strncpy (comms[count_comms].description, "Two dimensional Cartesian", TST_DESCRIPTION_LEN);
     comms[count_comms].size = comm_size;
     if ((comms[count_comms].mapping = malloc (comms[count_comms].size * sizeof(int))) == NULL)
@@ -316,9 +314,9 @@ int tst_comm_init (int * num_comms)
 
     MPI_CHECK(MPI_Dims_create(comm_size, 2, dims));
     MPI_CHECK(MPI_Cart_create(MPI_COMM_WORLD, 2, dims, periods, 1, &comms[count_comms].mpi_comm));
-    
+
     comms[count_comms].class = TST_MPI_CART_COMM;
-    
+
     comms[count_comms].other_size = 0;
     comms[count_comms].other_mapping = NULL;
 
@@ -334,7 +332,7 @@ int tst_comm_init (int * num_comms)
   {
     int dims[3] = {0, 0, 0};         /* Set to zero in order to receive value */
     int periods[3] = {0, 0, 0};
-      
+
     strncpy (comms[count_comms].description, "Three dimensional Cartesian", TST_DESCRIPTION_LEN);
     comms[count_comms].size = comm_size;
     if ((comms[count_comms].mapping = malloc (comms[count_comms].size * sizeof(int))) == NULL)
@@ -344,9 +342,9 @@ int tst_comm_init (int * num_comms)
 
     MPI_CHECK(MPI_Dims_create(comm_size, 3, dims));
     MPI_CHECK(MPI_Cart_create(MPI_COMM_WORLD, 3, dims, periods, 1, &comms[count_comms].mpi_comm));
-    
+
     comms[count_comms].class = TST_MPI_CART_COMM;
-    
+
     comms[count_comms].other_size = 0;
     comms[count_comms].other_mapping = NULL;
 
@@ -359,40 +357,38 @@ int tst_comm_init (int * num_comms)
    */
 
   {
-    int myid;
-    int proz_num;
     int *index=NULL;
     int *edges=NULL;
     int i,j, num;
-    MPI_CHECK(MPI_Comm_rank(MPI_COMM_WORLD, &myid));
-    MPI_CHECK(MPI_Comm_size(MPI_COMM_WORLD, &proz_num));
+
+    strncpy (comms[count_comms].description, "Full-connected Topology", TST_DESCRIPTION_LEN);
     /*allocate index*/
-    if((index=(int *)malloc(sizeof(int) * proz_num))==NULL)
+    if((index = (int*)malloc(sizeof(int) * comm_size))==NULL)
       ERROR(errno, "malloc");
-    for (i=0; i < proz_num; i++)
-      index[i] = (i+1)*(proz_num-1);
+    for (i=0; i < comm_size; i++)
+      index[i] = (i+1)*(comm_size-1);
     /*allocate edges*/
-    if((edges=(int *)malloc(sizeof(int) * proz_num * (proz_num-1)))==NULL)
+    if((edges = (int*)malloc(sizeof(int) * comm_size * (comm_size - 1)))==NULL)
       ERROR(errno,"malloc");
     num=0;
-    for(i=0; i<proz_num; i++)
+    for(i=0; i < comm_size; i++)
       {
-        for(j=0; j<proz_num;j++)
+        for(j=0; j < comm_size;j++)
           {
             if(j==i)
-                continue;
+              continue;
             edges[num]=j;
             num++;
           }
       }
-    MPI_CHECK(MPI_Graph_create(MPI_COMM_WORLD, proz_num, index,
-                               edges, 1, &comms[count_comms].mpi_comm));
+    MPI_CHECK(MPI_Graph_create (MPI_COMM_WORLD, comm_size, index,
+                                edges, 1, &comms[count_comms].mpi_comm));
     comms[count_comms].class = TST_MPI_TOPO_COMM;
     comms[count_comms].other_size = 0;
     comms[count_comms].other_mapping = NULL;
 
     if (++count_comms > COMM_NUM)
-        ERROR (EINVAL, "Too many communicators, increase COMM_NUM");
+      ERROR (EINVAL, "Too many communicators, increase COMM_NUM");
     free(index);
     free(edges);
   }
@@ -482,96 +478,117 @@ int tst_comm_init (int * num_comms)
       }
     }
 #ifdef HAVE_MPI_CLUSTER_SIZE
-  /*
-   * Create a communicator which is split onto the number of comps
-   */
-  MPI_Attr_get (MPI_COMM_WORLD, MPI_CLUSTER_SIZE, &cluster_size, &flag);
-  cluster_size = *(int*)cluster_size;
-  if (flag)
     {
-      int * tmp_array;
-      int j;
-      int cluster_color;
-
-      if (cluster_size < 1 || cluster_size > comm_size)
-        ERROR (EINVAL, "Invalid value for cluster_size");
-
-      strncpy (comms[count_comms].description, "Communicator split on Metacomputer boundaries", TST_DESCRIPTION_LEN);
-
-      if ((tmp_array = malloc (comm_size * sizeof (int))) == NULL)
-        ERROR (errno, "malloc");
-
-      MPI_Attr_get (MPI_COMM_WORLD, MPI_CLUSTER_COLOR, &cluster_color, &flag);
-      if (!flag)
-        ERROR (EINVAL, "MPI defines MPI_CLUSTER_SIZE, but does not define MPI_CLUSTER_COLOR");
-
-      cluster_color = *(int*)cluster_color;
-      if (cluster_color < 0 || cluster_color > cluster_size)
-        ERROR (EINVAL, "Invalid value for cluster_color");
-
+      int cluster_size;
+      int flag;
       /*
-       * Collect values for our mapping
+       * Create a communicator which is split onto the number of comps
        */
-      MPI_Allgather (&cluster_color, 1, MPI_INT, tmp_array, 1, MPI_INT, MPI_COMM_WORLD);
-
-      if ((comms[count_comms].mapping = malloc (comms[count_comms].size * sizeof(int))) == NULL)
-        ERROR (errno, "malloc");
-      /*
-       * Count the number of processes on this side.
-       */
-      /*for (j = 0, i = 0; i < comm_size && tmp_array[i] < cluster_color; i++)*/
-      comms[count_comms].size = 0;
-      for (i = 0; i < comm_size; i++)
-        if (tmp_array[i] == cluster_color)
-          comms[count_comms].size++;
-
-      if (comms[count_comms].size == 0)
-        ERROR (EINVAL, "Couldn't determine cluster-color in tmp_array");
-
-      if ((comms[count_comms].mapping = malloc (comms[count_comms].size * sizeof(int))) == NULL)
-        ERROR (errno, "malloc");
-
-      for (j = 0, i = 0 ; i < comm_size; i++)
+      MPI_Attr_get (MPI_COMM_WORLD, MPI_CLUSTER_SIZE, &cluster_size, &flag);
+      cluster_size = *(int*)cluster_size;
+      if (flag)
         {
-          if (tmp_array[i] == cluster_color)
+          int * tmp_array;
+          int j;
+          int cluster_color;
+
+          if (cluster_size < 1 || cluster_size > comm_size)
+            ERROR (EINVAL, "Invalid value for cluster_size");
+
+          strncpy (comms[count_comms].description, "Communicator split on Metacomputer boundaries", TST_DESCRIPTION_LEN);
+
+          if ((tmp_array = malloc (comm_size * sizeof (int))) == NULL)
+            ERROR (errno, "malloc");
+
+          MPI_Attr_get (MPI_COMM_WORLD, MPI_CLUSTER_COLOR, &cluster_color, &flag);
+          if (!flag)
+            ERROR (EINVAL, "MPI defines MPI_CLUSTER_SIZE, but does not define MPI_CLUSTER_COLOR");
+
+          cluster_color = *(int*)cluster_color;
+          if (cluster_color < 0 || cluster_color > cluster_size)
+            ERROR (EINVAL, "Invalid value for cluster_color");
+
+          /*
+           * Collect values for our mapping
+           */
+          MPI_Allgather (&cluster_color, 1, MPI_INT, tmp_array, 1, MPI_INT, MPI_COMM_WORLD);
+
+          if ((comms[count_comms].mapping = malloc (comms[count_comms].size * sizeof(int))) == NULL)
+            ERROR (errno, "malloc");
+          /*
+           * Count the number of processes on this side.
+           */
+          /*for (j = 0, i = 0; i < comm_size && tmp_array[i] < cluster_color; i++)*/
+          comms[count_comms].size = 0;
+          for (i = 0; i < comm_size; i++)
+            if (tmp_array[i] == cluster_color)
+              comms[count_comms].size++;
+
+          if (comms[count_comms].size == 0)
+            ERROR (EINVAL, "Couldn't determine cluster-color in tmp_array");
+
+          if ((comms[count_comms].mapping = malloc (comms[count_comms].size * sizeof(int))) == NULL)
+            ERROR (errno, "malloc");
+
+          for (j = 0, i = 0 ; i < comm_size; i++)
             {
-              comms[count_comms].mapping[j] = i;
-              if (++j > comms[count_comms].size)
-                ERROR (EINVAL, "Too many processes in this cluster_color");
+              if (tmp_array[i] == cluster_color)
+                {
+                  comms[count_comms].mapping[j] = i;
+                  if (++j > comms[count_comms].size)
+                    ERROR (EINVAL, "Too many processes in this cluster_color");
+                }
+              DEBUG(printf ("(Rank:%d) cluster_color:%d tmp_array[%d]:%d\n",
+                            tst_global_rank, cluster_color, i, tmp_array[i]));
             }
-          DEBUG(printf ("(Rank:%d) cluster_color:%d tmp_array[%d]:%d\n",
-                        tst_global_rank, cluster_color, i, tmp_array[i]));
+
+          /*
+           * With all this information create and check the mpi_comm
+           */
+          MPI_Comm_split (MPI_COMM_WORLD, cluster_color, comm_rank, &comms[count_comms].mpi_comm);
+
+          comms[count_comms].class = TST_MPI_INTRA_COMM;
+          comms[count_comms].other_size = 0;
+
+          INTERNAL_CHECK (
+            int tmp_rank;
+            int tmp_size;
+            MPI_Comm_size (comms[count_comms].mpi_comm, &tmp_size);
+            MPI_Comm_rank (comms[count_comms].mpi_comm, &tmp_rank);
+            if (tmp_size != j)
+              ERROR (EINVAL, "Invalid size for local communicator after cluster_color MPI_Comm_split");
+          );
+          free (tmp_array);
+
+          if (++count_comms > COMM_NUM)
+            ERROR (EINVAL, "Too many communicators, increase COMM_NUM");
+
+          /*
+          * Create a inter-communicator with all odd processes on one side and all the others
+          * on the other side!
+          */
         }
-
-      /*
-       * With all this information create and check the mpi_comm
-       */
-      MPI_Comm_split (MPI_COMM_WORLD, cluster_color, comm_rank, &comms[count_comms].mpi_comm);
-
-      comms[count_comms].class = TST_MPI_INTRA_COMM;
-      comms[count_comms].other_size = 0;
-
-      INTERNAL_CHECK (
-        int tmp_rank;
-        int tmp_size;
-        MPI_Comm_size (comms[count_comms].mpi_comm, &tmp_size);
-        MPI_Comm_rank (comms[count_comms].mpi_comm, &tmp_rank);
-        if (tmp_size != j)
-          ERROR (EINVAL, "Invalid size for local communicator after cluster_color MPI_Comm_split");
-      );
-      free (tmp_array);
-
-      if (++count_comms > COMM_NUM)
-        ERROR (EINVAL, "Too many communicators, increase COMM_NUM");
-
-      /*
-       * Create a inter-communicator with all odd processes on one side and all the others
-       * on the other side!
-       */
     }
 #endif
 
-   *num_comms = count_comms;
+  *num_comms = count_comms;
+  return 0;
+}
+
+
+int tst_comm_cleanup (void)
+{
+  int i;
+  for (i=PREDEFINED_COMMUNICATORS; i < TST_COMMS_NUM; i++)
+    {
+      if (NULL == ((void*)comms[i].mpi_comm) || MPI_COMM_NULL == comms[i].mpi_comm)
+        continue;
+      free (comms[i].mapping);
+      if (NULL != comms[i].other_mapping)
+        free (comms[i].other_mapping);
+
+      MPI_Comm_free (&comms[i].mpi_comm);
+    }
   return 0;
 }
 

@@ -79,49 +79,66 @@
  */
 #define TST_MPI_CHAR              ((tst_uint64)0x1 << 0)
 #define TST_MPI_UNSIGNED_CHAR     ((tst_uint64)0x1 << 1)
-#define TST_MPI_BYTE              ((tst_uint64)0x1 << 2)
-#define TST_MPI_SHORT             ((tst_uint64)0x1 << 3)
-#define TST_MPI_UNSIGNED_SHORT    ((tst_uint64)0x1 << 4)
-#define TST_MPI_INT               ((tst_uint64)0x1 << 5)
-#define TST_MPI_UNSIGNED          ((tst_uint64)0x1 << 6)
-#define TST_MPI_LONG              ((tst_uint64)0x1 << 7)
-#define TST_MPI_UNSIGNED_LONG     ((tst_uint64)0x1 << 8)
-#define TST_MPI_FLOAT             ((tst_uint64)0x1 << 9)
-#define TST_MPI_DOUBLE            ((tst_uint64)0x1 << 10)
-#define TST_MPI_LONG_DOUBLE       ((tst_uint64)0x1 << 11)
-#define TST_MPI_LONG_LONG         ((tst_uint64)0x1 << 12)
-#define TST_MPI_PACKED            ((tst_uint64)0x1 << 13)
-/*#define TST_MPI_LB                ((tst_uint64)0x1 << 14)*/
-/*#define TST_MPI_UB                ((tst_uint64)0x1 << 15)*/
-#define TST_MPI_FLOAT_INT         ((tst_uint64)0x1 << 14)
-#define TST_MPI_DOUBLE_INT        ((tst_uint64)0x1 << 15)
-#define TST_MPI_LONG_INT          ((tst_uint64)0x1 << 16)
-#define TST_MPI_SHORT_INT         ((tst_uint64)0x1 << 17)
-#define TST_MPI_2INT              ((tst_uint64)0x1 << 18)
-#define TST_MPI_LONG_DOUBLE_INT   ((tst_uint64)0x1 << 19)
-#define TST_MPI_COMPLEX           ((tst_uint64)0x1 << 20)
-#define TST_MPI_DOUBLE_COMPLEX    ((tst_uint64)0x1 << 21)
-#define TST_MPI_LOGICAL           ((tst_uint64)0x1 << 22)
-#define TST_MPI_REAL              ((tst_uint64)0x1 << 23)
-#define TST_MPI_DOUBLE_PRECISION  ((tst_uint64)0x1 << 24)
-#define TST_MPI_INTEGER           ((tst_uint64)0x1 << 25)
-#define TST_MPI_2INTEGER          ((tst_uint64)0x1 << 26)
-#define TST_MPI_2COMPLEX          ((tst_uint64)0x1 << 27)
-#define TST_MPI_2DOUBLE_COMPLEX   ((tst_uint64)0x1 << 28)
-#define TST_MPI_2REAL             ((tst_uint64)0x1 << 29)
-#define TST_MPI_2DOUBLE_PRECISION ((tst_uint64)0x1 << 30)
-#define TST_MPI_CHARACTER         ((tst_uint64)0x1 << 31)
-#define TST_MPI_INT_CONTI         ((tst_uint64)0x1 << 32)
-#define TST_MPI_INT_VECTOR        ((tst_uint64)0x1 << 33)
-#define TST_MPI_INT_HVECTOR       ((tst_uint64)0x1 << 34)
-#define TST_MPI_INT_INDEXED       ((tst_uint64)0x1 << 35)
-#define TST_MPI_INT_HINDEXED      ((tst_uint64)0x1 << 36)
-#define TST_MPI_INT_STRUCT        ((tst_uint64)0x1 << 37)
-#define TST_MPI_TYPE_MIX          ((tst_uint64)0x1 << 38)
-#define TST_MPI_TYPE_MIX_ARRAY    ((tst_uint64)0x1 << 39)
-#define TST_MPI_TYPE_MIX_LB_UB    ((tst_uint64)0x1 << 40)
+#define TST_MPI_SIGNED_CHAR       ((tst_uint64)0x1 << 2)
+#define TST_MPI_BYTE              ((tst_uint64)0x1 << 3)
+#define TST_MPI_SHORT             ((tst_uint64)0x1 << 4)
+#define TST_MPI_UNSIGNED_SHORT    ((tst_uint64)0x1 << 5)
+#define TST_MPI_INT               ((tst_uint64)0x1 << 6)
+#define TST_MPI_UNSIGNED          ((tst_uint64)0x1 << 7)
+#define TST_MPI_LONG              ((tst_uint64)0x1 << 8)
+#define TST_MPI_UNSIGNED_LONG     ((tst_uint64)0x1 << 9)
+#define TST_MPI_FLOAT             ((tst_uint64)0x1 << 10)
+#define TST_MPI_DOUBLE            ((tst_uint64)0x1 << 11)
+#define TST_MPI_LONG_DOUBLE       ((tst_uint64)0x1 << 12)
+#define TST_MPI_LONG_LONG         ((tst_uint64)0x1 << 13)
+#define TST_MPI_PACKED            ((tst_uint64)0x1 << 14)
+/*#define TST_MPI_LB                ((tst_uint64)0x1 << 15)*/
+/*#define TST_MPI_UB                ((tst_uint64)0x1 << 16)*/
+#define TST_MPI_FLOAT_INT         ((tst_uint64)0x1 << 15)
+#define TST_MPI_DOUBLE_INT        ((tst_uint64)0x1 << 16)
+#define TST_MPI_LONG_INT          ((tst_uint64)0x1 << 17)
+#define TST_MPI_SHORT_INT         ((tst_uint64)0x1 << 18)
+#define TST_MPI_2INT              ((tst_uint64)0x1 << 19)
+#define TST_MPI_LONG_DOUBLE_INT   ((tst_uint64)0x1 << 20)
+#define TST_MPI_COMPLEX           ((tst_uint64)0x1 << 21)
+#define TST_MPI_DOUBLE_COMPLEX    ((tst_uint64)0x1 << 22)
+#define TST_MPI_LOGICAL           ((tst_uint64)0x1 << 23)
+#define TST_MPI_REAL              ((tst_uint64)0x1 << 24)
+#define TST_MPI_DOUBLE_PRECISION  ((tst_uint64)0x1 << 25)
+#define TST_MPI_INTEGER           ((tst_uint64)0x1 << 26)
+#define TST_MPI_2INTEGER          ((tst_uint64)0x1 << 27)
+#define TST_MPI_2COMPLEX          ((tst_uint64)0x1 << 28)
+#define TST_MPI_2DOUBLE_COMPLEX   ((tst_uint64)0x1 << 29)
+#define TST_MPI_2REAL             ((tst_uint64)0x1 << 30)
+#define TST_MPI_2DOUBLE_PRECISION ((tst_uint64)0x1 << 31)
+#define TST_MPI_CHARACTER         ((tst_uint64)0x1 << 32)
+#define TST_MPI_INT_CONTI         ((tst_uint64)0x1 << 33)
+#define TST_MPI_INT_VECTOR        ((tst_uint64)0x1 << 34)
+#define TST_MPI_INT_HVECTOR       ((tst_uint64)0x1 << 35)
+#define TST_MPI_INT_INDEXED       ((tst_uint64)0x1 << 36)
+#define TST_MPI_INT_HINDEXED      ((tst_uint64)0x1 << 37)
+#define TST_MPI_INT_STRUCT        ((tst_uint64)0x1 << 38)
+#define TST_MPI_TYPE_MIX          ((tst_uint64)0x1 << 39)
+#define TST_MPI_TYPE_MIX_ARRAY    ((tst_uint64)0x1 << 40)
+#define TST_MPI_TYPE_MIX_LB_UB    ((tst_uint64)0x1 << 41)
 
-
+#ifdef HAVE_MPI2
+  /*
+   * Include the TST_MPI_SIGNED_CHAR
+   */
+#define TST_MPI_STANDARD_C_INT_TYPES \
+  (TST_MPI_CHAR | \
+   TST_MPI_UNSIGNED_CHAR | \
+   TST_MPI_SIGNED_CHAR | \
+   TST_MPI_BYTE | \
+   TST_MPI_SHORT | \
+   TST_MPI_UNSIGNED_SHORT | \
+   TST_MPI_INT | \
+   TST_MPI_UNSIGNED | \
+   TST_MPI_LONG | \
+   TST_MPI_UNSIGNED_LONG | \
+   TST_MPI_LONG_LONG)
+#else
 #define TST_MPI_STANDARD_C_INT_TYPES \
   (TST_MPI_CHAR | \
    TST_MPI_UNSIGNED_CHAR | \
@@ -133,6 +150,8 @@
    TST_MPI_LONG | \
    TST_MPI_UNSIGNED_LONG | \
    TST_MPI_LONG_LONG)
+#endif
+
 
 #define TST_MPI_STANDARD_C_FLOAT_TYPES \
   (TST_MPI_FLOAT | \
@@ -315,6 +334,7 @@ extern tst_mode_types tst_mode;
  */
 
 extern int tst_comm_init (int * num_comms);
+extern int tst_comm_cleanup (void);
 extern MPI_Comm tst_comm_getcomm (int comm);
 extern int tst_comm_getcommclass (int comm);
 extern const char * tst_comm_getdescription (int comm);
@@ -323,6 +343,7 @@ extern int tst_comm_select (const char * comm_string,
                             int * comm_list, int * comm_list_num, const int comm_list_max);
 
 extern int tst_test_init (int * num_tests);
+extern int tst_test_cleanup (void);
 extern const char * tst_test_getclass (int i);
 extern const char * tst_test_getdescription (int i);
 extern int tst_test_getmode (int i);
@@ -341,6 +362,7 @@ extern int tst_test_recordfailure (const struct tst_env * env);
 extern int tst_test_print_failed (void);
 
 extern int tst_type_init (int * num_types);
+extern int tst_type_cleanup (void);
 extern MPI_Datatype tst_type_getdatatype (int type);
 extern tst_uint64 tst_type_gettypeclass (int type);
 extern const char * tst_type_getdescription (int type);
@@ -458,6 +480,10 @@ extern int tst_p2p_simple_ring_shift_cleanup (const struct tst_env * env);
 extern int tst_p2p_simple_ring_xsend_init (const struct tst_env * env);
 extern int tst_p2p_simple_ring_xsend_run (const struct tst_env * env);
 extern int tst_p2p_simple_ring_xsend_cleanup (const struct tst_env * env);
+
+extern int tst_p2p_many_to_one_isend_cancel_init (const struct tst_env * env);
+extern int tst_p2p_many_to_one_isend_cancel_run (const struct tst_env * env);
+extern int tst_p2p_many_to_one_isend_cancel_cleanup (const struct tst_env * env);
 
 extern int tst_coll_bcast_init (const struct tst_env * env);
 extern int tst_coll_bcast_run (const struct tst_env * env);

@@ -4,7 +4,8 @@
  * Functionality:
  *  Simple collective Reduce test-program.
  *  Works with intra- and inter- communicators, MPI_COMM_SELF and up to now with any C (standard and struct) type,
- *    except MPI_CHAR, MPI_UNSIGNED_CHAR and MPI_BYTE, as defined by the MPI standard.
+ *    except MPI_CHAR, MPI_UNSIGNED_CHAR and MPI_BYTE, as defined by the MPI-1.2 standard.
+ *    As of MPI-2 (p77), we also accept MPI_UNSIGNED_CHAR and MPI_SIGNED_CHAR.
  *
  * Author: Rainer Keller
  *
@@ -35,10 +36,13 @@ int tst_coll_reduce_min_init (const struct tst_env * env)
   send_buffer = tst_type_allocvalues (env->type, env->values_num);
   tst_type_setstandardarray (env->type, env->values_num, send_buffer, comm_rank);
 
-  if (ROOT == comm_rank) {
+  /*
+   * MPIch2-1.0.3 checks even on NON-Root proceeses, whether recv_buffer is set!
+   */
+#ifndef HAVE_MPICH2
+  if (ROOT == comm_rank)
+#endif
     recv_buffer = tst_type_allocvalues (env->type, env->values_num);
-
-  }
 
   return 0;
 }
@@ -80,8 +84,10 @@ int tst_coll_reduce_min_cleanup (const struct tst_env * env)
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
 
   tst_type_freevalues (env->type, send_buffer, env->values_num);
-  if (ROOT == comm_rank) {
+#ifndef HAVE_MPICH2
+  if (ROOT == comm_rank)
+#endif
     tst_type_freevalues (env->type, recv_buffer, env->values_num);
-  }
+
   return 0;
 }

@@ -147,6 +147,19 @@ static struct tst_test tst_tests[] = {
    TST_SYNC,            /* Receiving with MPI_ANY_SOURCE and MPI_ANY_TAG */
    &tst_p2p_many_to_one_iprobe_anysource_init, &tst_p2p_many_to_one_iprobe_anysource_run, &tst_p2p_many_to_one_iprobe_anysource_cleanup},
 
+   /*
+    * LAM core-dumps with sig-segv when running this test with
+    * "MPI_COMM_WORLD,Reversed MPI_COMM_WORLD"
+    */
+#ifndef HAVE_LAM
+  {TST_CLASS_P2P, "Many-to-one with Isend and Cancellation",
+   TST_MPI_INTRA_COMM, /* XXX We use a MPI_Gather insided the tests -- no intercomm allowed! | TST_MPI_INTER_COMM,*/
+   TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Receiving with MPI_ANY_SOURCE and MPI_ANY_TAG */
+   &tst_p2p_many_to_one_isend_cancel_init, &tst_p2p_many_to_one_isend_cancel_run, &tst_p2p_many_to_one_isend_cancel_cleanup},
+#endif
+
   {TST_CLASS_P2P, "Alltoall",
    TST_MPI_INTRA_COMM | TST_MPI_INTER_COMM,
    TST_MPI_ALL_C_TYPES,
@@ -154,12 +167,14 @@ static struct tst_test tst_tests[] = {
    TST_NONE,            /* No synchronization needed, done with hash */
    &tst_p2p_alltoall_init, &tst_p2p_alltoall_run, &tst_p2p_alltoall_cleanup},
 
+#ifndef HAVE_LAM
   {TST_CLASS_P2P, "Alltoall - Persistent",
-   TST_MPI_INTRA_COMM | TST_MPI_INTER_COMM,
+   TST_MPI_INTRA_COMM,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed, done with hash */
    &tst_p2p_alltoall_persistent_init, &tst_p2p_alltoall_persistent_run, &tst_p2p_alltoall_persistent_cleanup},
+#endif
 
   {TST_CLASS_P2P, "Alltoall - xIsend",
    TST_MPI_INTRA_COMM | TST_MPI_INTER_COMM,
@@ -294,7 +309,16 @@ static struct tst_test tst_tests[] = {
   {TST_CLASS_COLL, "Reduce Min",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
    (TST_MPI_STANDARD_C_TYPES | TST_MPI_STANDARD_FORTRAN_INT_TYPES | TST_MPI_STANDARD_FORTRAN_FLOAT_TYPES) &
-   ~(TST_MPI_CHAR | TST_MPI_UNSIGNED_CHAR | TST_MPI_BYTE),
+#ifdef HAVE_MPI2
+   /*
+    * MPI2 allows the usage of the MPI_SIGNED_CHAR and the MPI_UNSIGNED_CHAR types in reductions!
+    * However, MPI_CHAR with no actual knowledge on the signed-ness is of course still not allowed.
+    */
+   ~(TST_MPI_CHAR | TST_MPI_BYTE),
+#else
+   ~(TST_MPI_CHAR | TST_MPI_SIGNED_CHAR | TST_MPI_UNSIGNED_CHAR | TST_MPI_BYTE),
+#endif
+
    TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
    &tst_coll_reduce_min_init, &tst_coll_reduce_min_run, &tst_coll_reduce_min_cleanup},
@@ -306,7 +330,16 @@ static struct tst_test tst_tests[] = {
   {TST_CLASS_COLL, "Reduce Max",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
    (TST_MPI_STANDARD_C_TYPES | TST_MPI_STANDARD_FORTRAN_INT_TYPES | TST_MPI_STANDARD_FORTRAN_FLOAT_TYPES) &
-   ~(TST_MPI_CHAR | TST_MPI_UNSIGNED_CHAR | TST_MPI_BYTE),
+#ifdef HAVE_MPI2
+   /*
+    * MPI2 allows the usage of the MPI_SIGNED_CHAR and the MPI_UNSIGNED_CHAR types in reductions!
+    * However, MPI_CHAR with no actual knowledge on the signed-ness is of course still not allowed.
+    */
+   ~(TST_MPI_CHAR | TST_MPI_BYTE),
+#else
+   ~(TST_MPI_CHAR | TST_MPI_SIGNED_CHAR | TST_MPI_UNSIGNED_CHAR | TST_MPI_BYTE),
+#endif
+
    TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
    &tst_coll_reduce_max_init, &tst_coll_reduce_max_run, &tst_coll_reduce_max_cleanup},
@@ -322,7 +355,16 @@ static struct tst_test tst_tests[] = {
   {TST_CLASS_COLL, "Allreduce MIN/MAX",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
    (TST_MPI_STANDARD_C_TYPES | TST_MPI_STANDARD_FORTRAN_INT_TYPES | TST_MPI_STANDARD_FORTRAN_FLOAT_TYPES) &
-   ~(TST_MPI_CHAR | TST_MPI_UNSIGNED_CHAR | TST_MPI_BYTE),
+#ifdef HAVE_MPI2
+   /*
+    * MPI2 allows the usage of the MPI_SIGNED_CHAR and the MPI_UNSIGNED_CHAR types in reductions!
+    * However, MPI_CHAR with no actual knowledge on the signed-ness is of course still not allowed.
+    */
+   ~(TST_MPI_CHAR | TST_MPI_BYTE),
+#else
+   ~(TST_MPI_CHAR | TST_MPI_SIGNED_CHAR | TST_MPI_UNSIGNED_CHAR | TST_MPI_BYTE),
+#endif
+
    TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
    &tst_coll_allreduce_init, &tst_coll_allreduce_run, &tst_coll_allreduce_cleanup},
@@ -346,14 +388,18 @@ static struct tst_test tst_tests[] = {
    TST_NONE,            /* No synchronization needed */
    &tst_one_sided_simple_ring_get_init, &tst_one_sided_simple_ring_get_run, &tst_one_sided_simple_ring_get_cleanup},
 
+   /*
+    * MPICH2-1.0.3 hangs in this test
+    * OpenMPI-v9189 also has problems
+    */
+#if !defined(HAVE_MPICH2) && !defined(HAVE_OPENMPI)
   {TST_CLASS_ONE_SIDED, "One-sided Ring with Get using Post",
    TST_MPI_INTRA_COMM, /* XXX possible with MPI_COMM_SELF?? */
-   TST_MPI_STANDARD_C_TYPES,
-   // (TST_MPI_STANDARD_C_TYPES) & ~(TST_MPI_SHORT | TST_MPI_UNSIGNED_SHORT | TST_MPI_LONG_DOUBLE), /* Fails with TST_MPI_ALL_C_TYPES, as the struct-datatypes are not supported */
+   TST_MPI_STANDARD_C_TYPES, /* Fails with TST_MPI_ALL_C_TYPES, as the struct-datatypes are not supported */
    TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
    &tst_one_sided_simple_ring_get_post_init, &tst_one_sided_simple_ring_get_post_run, &tst_one_sided_simple_ring_get_post_cleanup},
-
+#endif
   {TST_CLASS_ONE_SIDED, "One-sided Ring with Put",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM, /* XXX possible with MPI_COMM_SELF?? */
    TST_MPI_STANDARD_C_TYPES, /* Fails with TST_MPI_ALL_C_TYPES, as the struct-datatypes are not supported */
@@ -385,6 +431,12 @@ int tst_test_init (int * num_tests)
   return 0;
 }
 
+int tst_test_cleanup (void)
+{
+  free (tst_tests_failed);
+
+  return 0;
+}
 
 const char * tst_test_getclass (int i)
 {

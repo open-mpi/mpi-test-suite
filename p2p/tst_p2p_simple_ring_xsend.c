@@ -115,7 +115,11 @@ int tst_p2p_simple_ring_xsend_run (const struct tst_env * env)
     {
       MPI_CHECK(MPI_Get_count(&status, type, &recv_count));
       if(recv_count != env->values_num && recv_from != MPI_PROC_NULL)
+        {
+          printf ("(Rank:%d) recv_count:%d env->values_num:%d recv_from:%d\n",
+                  tst_global_rank, recv_count, env->values_num, recv_from);
           ERROR(EINVAL, "Error in Count");
+        }
     }
   if (recv_from != MPI_PROC_NULL)
     {

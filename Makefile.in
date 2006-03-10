@@ -60,6 +60,7 @@ OBJ =   mpi_test_suite.o                        \
         p2p/tst_p2p_direct_partner_intercomm.o  \
         p2p/tst_p2p_many_to_one.o               \
         p2p/tst_p2p_many_to_one_iprobe_anysource.o      \
+        p2p/tst_p2p_many_to_one_isend_cancel.o          \
         p2p/tst_p2p_many_to_one_probe_anysource.o       \
         p2p/tst_p2p_simple_ring.o               \
         p2p/tst_p2p_simple_ring_pack.o          \

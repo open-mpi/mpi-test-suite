@@ -323,6 +323,15 @@ int main (int argc, char * argv[])
         }
   if (tst_global_rank == 0)
     tst_test_print_failed ();
+
+  tst_comm_cleanup ();
+  tst_type_cleanup ();
+  tst_test_cleanup ();
+  free (tst_comm_array);
+  free (tst_type_array);
+  free (tst_test_array);
+  DEBUG (printf ("(Rank:%d) Going to MPI_Finalize\n",
+                 tst_global_rank));
   MPI_Finalize ();
   return 0;
 }

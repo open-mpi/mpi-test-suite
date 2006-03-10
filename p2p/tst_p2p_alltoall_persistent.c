@@ -78,8 +78,9 @@ int tst_p2p_alltoall_persistent_init (const struct tst_env * env)
                                         i, 4711, comm,
                                         &reqs[current_req]));
 
-              if (reqs[current_req++] == MPI_REQUEST_NULL)
+              if (reqs[current_req] == MPI_REQUEST_NULL)
                 ERROR (EINVAL, "Error in request after MPI_Send_init");
+              current_req++;
             }
         }
       else
@@ -88,8 +89,9 @@ int tst_p2p_alltoall_persistent_init (const struct tst_env * env)
                                     rank, 4711, comm,
                                     &reqs[current_req]));
 
-          if (reqs[current_req++] == MPI_REQUEST_NULL)
+          if (reqs[current_req] == MPI_REQUEST_NULL)
             ERROR (EINVAL, "Error in request after MPI_Recv_init");
+          current_req++;
         }
     }
 
