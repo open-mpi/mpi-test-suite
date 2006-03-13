@@ -16,12 +16,16 @@
 #undef DEBUG
 #define DEBUG(x)
 
-#define TST_TESTS_NUM (sizeof (tst_tests) / sizeof (tst_tests[0]))
+/*
+ * Do not count the last test with UNSPEC-Class
+ */
+#define TST_TESTS_NUM (sizeof (tst_tests) / sizeof (tst_tests[0]) -1)
 #define TST_TEST_CLASS_NUM (sizeof (tst_test_class_strings) / sizeof (tst_test_class_strings[0]))
 
 /* This string has to be kept up-to-date with XXX in mpi_test_suite.h */
 static const char * const tst_test_class_strings [] =
   {
+    "Unspecified",
     "Environment",
     "P2P",
     "Collective",
@@ -264,7 +268,22 @@ static struct tst_test tst_tests[] = {
    (TST_MPI_STANDARD_C_INT_TYPES |
      TST_MPI_STANDARD_C_FLOAT_TYPES |
      TST_MPI_STANDARD_FORTRAN_COMPLEX_TYPES) &
-   ~(TST_MPI_CHAR | TST_MPI_UNSIGNED_CHAR | TST_MPI_BYTE),
+#ifdef HAVE_MPI2
+   /*
+    * MPI2 allows the usage of the MPI_SIGNED_CHAR and the MPI_UNSIGNED_CHAR types in reductions!
+    * However, MPI_CHAR with no actual knowledge on the signed-ness is of course still not allowed.
+    */
+   /*
+    * MPIch2 does not allow MPI_SIGNED_CHAR on collective Ops.
+    */
+#  ifdef HAVE_MPICH2
+   ~(TST_MPI_CHAR | TST_MPI_SIGNED_CHAR | TST_MPI_BYTE),
+#  else
+   ~(TST_MPI_CHAR | TST_MPI_BYTE),
+#  endif
+#else
+  ~(TST_MPI_CHAR | TST_MPI_UNSIGNED_CHAR | TST_MPI_BYTE),
+#endif
    TST_MODE_RELAXED,
    TST_SYNC,            /* No synchronization needed */
    &tst_coll_scan_sum_init, &tst_coll_scan_sum_run, &tst_coll_scan_sum_cleanup},
@@ -314,7 +333,14 @@ static struct tst_test tst_tests[] = {
     * MPI2 allows the usage of the MPI_SIGNED_CHAR and the MPI_UNSIGNED_CHAR types in reductions!
     * However, MPI_CHAR with no actual knowledge on the signed-ness is of course still not allowed.
     */
+   /*
+    * MPIch2 does not allow MPI_SIGNED_CHAR on collective Ops.
+    */
+#  ifdef HAVE_MPICH2
+   ~(TST_MPI_CHAR | TST_MPI_SIGNED_CHAR | TST_MPI_BYTE),
+#  else
    ~(TST_MPI_CHAR | TST_MPI_BYTE),
+#  endif
 #else
    ~(TST_MPI_CHAR | TST_MPI_SIGNED_CHAR | TST_MPI_UNSIGNED_CHAR | TST_MPI_BYTE),
 #endif
@@ -335,7 +361,14 @@ static struct tst_test tst_tests[] = {
     * MPI2 allows the usage of the MPI_SIGNED_CHAR and the MPI_UNSIGNED_CHAR types in reductions!
     * However, MPI_CHAR with no actual knowledge on the signed-ness is of course still not allowed.
     */
+   /*
+    * MPIch2 does not allow MPI_SIGNED_CHAR on collective Ops.
+    */
+#  ifdef HAVE_MPICH2
+   ~(TST_MPI_CHAR | TST_MPI_SIGNED_CHAR | TST_MPI_BYTE),
+#  else
    ~(TST_MPI_CHAR | TST_MPI_BYTE),
+#  endif
 #else
    ~(TST_MPI_CHAR | TST_MPI_SIGNED_CHAR | TST_MPI_UNSIGNED_CHAR | TST_MPI_BYTE),
 #endif
@@ -360,7 +393,14 @@ static struct tst_test tst_tests[] = {
     * MPI2 allows the usage of the MPI_SIGNED_CHAR and the MPI_UNSIGNED_CHAR types in reductions!
     * However, MPI_CHAR with no actual knowledge on the signed-ness is of course still not allowed.
     */
+   /*
+    * MPIch2 does not allow MPI_SIGNED_CHAR on collective Ops.
+    */
+#  ifdef HAVE_MPICH2
+   ~(TST_MPI_CHAR | TST_MPI_SIGNED_CHAR | TST_MPI_BYTE),
+#  else
    ~(TST_MPI_CHAR | TST_MPI_BYTE),
+#  endif
 #else
    ~(TST_MPI_CHAR | TST_MPI_SIGNED_CHAR | TST_MPI_UNSIGNED_CHAR | TST_MPI_BYTE),
 #endif
@@ -389,7 +429,8 @@ static struct tst_test tst_tests[] = {
    &tst_one_sided_simple_ring_get_init, &tst_one_sided_simple_ring_get_run, &tst_one_sided_simple_ring_get_cleanup},
 
    /*
-    * MPICH2-1.0.3 hangs in this test
+    * MPICH2-1.0.3 hangs in this test on the 
+    *  Odd/Even split MPI_COMM_WORLD (ONLY on *this* one, all other intra-comms work)
     * OpenMPI-v9189 also has problems
     */
 #if !defined(HAVE_MPICH2) && !defined(HAVE_OPENMPI)
@@ -400,6 +441,7 @@ static struct tst_test tst_tests[] = {
    TST_NONE,            /* No synchronization needed */
    &tst_one_sided_simple_ring_get_post_init, &tst_one_sided_simple_ring_get_post_run, &tst_one_sided_simple_ring_get_post_cleanup},
 #endif
+
   {TST_CLASS_ONE_SIDED, "One-sided Ring with Put",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM, /* XXX possible with MPI_COMM_SELF?? */
    TST_MPI_STANDARD_C_TYPES, /* Fails with TST_MPI_ALL_C_TYPES, as the struct-datatypes are not supported */
@@ -455,7 +497,7 @@ const char * tst_test_getclass (int i)
           i, tst_tests[i].class, ffs(tst_tests[i].class)-1,
           tst_test_class_strings[ffs (tst_tests[i].class)-1]);
   */
-  return tst_test_class_strings[ffs (tst_tests[i].class) - 1];
+  return tst_test_class_strings[ffs (tst_tests[i].class)];
 }
 
 const char * tst_test_getdescription (int i)
