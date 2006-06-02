@@ -173,11 +173,11 @@ int tst_comm_init (int * num_comms)
   }
 
   /*
-   * Create a communicator, which is split in two halfs.
+   * Create a communicator, which is split in two halves.
    * WATCH OUT, ONE process may contain MPI_COMM_NULL
    */
   {
-    strncpy (comms[count_comms].description, "Halfed MPI_COMM_WORLD", TST_DESCRIPTION_LEN);
+    strncpy (comms[count_comms].description, "Halved MPI_COMM_WORLD", TST_DESCRIPTION_LEN);
     comms[count_comms].size = comm_size / 2;
     if ((comms[count_comms].mapping = malloc (comms[count_comms].size * sizeof(int))) == NULL)
       ERROR (errno, "malloc");
@@ -359,7 +359,7 @@ int tst_comm_init (int * num_comms)
   {
     int *index=NULL;
     int *edges=NULL;
-    int i,j, num;
+    int j, num;
 
     strncpy (comms[count_comms].description, "Full-connected Topology", TST_DESCRIPTION_LEN);
     /*allocate index*/
@@ -395,7 +395,7 @@ int tst_comm_init (int * num_comms)
 
 
   /*
-   * Create a halfed inter-communicator with all processes < comm_size/2 on one side
+   * Create a halved inter-communicator with all processes < comm_size/2 on one side
    * and all the others on the other side!
    */
   if (comm_size > 1)
@@ -403,7 +403,7 @@ int tst_comm_init (int * num_comms)
       {
         INTERCOMM_TO_MERGE = count_comms;
 
-        strncpy (comms[count_comms].description, "Halfed Intercommunicator", TST_DESCRIPTION_LEN);
+        strncpy (comms[count_comms].description, "Halved Intercommunicator", TST_DESCRIPTION_LEN);
 
         if (comm_rank > comm_size / 2)
           {
@@ -455,7 +455,7 @@ int tst_comm_init (int * num_comms)
       * Create an Intra-communicator merged out of the communicator created above...
       */
       {
-        strncpy (comms[count_comms].description, "Intracomm merged of the Halfed Intercomm", TST_DESCRIPTION_LEN);
+        strncpy (comms[count_comms].description, "Intracomm merged of the Halved Intercomm", TST_DESCRIPTION_LEN);
         comms[count_comms].size = comm_size;
         comms[count_comms].other_size = 0;
         comms[count_comms].other_mapping = NULL;

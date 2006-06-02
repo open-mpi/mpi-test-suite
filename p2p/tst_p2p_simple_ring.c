@@ -81,10 +81,8 @@ int tst_p2p_simple_ring_run (const struct tst_env * env)
   else
     ERROR (EINVAL, "tst_p2p_simple_ring cannot run with this kind of communicator");
 
-  DEBUG (printf ("(Rank:%d) comm_rank:%d comm_size:%d "
-                 "send_to:%d recv_from:%d 4711:%d\n",
-                 tst_global_rank, comm_rank, comm_size,
-                 send_to, recv_from, 4711));
+  DEBUG (printf ("(Rank:%d) comm_rank:%d comm_size:%d send_to:%d recv_from:%d\n",
+                 tst_global_rank, comm_rank, comm_size, send_to, recv_from));
 
   if (comm_rank == 0)
     {
@@ -107,12 +105,8 @@ int tst_p2p_simple_ring_run (const struct tst_env * env)
       if (tst_mode == TST_MODE_STRICT)
         {
           MPI_CHECK(MPI_Get_count(&status, type, &recv_count));
-          if(recv_count != env->values_num)
-            {
-              printf ("(Rank:%d) recv_count:%d env->values_num:%d recv_from:%d\n",
-                      tst_global_rank, recv_count, env->values_num, recv_from);
-              ERROR(EINVAL, "Error in Count");
-            }
+          if (recv_count != env->values_num)
+            ERROR(EINVAL, "Error in count");
         }
       tst_test_checkstandardarray (env, recv_buffer, recv_from);
     }

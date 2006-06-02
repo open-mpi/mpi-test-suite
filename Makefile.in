@@ -12,6 +12,18 @@ MPI_LIB_DIR = @mpi_lib_dir@
 PACX_INC_DIR = @pacx_dir@/include
 PACX_LIB_DIR = @pacx_dir@/lib
 
+#
+# For additional setting of the environment (some MPIs have known errors),
+# one may set one of the following Compiler flags (in the beautiful future,
+# this should be checked by configure automagically):
+#   HAVE_MPI_LAM
+#   HAVE_MPI_INTEL10
+#   HAVE_MPI_INTEL20
+#   HAVE_MPI_NECSX
+#   HAVE_MPI_OPENMPI
+#   HAVE_MPI_MPICH1
+#   HAVE_MPI_MPICH2
+#
 
 @SET_MAKE@
 # YES, we need those two includes! Otherwise, if configure is done in other dir
@@ -67,6 +79,9 @@ OBJ =   mpi_test_suite.o                        \
         p2p/tst_p2p_simple_ring_bottom.o        \
         p2p/tst_p2p_simple_ring_bsend.o         \
         p2p/tst_p2p_simple_ring_isend.o         \
+        p2p/tst_p2p_simple_ring_ibsend.o        \
+        p2p/tst_p2p_simple_ring_irsend.o        \
+        p2p/tst_p2p_simple_ring_issend.o        \
         p2p/tst_p2p_simple_ring_shift.o         \
         p2p/tst_p2p_simple_ring_ssend.o         \
         p2p/tst_p2p_simple_ring_sendrecv.o      \

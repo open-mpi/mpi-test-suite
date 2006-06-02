@@ -170,8 +170,8 @@ int tst_p2p_many_to_one_isend_cancel_run (const struct tst_env * env)
               MPI_CHECK (MPI_Cancel (&recv_reqs[rank]));
               if (MPI_REQUEST_NULL == recv_reqs[rank])
                 ERROR (EINVAL, "recv_reqs[rank] == MPI_REQUEST_NULL");
-/* #define HAVE_LAM */
-#ifdef HAVE_LAM
+/* #define HAVE_MPI_LAM */
+#ifdef HAVE_MPI_LAM
               /*
                * LAM hangs without this MPI_Request_free, as it doesn't finish the MPI_Waitall of cancelled requests
                */
@@ -193,7 +193,7 @@ int tst_p2p_many_to_one_isend_cancel_run (const struct tst_env * env)
         {
           int flag;
           status = recv_statuses[rank];
-#ifdef HAVE_LAM
+#ifdef HAVE_MPI_LAM
           /*
            * With LAM, we have freed the request, the status is unitialized
            */

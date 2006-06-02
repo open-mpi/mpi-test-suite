@@ -144,14 +144,19 @@ static struct type types[32] = {
        */
       {MPI_DATATYPE_NULL,     "MPI_TYPE_MIX",         0, sizeof(struct tst_mpi_type_mix), TST_MPI_TYPE_MIX, 11, {TST_MPI_INT}},
       {MPI_DATATYPE_NULL,     "MPI_TYPE_MIX_ARRAY",   0, sizeof(struct tst_mpi_type_mix_array), TST_MPI_TYPE_MIX_ARRAY, 6, {TST_MPI_INT}},
+#ifndef HAVE_MPI_NECSX
       {MPI_DATATYPE_NULL,     "MPI_TYPE_MIX_LB_UB",   0, 0, TST_MPI_TYPE_MIX_LB_UB, 6, {TST_MPI_INT}},
+#endif
 
       /*
        * Two examples for MPI_Type_dup usage on a predefined- and a derived datatype.
        */
 #if defined(HAVE_MPI2)
       {MPI_DATATYPE_NULL,     "Dup MPI_CHAR",            0, sizeof (char), TST_MPI_CHAR, 1, {TST_MPI_CHAR}},
+#ifndef HAVE_MPI_NECSX
 /*30*/{MPI_DATATYPE_NULL,     "Dup MPI_TYPE_MIX_LB_UB",  0, 0, TST_MPI_TYPE_MIX_LB_UB, 6, {TST_MPI_INT}},
+#endif
+
 #else
       {MPI_DATATYPE_NULL,     "function MPI_Type_dup() n/a", 0, 0, 0, 0, {0}},
       {MPI_DATATYPE_NULL,     "function MPI_Type_dup() n/a", 0, 0, 0, 0, {0}},
@@ -236,6 +241,10 @@ int tst_type_init (int * num_types)
     num++;
   }
 
+  /*
+   * Intel-MPI1.0 segfaults with this datatype
+   */
+#if !defined(HAVE_MPI_INTEL10) && !defined(HAVE_MPI_INTEL20)
   {
     /*
      * MPI_HINDEXED_INT
@@ -253,6 +262,12 @@ int tst_type_init (int * num_types)
       types[num].type_mapping[i]=TST_MPI_INT;
     num++;
   }
+#else
+  {
+    types[num].mpi_datatype = MPI_DATATYPE_NULL;
+    num++;
+  }
+#endif
 
   {
     /*
@@ -275,6 +290,7 @@ int tst_type_init (int * num_types)
     num++;
   }
 
+#ifndef HAVE_MPI_INTEL20
   {
     /*
      * MPI_TYPE_MIX
@@ -317,6 +333,13 @@ int tst_type_init (int * num_types)
     types[num].type_mapping[10] = TST_MPI_2INT;
     num++;
   }
+#else
+  {
+    types[num].mpi_datatype = MPI_DATATYPE_NULL;
+    num++;
+  }
+#endif
+
 
   {
     /*
@@ -375,11 +398,11 @@ int tst_type_init (int * num_types)
       }
     num++;
   }
+#ifndef HAVE_MPI_NECSX
   {
     /*
      * MPI_TYPE_MIX_LB_UB
      */
-
     int block_mix[8];
     MPI_Aint disp_array[8] = {
         -1*(sizeof(char)+sizeof(long)+sizeof(double)), /* Position of LB */
@@ -415,6 +438,7 @@ int tst_type_init (int * num_types)
 
     num++;
   }
+#endif
 
 #if defined(HAVE_MPI2)
   {
@@ -432,7 +456,7 @@ int tst_type_init (int * num_types)
     types[num].type_mapping[0] = types[0].type_mapping[0];*/
     num++;
   }
-#ifndef HAVE_OPENMPI
+#if !defined (HAVE_MPI_NECSX) && !defined(HAVE_MPI_OPENMPI)
   /*
    * OpenMPI fails here!!!
    */
@@ -705,8 +729,20 @@ int tst_type_freevalues (const int type, char * buffer, const int values_num)
         (*(c_type*)buffer).b = INT_MIN;                                                          \
         break;                                                                                   \
       case TST_TYPE_SET_VALUE:                                                                   \
-        (*(c_type*)buffer).a = direct_value;                                                     \
-        (*(c_type*)buffer).b = direct_value;                                                     \
+        if (direct_value > c_type_caps##_MAX) {                                                  \
+          (*(c_type*)buffer).a = c_type_caps##_MAX;                                              \
+        } else if (direct_value < c_type_caps##_MIN) {                                           \
+          (*(c_type*)buffer).a = c_type_caps##_MIN;                                              \
+        } else {                                                                                 \
+          (*(c_type*)buffer).a = direct_value;                                                   \
+        }                                                                                        \
+        if (direct_value > INT_MAX) {                                                            \
+          (*(c_type*)buffer).b = INT_MAX;                                                        \
+        } else if (direct_value < INT_MIN) {                                                     \
+          (*(c_type*)buffer).b = INT_MIN;                                                        \
+        } else {                                                                                 \
+          (*(c_type*)buffer).b = direct_value;                                                   \
+        }                                                                                        \
         break;                                                                                   \
       default:                                                                                   \
         return -1;                                                                               \
@@ -943,7 +979,7 @@ int tst_type_setvalue (int type, char * buffer, int type_set, long long direct_v
       TST_TYPE_SET (TST_MPI_CHAR, char, CHAR);
       TST_TYPE_SET_UNSIGNED (TST_MPI_UNSIGNED_CHAR, unsigned char, UCHAR);
 #ifdef HAVE_MPI2
-      TST_TYPE_SET (TST_MPI_SIGNED_CHAR, signed char, CHAR);
+      TST_TYPE_SET (TST_MPI_SIGNED_CHAR, signed char, SCHAR);
 #endif
       TST_TYPE_SET (TST_MPI_BYTE, char, CHAR);
       TST_TYPE_SET (TST_MPI_SHORT, short, SHRT);

@@ -22,8 +22,6 @@ static char * recv_buffer = NULL;
 static char * mpi_buffer = NULL;
 static int mpi_buffer_size = 0;
 
-
-
 int tst_p2p_simple_ring_bsend_init (const struct tst_env * env)
 {
   int comm_rank;
@@ -66,10 +64,31 @@ int tst_p2p_simple_ring_bsend_run (const struct tst_env * env)
   comm = tst_comm_getcomm (env->comm);
   type = tst_type_getdatatype (env->type);
 
-  MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
-  MPI_CHECK (MPI_Comm_size (comm, &comm_size));
-  send_to = (comm_rank + 1) % comm_size;
-  recv_from = (comm_rank + comm_size - 1) % comm_size;
+  if (tst_comm_getcommclass (env->comm) & TST_MPI_COMM_SELF)
+    {
+      comm_size = 1;
+      comm_rank = 0;
+      send_to = MPI_PROC_NULL;
+      recv_from = MPI_PROC_NULL;
+    }
+  else if (tst_comm_getcommclass (env->comm) & TST_MPI_INTRA_COMM)
+    {
+      MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
+      MPI_CHECK (MPI_Comm_size (comm, &comm_size));
+
+      if (comm_size > 1)
+        {
+          send_to = (comm_rank + 1) % comm_size;
+          recv_from = (comm_rank + comm_size - 1) % comm_size;
+        }
+      else
+        {
+          send_to = MPI_PROC_NULL;
+          recv_from = MPI_PROC_NULL;
+        }
+    }
+  else
+    ERROR (EINVAL, "tst_p2p_simple_ring cannot run with this kind of communicator");
 
   DEBUG (printf ("(Rank:%d) comm_rank:%d comm_size:%d send_to:%d recv_from:%d\n",
                  tst_global_rank, comm_rank, comm_size, send_to, recv_from));
@@ -86,16 +105,20 @@ int tst_p2p_simple_ring_bsend_run (const struct tst_env * env)
     }
 
   if (status.MPI_SOURCE != recv_from ||
-      status.MPI_TAG != 4711)
+      (recv_from != MPI_PROC_NULL && status.MPI_TAG != 4711) ||
+      (recv_from == MPI_PROC_NULL && status.MPI_TAG != MPI_ANY_TAG))
     ERROR (EINVAL, "Error in status");
-  if (tst_mode == TST_MODE_STRICT)
-    {
-      MPI_CHECK(MPI_Get_count(&status, type, &recv_count));
-      if(recv_count != env->values_num)
-         ERROR(EINVAL, "Error in Count");
-    }
 
-  tst_test_checkstandardarray (env, recv_buffer, recv_from);
+  if (recv_from != MPI_PROC_NULL)
+    {
+      if (tst_mode == TST_MODE_STRICT)
+        {
+          MPI_CHECK(MPI_Get_count(&status, type, &recv_count));
+          if (recv_count != env->values_num)
+            ERROR(EINVAL, "Error in Count");
+        }
+      tst_test_checkstandardarray (env, recv_buffer, recv_from);
+    }
 
   return 0;
 }

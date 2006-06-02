@@ -28,10 +28,11 @@
 #define INTERNAL_CHECK(x) do { \
   } while (0)
 
-#define ERROR(e,s) do {                               \
-    fprintf (stderr, "(%s:%d) ERROR: %s; %s(%d)\n",   \
-             __FILE__, __LINE__, (s), strerror(e), e);\
-    exit (e);                                         \
+#define ERROR(e,s) do {                                           \
+    int __error = (e);                                            \
+    fprintf (stderr, "(%s:%d) ERROR: %s; %s(%d)\n",               \
+             __FILE__, __LINE__, (s), strerror(__error), __error);\
+    exit (__error);                                               \
   } while(0)
 
 #define MPI_CHECK(x) do {                   \
@@ -307,6 +308,7 @@ struct tst_mpi_type_mix_array {
 };
 
 extern int tst_global_rank;
+extern int tst_global_size;
 extern int tst_verbose;
 
 extern const char * tst_reports[];
@@ -464,6 +466,18 @@ extern int tst_p2p_simple_ring_bsend_cleanup (const struct tst_env * env);
 extern int tst_p2p_simple_ring_isend_init (const struct tst_env * env);
 extern int tst_p2p_simple_ring_isend_run (const struct tst_env * env);
 extern int tst_p2p_simple_ring_isend_cleanup (const struct tst_env * env);
+
+extern int tst_p2p_simple_ring_ibsend_init (const struct tst_env * env);
+extern int tst_p2p_simple_ring_ibsend_run (const struct tst_env * env);
+extern int tst_p2p_simple_ring_ibsend_cleanup (const struct tst_env * env);
+
+extern int tst_p2p_simple_ring_irsend_init (const struct tst_env * env);
+extern int tst_p2p_simple_ring_irsend_run (const struct tst_env * env);
+extern int tst_p2p_simple_ring_irsend_cleanup (const struct tst_env * env);
+
+extern int tst_p2p_simple_ring_issend_init (const struct tst_env * env);
+extern int tst_p2p_simple_ring_issend_run (const struct tst_env * env);
+extern int tst_p2p_simple_ring_issend_cleanup (const struct tst_env * env);
 
 extern int tst_p2p_simple_ring_ssend_init (const struct tst_env * env);
 extern int tst_p2p_simple_ring_ssend_run (const struct tst_env * env);

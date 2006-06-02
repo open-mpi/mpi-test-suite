@@ -35,7 +35,7 @@ const char * tst_modes[] = {
   "relaxed"
 };
 
-int tst_tag_ub = 32766;
+static int tst_tag_ub = 32766;
 
 
 /*
@@ -54,7 +54,7 @@ static int usage (void)
            "test:\t\tone (or more) tests or test-classes (see -l) and\n"
            "comm:\t\tone (or more) communicator or communicator-classes (see -l)\n"
            "datatype:\tone (or more) datatype or datatype-classes (see -l)\n"
-           "num_values:\thow many elements to communicate (default:%d)\n"
+           "num_values:\tone (or more) numbers of values to communicate (default:%d)\n"
            "report:\t\tlevel of detail for tests being run, see -l (default:SUMMARY)\n"
            "test_mode:\tlevel of correctness testing, tests to run and internal tests, see -l (default:RELAXED)\n"
            "\n"
@@ -76,12 +76,13 @@ int main (int argc, char * argv[])
   int i;
   int j;
   int k;
+  int l;
   int flag;
   int tst_global_size;
   int num_comms;
   int num_types;
   int num_tests;
-  int num_values = NUM_VALUES;
+  int num_values = 1;
   struct tst_env tst_env;
   int * tst_test_array;
   int tst_test_array_max;
@@ -89,6 +90,8 @@ int main (int argc, char * argv[])
   int tst_comm_array_max;
   int * tst_type_array;
   int tst_type_array_max;
+  int tst_value_array[32] = {NUM_VALUES, 0, };
+  int tst_value_array_max = 32;
   int * val;
 
 
@@ -98,7 +101,11 @@ int main (int argc, char * argv[])
 
   if (NULL != getenv ("MPI_TEST_SUITE_SLEEP"))
     {
-      printf ("(Rank:%d) pid:%ld Going to sleep\n", tst_global_rank, getpid());
+      char hostname[256];
+      gethostname (hostname, 256);
+      hostname[255] = '\0';
+      printf ("(Rank:%d) host:%s pid:%ld Going to sleep\n",
+              tst_global_rank, hostname, getpid());
       sleep (30);
     }
 
@@ -229,8 +236,22 @@ int main (int argc, char * argv[])
             break;
           }
         case 'n':
-          num_values = atoi (optarg);
-          break;
+          {
+            char * str;
+            memset (tst_value_array, 0, sizeof (int)* tst_value_array_max);
+            num_values = 0;
+            str = strtok (optarg, ",");
+            while (str)
+              {
+                tst_value_array[num_values++] = atoi (str);
+
+                if (num_values >= tst_value_array_max)
+                  ERROR (EINVAL, "Too many values specified");
+
+                str = strtok (NULL, ",");
+              }
+            break;
+          }
         case 'l':
           if (!tst_global_rank)
             {
@@ -289,38 +310,40 @@ int main (int argc, char * argv[])
    */
   DEBUG (printf ("num_tests:%d num_comms:%d num_types:%d\n",
                  num_tests, num_comms, num_types));
+
   for (i = 0; i < num_tests; i++)
     for (j = 0; j < num_comms; j++)
       for (k = 0; k < num_types; k++)
-        {
-          tst_env.comm = tst_comm_array[j];
-          tst_env.type = tst_type_array[k];
-          tst_env.test = tst_test_array[i];
-          tst_env.values_num = num_values;
+        for (l = 0; l < num_values; l++)
+          {
+            tst_env.comm       = tst_comm_array[j];
+            tst_env.type       = tst_type_array[k];
+            tst_env.test       = tst_test_array[i];
+            tst_env.values_num = tst_value_array[l];
 
-          if (!tst_test_check_run (&tst_env))
-            {
-              DEBUG(printf ("Not running tst_env.test:%d\n", tst_env.test));
-              continue;
-            }
+            if (!tst_test_check_run (&tst_env))
+              {
+                DEBUG(printf ("Not running tst_env.test:%d\n", tst_env.test));
+                continue;
+              }
 
-          fflush (stderr);
-          fflush (stdout);
-          if (tst_test_check_sync (&tst_env))
-            MPI_Barrier (MPI_COMM_WORLD);
+            fflush (stderr);
+            fflush (stdout);
+            if (tst_test_check_sync (&tst_env))
+              MPI_Barrier (MPI_COMM_WORLD);
 
-          if (tst_global_rank == 0 && tst_report > TST_REPORT_SUMMARY)
-            printf ("%s tests %s (%d/%d), comm %s (%d/%d), type %s (%d/%d)\n",
-                    tst_test_getclass (tst_env.test),
-                    tst_test_getdescription (tst_env.test), tst_env.test+1, num_tests,
-                    tst_comm_getdescription (tst_env.comm), tst_env.comm+1, num_comms,
-                    tst_type_getdescription (tst_env.type), tst_env.type+1, num_types);
-          tst_test_init_func (&tst_env);
-          tst_test_run_func (&tst_env);
-          tst_test_cleanup_func (&tst_env);
-          if (tst_test_check_sync (&tst_env))
-            MPI_Barrier (MPI_COMM_WORLD);
-        }
+            if (tst_global_rank == 0 && tst_report > TST_REPORT_SUMMARY)
+              printf ("%s tests %s (%d/%d), comm %s (%d/%d), type %s (%d/%d)\n",
+                      tst_test_getclass (tst_env.test),
+                      tst_test_getdescription (tst_env.test), tst_env.test+1, num_tests,
+                      tst_comm_getdescription (tst_env.comm), tst_env.comm+1, num_comms,
+                      tst_type_getdescription (tst_env.type), tst_env.type+1, num_types);
+            tst_test_init_func (&tst_env);
+            tst_test_run_func (&tst_env);
+            tst_test_cleanup_func (&tst_env);
+            if (tst_test_check_sync (&tst_env))
+              MPI_Barrier (MPI_COMM_WORLD);
+          }
   if (tst_global_rank == 0)
     tst_test_print_failed ();
 

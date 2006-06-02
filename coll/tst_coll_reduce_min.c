@@ -37,9 +37,9 @@ int tst_coll_reduce_min_init (const struct tst_env * env)
   tst_type_setstandardarray (env->type, env->values_num, send_buffer, comm_rank);
 
   /*
-   * MPIch2-1.0.3 checks even on NON-Root proceeses, whether recv_buffer is set!
+   * MPIch2-1.0.3 and MPI/SX checks even on NON-Root proceeses, whether recv_buffer is set!
    */
-#ifndef HAVE_MPICH2
+#if !defined(HAVE_MPICH2) && !defined(HAVE_MPISX)
   if (ROOT == comm_rank)
 #endif
     recv_buffer = tst_type_allocvalues (env->type, env->values_num);
@@ -84,7 +84,7 @@ int tst_coll_reduce_min_cleanup (const struct tst_env * env)
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
 
   tst_type_freevalues (env->type, send_buffer, env->values_num);
-#ifndef HAVE_MPICH2
+#if !defined(HAVE_MPICH2) && !defined(HAVE_MPISX)
   if (ROOT == comm_rank)
 #endif
     tst_type_freevalues (env->type, recv_buffer, env->values_num);

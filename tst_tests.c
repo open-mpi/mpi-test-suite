@@ -93,15 +93,36 @@ static struct tst_test tst_tests[] = {
    TST_SYNC,
    &tst_p2p_simple_ring_isend_init, &tst_p2p_simple_ring_isend_run, &tst_p2p_simple_ring_isend_cleanup},
 
+  {TST_CLASS_P2P, "Ring Ibsend",
+   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
+   TST_SYNC,
+   &tst_p2p_simple_ring_ibsend_init, &tst_p2p_simple_ring_ibsend_run, &tst_p2p_simple_ring_ibsend_cleanup},
+
+  {TST_CLASS_P2P, "Ring Irsend",
+   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
+   TST_SYNC,
+   &tst_p2p_simple_ring_irsend_init, &tst_p2p_simple_ring_irsend_run, &tst_p2p_simple_ring_irsend_cleanup},
+
+  {TST_CLASS_P2P, "Ring Issend",
+   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
+   TST_SYNC,
+   &tst_p2p_simple_ring_issend_init, &tst_p2p_simple_ring_issend_run, &tst_p2p_simple_ring_issend_cleanup},
+
   {TST_CLASS_P2P, "Ring Bsend",
-   TST_MPI_INTRA_COMM,
+   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_NONE,
    &tst_p2p_simple_ring_bsend_init, &tst_p2p_simple_ring_bsend_run, &tst_p2p_simple_ring_bsend_cleanup},
 
   {TST_CLASS_P2P, "Ring Ssend",
-   TST_MPI_INTRA_COMM,
+   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_NONE,
@@ -155,7 +176,7 @@ static struct tst_test tst_tests[] = {
     * LAM core-dumps with sig-segv when running this test with
     * "MPI_COMM_WORLD,Reversed MPI_COMM_WORLD"
     */
-#ifndef HAVE_LAM
+#ifndef HAVE_MPI_LAM
   {TST_CLASS_P2P, "Many-to-one with Isend and Cancellation",
    TST_MPI_INTRA_COMM, /* XXX We use a MPI_Gather insided the tests -- no intercomm allowed! | TST_MPI_INTER_COMM,*/
    TST_MPI_ALL_C_TYPES,
@@ -171,7 +192,7 @@ static struct tst_test tst_tests[] = {
    TST_NONE,            /* No synchronization needed, done with hash */
    &tst_p2p_alltoall_init, &tst_p2p_alltoall_run, &tst_p2p_alltoall_cleanup},
 
-#ifndef HAVE_LAM
+#ifndef HAVE_MPI_LAM
   {TST_CLASS_P2P, "Alltoall - Persistent",
    TST_MPI_INTRA_COMM,
    TST_MPI_ALL_C_TYPES,
@@ -276,7 +297,7 @@ static struct tst_test tst_tests[] = {
    /*
     * MPIch2 does not allow MPI_SIGNED_CHAR on collective Ops.
     */
-#  ifdef HAVE_MPICH2
+#  ifdef HAVE_MPI_MPICH2
    ~(TST_MPI_CHAR | TST_MPI_SIGNED_CHAR | TST_MPI_BYTE),
 #  else
    ~(TST_MPI_CHAR | TST_MPI_BYTE),
@@ -336,7 +357,7 @@ static struct tst_test tst_tests[] = {
    /*
     * MPIch2 does not allow MPI_SIGNED_CHAR on collective Ops.
     */
-#  ifdef HAVE_MPICH2
+#  ifdef HAVE_MPI_MPICH2
    ~(TST_MPI_CHAR | TST_MPI_SIGNED_CHAR | TST_MPI_BYTE),
 #  else
    ~(TST_MPI_CHAR | TST_MPI_BYTE),
@@ -364,7 +385,7 @@ static struct tst_test tst_tests[] = {
    /*
     * MPIch2 does not allow MPI_SIGNED_CHAR on collective Ops.
     */
-#  ifdef HAVE_MPICH2
+#  ifdef HAVE_MPI_MPICH2
    ~(TST_MPI_CHAR | TST_MPI_SIGNED_CHAR | TST_MPI_BYTE),
 #  else
    ~(TST_MPI_CHAR | TST_MPI_BYTE),
@@ -433,7 +454,7 @@ static struct tst_test tst_tests[] = {
     *  Odd/Even split MPI_COMM_WORLD (ONLY on *this* one, all other intra-comms work)
     * OpenMPI-v9189 also has problems
     */
-#if !defined(HAVE_MPICH2) && !defined(HAVE_OPENMPI)
+#if !defined(HAVE_MPI_MPICH2) && !defined(HAVE_MPI_NECSX) && !defined(HAVE_MPI_OPENMPI)
   {TST_CLASS_ONE_SIDED, "One-sided Ring with Get using Post",
    TST_MPI_INTRA_COMM, /* XXX possible with MPI_COMM_SELF?? */
    TST_MPI_STANDARD_C_TYPES, /* Fails with TST_MPI_ALL_C_TYPES, as the struct-datatypes are not supported */

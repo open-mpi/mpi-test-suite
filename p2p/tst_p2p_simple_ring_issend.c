@@ -19,7 +19,7 @@
 static char * send_buffer = NULL;
 static char * recv_buffer = NULL;
 
-int tst_p2p_simple_ring_ssend_init (const struct tst_env * env)
+int tst_p2p_simple_ring_issend_init (const struct tst_env * env)
 {
   int comm_rank;
   MPI_Comm comm;
@@ -41,7 +41,7 @@ int tst_p2p_simple_ring_ssend_init (const struct tst_env * env)
   return 0;
 }
 
-int tst_p2p_simple_ring_ssend_run (const struct tst_env * env)
+int tst_p2p_simple_ring_issend_run (const struct tst_env * env)
 {
   int comm_size;
   int comm_rank;
@@ -50,7 +50,8 @@ int tst_p2p_simple_ring_ssend_run (const struct tst_env * env)
   int recv_count;
   MPI_Comm comm;
   MPI_Datatype type;
-  MPI_Status status;
+  MPI_Status statuses[2];
+  MPI_Request requests[2];
 
   comm = tst_comm_getcomm (env->comm);
   type = tst_type_getdatatype (env->type);
@@ -67,54 +68,45 @@ int tst_p2p_simple_ring_ssend_run (const struct tst_env * env)
       MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
       MPI_CHECK (MPI_Comm_size (comm, &comm_size));
 
-      if (comm_size > 1)
-        {
-          send_to = (comm_rank + 1) % comm_size;
-          recv_from = (comm_rank + comm_size - 1) % comm_size;
-        }
-      else
-        {
-          send_to = MPI_PROC_NULL;
-          recv_from = MPI_PROC_NULL;
-        }
+      send_to = (comm_rank + 1) % comm_size;
+      recv_from = (comm_rank + comm_size - 1) % comm_size;
     }
   else
-    ERROR (EINVAL, "tst_p2p_simple_ring cannot run with this kind of communicator");
+    ERROR (EINVAL, "tst_p2p_simple_ring_issend cannot run with this kind of communicator");
 
-  DEBUG (printf ("(Rank:%d) comm_rank:%d comm_size:%d send_to:%d recv_from:%d\n",
-                 tst_global_rank, comm_rank, comm_size, send_to, recv_from));
+  DEBUG (printf ("(Rank:%d) comm_rank:%d comm_size:%d "
+                 "send_to:%d recv_from:%d 4711:%d\n",
+                 tst_global_rank, comm_rank, comm_size,
+                 send_to, recv_from, 4711));
 
-  if (comm_rank == 0)
-    {
-      MPI_CHECK (MPI_Ssend (send_buffer, env->values_num, type, send_to, 4711, comm));
-      MPI_CHECK (MPI_Recv (recv_buffer, env->values_num, type, recv_from, 4711, comm, &status));
-    }
-  else
-    {
-      MPI_CHECK (MPI_Recv (recv_buffer, env->values_num, type, recv_from, 4711, comm, &status));
-      MPI_CHECK (MPI_Ssend (send_buffer, env->values_num, type, send_to, 4711, comm));
-    }
+  MPI_CHECK (MPI_Irecv (recv_buffer, env->values_num, type, recv_from, 4711, comm, &requests[1]));
+  MPI_CHECK (MPI_Issend (send_buffer, env->values_num, type, send_to, 4711, comm, &requests[0]));
 
-  if (status.MPI_SOURCE != recv_from ||
-      (recv_from != MPI_PROC_NULL && status.MPI_TAG != 4711) ||
-      (recv_from == MPI_PROC_NULL && status.MPI_TAG != MPI_ANY_TAG))
-    ERROR (EINVAL, "Error in status");
+  MPI_Waitall (2, requests, statuses);
+
+  if (requests[0] != MPI_REQUEST_NULL ||
+      requests[1] != MPI_REQUEST_NULL)
+    ERROR (EINVAL, "Error in requests");
+
+  if (statuses[1].MPI_SOURCE != recv_from ||
+      (recv_from != MPI_PROC_NULL && statuses[1].MPI_TAG != 4711) ||
+      (recv_from == MPI_PROC_NULL && statuses[1].MPI_TAG != MPI_ANY_TAG))
+    ERROR (EINVAL, "Error in statuses");
 
   if (recv_from != MPI_PROC_NULL)
     {
       if (tst_mode == TST_MODE_STRICT)
         {
-          MPI_CHECK(MPI_Get_count(&status, type, &recv_count));
+          MPI_CHECK(MPI_Get_count(&(statuses[1]), type, &recv_count));
           if (recv_count != env->values_num)
             ERROR(EINVAL, "Error in count");
         }
       tst_test_checkstandardarray (env, recv_buffer, recv_from);
     }
-
   return 0;
 }
 
-int tst_p2p_simple_ring_ssend_cleanup (const struct tst_env * env)
+int tst_p2p_simple_ring_issend_cleanup (const struct tst_env * env)
 {
   tst_type_freevalues (env->type, send_buffer, env->values_num);
   tst_type_freevalues (env->type, recv_buffer, env->values_num);

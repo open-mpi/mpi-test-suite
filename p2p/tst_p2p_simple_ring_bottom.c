@@ -115,11 +115,12 @@ int tst_p2p_simple_ring_bottom_run (const struct tst_env * env)
       if (tst_mode == TST_MODE_STRICT)
         {
           MPI_CHECK(MPI_Get_count(&status, type, &recv_count));
-          if(recv_count != env->values_num)
+          if (recv_count != env->values_num)
             ERROR(EINVAL, "Error in Count");
         }
       tst_test_checkstandardarray (env, recv_buffer, recv_from);
     }
+
   return 0;
 }
 
