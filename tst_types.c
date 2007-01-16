@@ -17,6 +17,10 @@
 #include "mpi.h"
 #include "mpi_test_suite.h"
 
+#ifndef LLONG_MAX
+#   define LLONG_MAX    9223372036854775807LL
+#   define LLONG_MIN    (-LLONG_MAX - 1LL)
+#endif
 
 /*
 #ifdef __USE_ISOC99

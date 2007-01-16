@@ -284,6 +284,17 @@ static struct tst_test tst_tests[] = {
    * XXX should allow TST_MPI_INTER_COMM depending on whether the underlying
    * MPI supports it!
    */
+  {TST_CLASS_COLL, "Allgather with MPI_IN_PLACE",
+   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
+   TST_NONE,            /* No synchronization needed */
+   &tst_coll_allgather_in_place_init, &tst_coll_allgather_in_place_run, &tst_coll_allgather_in_place_cleanup},
+
+  /*
+   * XXX should allow TST_MPI_INTER_COMM depending on whether the underlying
+   * MPI supports it!
+   */
   {TST_CLASS_COLL, "Scan sum",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
    (TST_MPI_STANDARD_C_INT_TYPES |
@@ -399,6 +410,62 @@ static struct tst_test tst_tests[] = {
    &tst_coll_reduce_max_init, &tst_coll_reduce_max_run, &tst_coll_reduce_max_cleanup},
 
   /*
+   * XXX should allow TST_MPI_INTER_COMM depending on whether the underlying
+   * MPI supports it!
+   */
+  {TST_CLASS_COLL, "Reduce Min with MPI_IN_PLACE",
+   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   (TST_MPI_STANDARD_C_TYPES | TST_MPI_STANDARD_FORTRAN_INT_TYPES | TST_MPI_STANDARD_FORTRAN_FLOAT_TYPES) &
+#ifdef HAVE_MPI2
+   /*
+    * MPI2 allows the usage of the MPI_SIGNED_CHAR and the MPI_UNSIGNED_CHAR types in reductions!
+    * However, MPI_CHAR with no actual knowledge on the signed-ness is of course still not allowed.
+    */
+   /*
+    * MPIch2 does not allow MPI_SIGNED_CHAR on collective Ops.
+    */
+#  ifdef HAVE_MPI_MPICH2
+   ~(TST_MPI_CHAR | TST_MPI_SIGNED_CHAR | TST_MPI_BYTE),
+#  else
+   ~(TST_MPI_CHAR | TST_MPI_BYTE),
+#  endif
+#else
+   ~(TST_MPI_CHAR | TST_MPI_SIGNED_CHAR | TST_MPI_UNSIGNED_CHAR | TST_MPI_BYTE),
+#endif
+
+   TST_MODE_RELAXED,
+   TST_NONE,            /* No synchronization needed */
+   &tst_coll_reduce_in_place_min_init, &tst_coll_reduce_in_place_min_run, &tst_coll_reduce_in_place_min_cleanup},
+
+  /*
+   * XXX should allow TST_MPI_INTER_COMM depending on whether the underlying
+   * MPI supports it!
+   */
+  {TST_CLASS_COLL, "Reduce Max with MPI_IN_PLACE",
+   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   (TST_MPI_STANDARD_C_TYPES | TST_MPI_STANDARD_FORTRAN_INT_TYPES | TST_MPI_STANDARD_FORTRAN_FLOAT_TYPES) &
+#ifdef HAVE_MPI2
+   /*
+    * MPI2 allows the usage of the MPI_SIGNED_CHAR and the MPI_UNSIGNED_CHAR types in reductions!
+    * However, MPI_CHAR with no actual knowledge on the signed-ness is of course still not allowed.
+    */
+   /*
+    * MPIch2 does not allow MPI_SIGNED_CHAR on collective Ops.
+    */
+#  ifdef HAVE_MPI_MPICH2
+   ~(TST_MPI_CHAR | TST_MPI_SIGNED_CHAR | TST_MPI_BYTE),
+#  else
+   ~(TST_MPI_CHAR | TST_MPI_BYTE),
+#  endif
+#else
+   ~(TST_MPI_CHAR | TST_MPI_SIGNED_CHAR | TST_MPI_UNSIGNED_CHAR | TST_MPI_BYTE),
+#endif
+
+   TST_MODE_RELAXED,
+   TST_NONE,            /* No synchronization needed */
+   &tst_coll_reduce_in_place_max_init, &tst_coll_reduce_in_place_max_run, &tst_coll_reduce_in_place_max_cleanup},
+
+  /*
    * The Allreduce call is not valid for MPI_MIN/MPI_MAX and
    * the datatypes MPI_Char, MPI_UNSIGNED_CHAR and MPI_Byte and
    * the struct datatypes
@@ -429,6 +496,35 @@ static struct tst_test tst_tests[] = {
    TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
    &tst_coll_allreduce_init, &tst_coll_allreduce_run, &tst_coll_allreduce_cleanup},
+
+  /*
+   * MPI_IN_PLACE allreduce
+   * XXX should allow TST_MPI_INTER_COMM depending on whether the underlying
+   * MPI supports it!
+   */
+  {TST_CLASS_COLL, "Allreduce MIN/MAX with MPI_IN_PLACE",
+   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   (TST_MPI_STANDARD_C_TYPES | TST_MPI_STANDARD_FORTRAN_INT_TYPES | TST_MPI_STANDARD_FORTRAN_FLOAT_TYPES) &
+#ifdef HAVE_MPI2
+   /*
+    * MPI2 allows the usage of the MPI_SIGNED_CHAR and the MPI_UNSIGNED_CHAR types in reductions!
+    * However, MPI_CHAR with no actual knowledge on the signed-ness is of course still not allowed.
+    */
+   /*
+    * MPIch2 does not allow MPI_SIGNED_CHAR on collective Ops.
+    */
+#  ifdef HAVE_MPICH2
+   ~(TST_MPI_CHAR | TST_MPI_SIGNED_CHAR | TST_MPI_BYTE),
+#  else
+   ~(TST_MPI_CHAR | TST_MPI_BYTE),
+#  endif
+#else
+   ~(TST_MPI_CHAR | TST_MPI_SIGNED_CHAR | TST_MPI_UNSIGNED_CHAR | TST_MPI_BYTE),
+#endif
+
+   TST_MODE_RELAXED,
+   TST_NONE,            /* No synchronization needed */
+   &tst_coll_allreduce_in_place_init, &tst_coll_allreduce_in_place_run, &tst_coll_allreduce_in_place_cleanup},
 
   /*
    * XXX should allow TST_MPI_INTER_COMM depending on whether the underlying

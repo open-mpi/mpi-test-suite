@@ -511,6 +511,10 @@ extern int tst_coll_allgather_init (const struct tst_env * env);
 extern int tst_coll_allgather_run (const struct tst_env * env);
 extern int tst_coll_allgather_cleanup (const struct tst_env * env);
 
+extern int tst_coll_allgather_in_place_init (const struct tst_env * env);
+extern int tst_coll_allgather_in_place_run (const struct tst_env * env);
+extern int tst_coll_allgather_in_place_cleanup (const struct tst_env * env);
+
 extern int tst_coll_reduce_max_cleanup (const struct tst_env * env);
 extern int tst_coll_reduce_max_run (const struct tst_env * env);
 extern int tst_coll_reduce_max_init (const struct tst_env * env);
@@ -518,6 +522,14 @@ extern int tst_coll_reduce_max_init (const struct tst_env * env);
 extern int tst_coll_reduce_min_cleanup (const struct tst_env * env);
 extern int tst_coll_reduce_min_run (const struct tst_env * env);
 extern int tst_coll_reduce_min_init (const struct tst_env * env);
+
+extern int tst_coll_reduce_in_place_max_cleanup (const struct tst_env * env);
+extern int tst_coll_reduce_in_place_max_run (const struct tst_env * env);
+extern int tst_coll_reduce_in_place_max_init (const struct tst_env * env);
+
+extern int tst_coll_reduce_in_place_min_cleanup (const struct tst_env * env);
+extern int tst_coll_reduce_in_place_min_run (const struct tst_env * env);
+extern int tst_coll_reduce_in_place_min_init (const struct tst_env * env);
 
 extern int tst_coll_scan_sum_init (const struct tst_env * env);
 extern int tst_coll_scan_sum_run (const struct tst_env * env);
@@ -538,6 +550,10 @@ extern int tst_coll_scatterv_stride_cleanup (const struct tst_env * env);
 extern int tst_coll_allreduce_init (const struct tst_env * env);
 extern int tst_coll_allreduce_run (const struct tst_env * env);
 extern int tst_coll_allreduce_cleanup (const struct tst_env * env);
+
+extern int tst_coll_allreduce_in_place_init (const struct tst_env * env);
+extern int tst_coll_allreduce_in_place_run (const struct tst_env * env);
+extern int tst_coll_allreduce_in_place_cleanup (const struct tst_env * env);
 
 extern int tst_coll_alltoall_init (const struct tst_env * env);
 extern int tst_coll_alltoall_run (const struct tst_env * env);

@@ -46,12 +46,16 @@ OBJ =   mpi_test_suite.o                        \
         tst_tests.o                             \
         tst_types.o                             \
         coll/tst_coll_allgather.o               \
+        coll/tst_coll_allgather_in_place.o      \
         coll/tst_coll_allreduce.o               \
+        coll/tst_coll_allreduce_in_place.o      \
         coll/tst_coll_alltoall.o                \
         coll/tst_coll_bcast.o                   \
         coll/tst_coll_gather.o                  \
         coll/tst_coll_reduce_max.o              \
         coll/tst_coll_reduce_min.o              \
+        coll/tst_coll_reduce_in_place_max.o     \
+        coll/tst_coll_reduce_in_place_min.o     \
         coll/tst_coll_scan_sum.o                \
         coll/tst_coll_scatter.o                 \
         coll/tst_coll_scatterv.o                \
