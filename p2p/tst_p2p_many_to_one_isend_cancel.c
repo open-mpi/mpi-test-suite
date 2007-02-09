@@ -14,71 +14,81 @@
  */
 #include "mpi.h"
 #include "mpi_test_suite.h"
+#include "tst_output.h"
 
 #undef DEBUG
 #define DEBUG(x)
 
 #define ROOT 0
 
+/*
+ * XXX
 static char * send_buffer = NULL;
-static char ** recv_buffer = NULL;
-static MPI_Request * recv_reqs = NULL;
-static MPI_Status * recv_statuses = NULL;
+static char ** recv_buffer_array = NULL;
+static MPI_Request * req_buffer = NULL;
+static MPI_Status * status_buffer = NULL;
 static int * cancelled = NULL;
+ */
 
-int tst_p2p_many_to_one_isend_cancel_init (const struct tst_env * env)
+int tst_p2p_many_to_one_isend_cancel_init (struct tst_env * env)
 {
   int comm_rank;
   int comm_size;
   MPI_Comm comm;
 
-  DEBUG (printf ("(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
-                 tst_global_rank, env->comm, env->type, env->values_num));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
+                     tst_global_rank, env->comm, env->type, env->values_num);
 
   /*
    * Now, initialize the buffer
    */
   comm = tst_comm_getcomm (env->comm);
-  MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
-  MPI_CHECK (MPI_Comm_size (comm, &comm_size));
 
-  send_buffer = tst_type_allocvalues (env->type, env->values_num);
-  tst_type_setstandardarray (env->type, env->values_num, send_buffer, comm_rank);
+  MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
+
+  if (tst_comm_getcommclass (env->comm) & TST_MPI_INTRA_COMM)
+    MPI_CHECK (MPI_Comm_size (comm, &comm_size));
+  else
+    MPI_CHECK (MPI_Comm_remote_size (comm, &comm_size));
+
+
+  env->send_buffer = tst_type_allocvalues (env->type, env->values_num);
+  tst_type_setstandardarray (env->type, env->values_num, env->send_buffer, comm_rank);
 
   if (ROOT == comm_rank)
     {
       int rank;
-      recv_buffer = malloc (sizeof(char *) * comm_size);
-      if (NULL == recv_buffer)
+      env->recv_buffer_array = malloc (sizeof(char *) * comm_size);
+      if (NULL == env->recv_buffer_array)
         ERROR (ENOMEM, "malloc");
 
       for (rank = 0; rank < comm_size; rank++)
         {
-          recv_buffer[rank] = tst_type_allocvalues (env->type, env->values_num);
-          if (NULL == recv_buffer[rank])
+          env->recv_buffer_array[rank] = tst_type_allocvalues (env->type, env->values_num);
+          if (NULL == env->recv_buffer_array[rank])
             ERROR (ENOMEM, "malloc");
         }
 
-      recv_reqs = malloc (sizeof(MPI_Request) * comm_size);
-      if (NULL == recv_reqs)
+      env->req_buffer = malloc (sizeof(MPI_Request) * comm_size);
+      if (NULL == env->req_buffer)
         ERROR (ENOMEM, "malloc");
       for (rank = 0; rank < comm_size; rank++)
-        recv_reqs[rank] = MPI_REQUEST_NULL;
+        env->req_buffer[rank] = MPI_REQUEST_NULL;
 
-      recv_statuses = malloc (sizeof(MPI_Status) * comm_size);
-      if (NULL == recv_statuses)
+      env->status_buffer = malloc (sizeof(MPI_Status) * comm_size);
+      if (NULL == env->status_buffer)
         ERROR (ENOMEM, "malloc");
 
-      cancelled = malloc (sizeof(int) * comm_size);
-      if (NULL == cancelled)
+      env->cancelled = malloc (sizeof(int) * comm_size);
+      if (NULL == env->cancelled)
         ERROR (ENOMEM, "malloc");
-      memset (cancelled, 0, sizeof (int) * comm_size);
+      memset (env->cancelled, 0, sizeof (int) * comm_size);
     }
 
   return 0;
 }
 
-int tst_p2p_many_to_one_isend_cancel_run (const struct tst_env * env)
+int tst_p2p_many_to_one_isend_cancel_run (struct tst_env * env)
 {
   int comm_size;
   int comm_rank;
@@ -93,7 +103,7 @@ int tst_p2p_many_to_one_isend_cancel_run (const struct tst_env * env)
   comm = tst_comm_getcomm (env->comm);
   type = tst_type_getdatatype (env->type);
 
-  if (tst_comm_getcommclass (env->comm) == TST_MPI_INTRA_COMM)
+  if (tst_comm_getcommclass (env->comm) & TST_MPI_INTRA_COMM)
     MPI_CHECK (MPI_Comm_size (comm, &comm_size));
   else
     MPI_CHECK (MPI_Comm_remote_size (comm, &comm_size));
@@ -101,10 +111,11 @@ int tst_p2p_many_to_one_isend_cancel_run (const struct tst_env * env)
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
 
   hash_value = tst_hash_value (env);
-  DEBUG (printf ("(Rank:%d) comm:%d type:%d test:%d hash_value:%d comm_size:%d comm_rank:%d\n",
-                 tst_global_rank,
-                 env->comm, env->type, env->test, hash_value,
-                 comm_size, comm_rank));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) comm:%d type:%d test:%d hash_value:%d comm_size:%d comm_rank:%d\n",
+                     tst_global_rank,
+                     env->comm, env->type, env->test, hash_value,
+                     comm_size, comm_rank);
+
 
   /*
   ** Even for intercommunicator, only process zero within
@@ -117,10 +128,10 @@ int tst_p2p_many_to_one_isend_cancel_run (const struct tst_env * env)
 
       for (rank = 0; rank < comm_size; rank++)
         {
-          MPI_CHECK (MPI_Irecv (recv_buffer[rank], env->values_num, type, rank,
-                                hash_value, comm, &recv_reqs[rank]));
-          if (recv_reqs[rank] == MPI_REQUEST_NULL)
-            ERROR (EINVAL, "recv_reqs[rank] == MPI_REQUEST_NULL");
+          MPI_CHECK (MPI_Irecv (env->recv_buffer_array[rank], env->values_num, type, rank,
+                                hash_value, comm, &env->req_buffer[rank]));
+          if (env->req_buffer[rank] == MPI_REQUEST_NULL)
+            ERROR (EINVAL, "req_buffer[rank] == MPI_REQUEST_NULL");
         }
     }
 
@@ -136,68 +147,71 @@ int tst_p2p_many_to_one_isend_cancel_run (const struct tst_env * env)
    * if the Isend may not be cancelled.
    * Again either way, every process of comm will enter the MPI_Gather.
    */
-  MPI_CHECK (MPI_Isend (send_buffer, env->values_num, type, ROOT, hash_value, comm, &send_request));
+  MPI_CHECK (MPI_Isend (env->send_buffer, env->values_num, type, ROOT, hash_value, comm, &send_request));
   MPI_CHECK (MPI_Cancel (&send_request));
   if (MPI_REQUEST_NULL == send_request)
     ERROR (EINVAL, "send_request == MPI_REQUEST_NULL");
   MPI_CHECK (MPI_Wait (&send_request, &status));
   send_cancelled = 0;
   MPI_CHECK (MPI_Test_cancelled (&status, &send_cancelled));
-  DEBUG (printf ("(Rank:%d) send_cancelled:%d\n",
-                 comm_rank, send_cancelled));
+
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) send_cancelled:%d\n",
+                     comm_rank, send_cancelled);
+
   /*
    * Now collect the cancel information from all the processes
    */
-  MPI_CHECK (MPI_Gather (&send_cancelled, 1, MPI_INT, cancelled, 1, MPI_INT, ROOT, comm));
+  MPI_CHECK (MPI_Gather (&send_cancelled, 1, MPI_INT, env->cancelled, 1, MPI_INT, ROOT, comm));
 
   if (ROOT == comm_rank)
     {
       int rank;
       for (rank = 0; rank < comm_size; rank++)
-        DEBUG (printf ("(Rank:%d) cancelled[%d]:%d\n",
-                       comm_rank, rank, cancelled[rank]));
+        tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) cancelled[%d]\n",
+                           comm_rank, rank);
 
       for (rank = 0; rank < comm_size; rank++)
         {
           /*
            * If the Isend has been cancelled on the processes, Cancel the Irecv as well
            */
-          if (cancelled[rank])
+          if (env->cancelled[rank])
             {
-              DEBUG (printf ("(Rank:%d) cancelled[%d]:%d Going to cancel MPI_Irecv\n",
-                             comm_rank, rank, cancelled[rank]));
+              tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) cancelled[%d]:%d Going to cancel MPI_Irecv\n",
+                                 comm_rank, rank, env->cancelled[rank]);
 
-              MPI_CHECK (MPI_Cancel (&recv_reqs[rank]));
-              if (MPI_REQUEST_NULL == recv_reqs[rank])
-                ERROR (EINVAL, "recv_reqs[rank] == MPI_REQUEST_NULL");
+              MPI_CHECK (MPI_Cancel (&env->req_buffer[rank]));
+              if (MPI_REQUEST_NULL == env->req_buffer[rank])
+                ERROR (EINVAL, "req_buffer[rank] == MPI_REQUEST_NULL");
 /* #define HAVE_MPI_LAM */
 #ifdef HAVE_MPI_LAM
               /*
                * LAM hangs without this MPI_Request_free, as it doesn't finish the MPI_Waitall of cancelled requests
                */
-              MPI_Request_free (&recv_reqs[rank]);
-              if (MPI_REQUEST_NULL != recv_reqs[rank])
-                ERROR (EINVAL, "recv_reqs[rank] != MPI_REQUEST_NULL");
+              MPI_Request_free (&env->req_buffer[rank]);
+              if (MPI_REQUEST_NULL != env->req_buffer[rank])
+                ERROR (EINVAL, "req_buffer[rank] != MPI_REQUEST_NULL");
 #endif
             }
           else
-            DEBUG (printf ("(Rank:%d) cancelled[%d]:%d\n",
-                           comm_rank, rank, cancelled[rank]));
-         }
-      DEBUG (printf ("(Rank:%d) Before MPI_Waitall\n",
-                     comm_rank));
+            tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) cancelled[%d]:%d\n",
+                               comm_rank, rank, env->cancelled[rank]);
 
-      MPI_CHECK (MPI_Waitall(comm_size, recv_reqs, recv_statuses));
+        }
+      tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) Before MPI_Waitall\n",
+                     comm_rank);
+
+      MPI_CHECK (MPI_Waitall(comm_size, env->req_buffer, env->status_buffer));
 
       for (rank = 0; rank < comm_size; rank++)
         {
           int flag;
-          status = recv_statuses[rank];
+          status = env->status_buffer[rank];
 #ifdef HAVE_MPI_LAM
           /*
            * With LAM, we have freed the request, the status is unitialized
            */
-          if (cancelled[rank])
+          if (env->cancelled[rank])
             continue;
 #endif
           if (status.MPI_TAG != hash_value ||
@@ -214,22 +228,22 @@ int tst_p2p_many_to_one_isend_cancel_run (const struct tst_env * env)
                if(recv_count != env->values_num)
                   ERROR(EINVAL, "Error in Count");
             }
-          MPI_CHECK (MPI_Test_cancelled (&recv_statuses[rank], &flag));
-          if (cancelled[rank] && !flag)
+          MPI_CHECK (MPI_Test_cancelled (&env->status_buffer[rank], &flag));
+          if (env->cancelled[rank] && !flag)
             ERROR (EINVAL, "cancellation info and MPI_Test_cancelled differ");
 
-          DEBUG (printf ("(Rank:%d) going to check array from source:%d\n",
-                         comm_rank, status.MPI_SOURCE));
+          tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) going to check array from source:%d\n",
+                             comm_rank, status.MPI_SOURCE);
 
           if (!flag)
-            tst_test_checkstandardarray (env, recv_buffer[rank], status.MPI_SOURCE);
+            tst_test_checkstandardarray (env, env->recv_buffer_array[rank], status.MPI_SOURCE);
         }
     }
 
   return 0;
 }
 
-int tst_p2p_many_to_one_isend_cancel_cleanup (const struct tst_env * env)
+int tst_p2p_many_to_one_isend_cancel_cleanup (struct tst_env * env)
 {
   int comm_rank;
   int comm_size;
@@ -238,21 +252,22 @@ int tst_p2p_many_to_one_isend_cancel_cleanup (const struct tst_env * env)
 
   comm = tst_comm_getcomm (env->comm);
 
-  if (tst_comm_getcommclass (env->comm) == TST_MPI_INTRA_COMM)
+  if (tst_comm_getcommclass (env->comm) & TST_MPI_INTRA_COMM)
     MPI_CHECK (MPI_Comm_size (comm, &comm_size));
   else
     MPI_CHECK (MPI_Comm_remote_size (comm, &comm_size));
+
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
 
   if (ROOT == comm_rank)
     {
       for (rank = 0; rank < comm_size; rank++)
-        tst_type_freevalues (env->type, recv_buffer[rank], env->values_num);
-      free (recv_buffer);
-      free (recv_reqs);
-      free (recv_statuses);
-      free (cancelled);
+        tst_type_freevalues (env->type, env->recv_buffer_array[rank], env->values_num);
+      free (env->recv_buffer_array);
+      free (env->req_buffer);
+      free (env->status_buffer);
+      free (env->cancelled);
     }
-  tst_type_freevalues (env->type, send_buffer, env->values_num);
+  tst_type_freevalues (env->type, env->send_buffer, env->values_num);
   return 0;
 }

@@ -29,7 +29,8 @@ static const char * const tst_test_class_strings [] =
     "Environment",
     "P2P",
     "Collective",
-    "One-sided"
+    "One-sided",
+    "Threaded"
   };
 
 struct tst_test {
@@ -39,9 +40,9 @@ struct tst_test {
   tst_uint64 run_with_type;
   int mode;
   int needs_sync;
-  int (*tst_init_func) (const struct tst_env * env);
-  int (*tst_run_func) (const struct tst_env * env);
-  int (*tst_cleanup_func) (const struct tst_env * env);
+  int (*tst_init_func) (struct tst_env * env);
+  int (*tst_run_func) (struct tst_env * env);
+  int (*tst_cleanup_func) (struct tst_env * env);
 };
 
 static struct tst_test tst_tests[] = {
@@ -120,6 +121,14 @@ static struct tst_test tst_tests[] = {
    TST_MODE_RELAXED,
    TST_NONE,
    &tst_p2p_simple_ring_bsend_init, &tst_p2p_simple_ring_bsend_run, &tst_p2p_simple_ring_bsend_cleanup},
+
+  {TST_CLASS_P2P, "Ring Rsend",
+   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
+   TST_SYNC,
+   &tst_p2p_simple_ring_rsend_init, &tst_p2p_simple_ring_rsend_run, &tst_p2p_simple_ring_rsend_cleanup},
+
 
   {TST_CLASS_P2P, "Ring Ssend",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
@@ -484,7 +493,7 @@ static struct tst_test tst_tests[] = {
    /*
     * MPIch2 does not allow MPI_SIGNED_CHAR on collective Ops.
     */
-#  ifdef HAVE_MPICH2
+#  ifdef HAVE_MPI_MPICH2
    ~(TST_MPI_CHAR | TST_MPI_SIGNED_CHAR | TST_MPI_BYTE),
 #  else
    ~(TST_MPI_CHAR | TST_MPI_BYTE),
@@ -568,6 +577,39 @@ static struct tst_test tst_tests[] = {
 
 #endif
 
+  /*
+   * Here come the real threaded tests
+   */
+#ifdef HAVE_MPI2_THREADS
+  {TST_CLASS_THREADED, "Threaded ring",
+   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
+   TST_NONE,
+   &tst_threaded_ring_init, &tst_threaded_ring_run, &tst_threaded_ring_cleanup},
+
+  {TST_CLASS_THREADED, "Threaded ring isend",
+   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
+   TST_NONE,
+   &tst_threaded_ring_isend_init, &tst_threaded_ring_isend_run, &tst_threaded_ring_isend_cleanup},
+
+  {TST_CLASS_THREADED, "Threaded ring bsend",
+   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
+   TST_NONE,
+   &tst_threaded_ring_bsend_init, &tst_threaded_ring_bsend_run, &tst_threaded_ring_bsend_cleanup},
+
+  {TST_CLASS_THREADED, "Threaded ring persistent",
+   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
+   TST_NONE,
+   &tst_threaded_ring_persistent_init, &tst_threaded_ring_persistent_run, &tst_threaded_ring_persistent_cleanup},
+#endif
+
   {TST_CLASS_UNSPEC, "None",
    0,
    0,
@@ -605,6 +647,7 @@ const char * tst_test_getclass (int i)
     (
      if (tst_tests[i].class != TST_CLASS_ENV &&
          tst_tests[i].class != TST_CLASS_P2P &&
+         tst_tests[i].class != TST_CLASS_THREADED &&
          tst_tests[i].class != TST_CLASS_COLL &&
          tst_tests[i].class != TST_CLASS_ONE_SIDED)
      ERROR (EINVAL, "Class of test is unknown");
@@ -651,6 +694,25 @@ int tst_test_cleanup_func (struct tst_env * env)
   CHECK_ARG (env->test, -1);
 
   return tst_tests[env->test].tst_cleanup_func (env);
+}
+
+
+void *  tst_test_get_init_func (struct tst_env * env)
+{
+  CHECK_ARG (env->test, NULL);
+  return tst_tests[env->test].tst_init_func;
+}
+
+void * tst_test_get_run_func (struct tst_env * env)
+{
+  CHECK_ARG (env->test, NULL);
+  return tst_tests[env->test].tst_run_func;
+}
+
+void * tst_test_get_cleanup_func (struct tst_env * env)
+{
+  CHECK_ARG (env->test, NULL);
+  return tst_tests[env->test].tst_cleanup_func;
 }
 
 
@@ -703,11 +765,11 @@ static int tst_test_search (const int search_test, const int * test_list, const 
   for (k = 0; k < test_list_num; k++)
     if (test_list[k] == search_test)
       break;
-  return (k == test_list_num) ? 0 : 1;
+  return (k == test_list_num) ? -1 : k;
 }
 
 
-int tst_test_select (const char * test_string, int * test_list, int * test_list_num, const int test_list_max)
+int tst_test_select (const char * test_string, int * test_list, const int test_list_max, int * test_list_num)
 {
   int i;
 
@@ -722,6 +784,7 @@ int tst_test_select (const char * test_string, int * test_list, int * test_list_
       if (!strcasecmp (test_string, tst_test_class_strings[i]))
         {
           int j;
+          int tst_class = i-1;
           DEBUG (printf ("test_string:%s matched with tst_test_class_strings[%d]:%s\n",
                          test_string, i, tst_test_class_strings[i]));
           for (j = 0; j < TST_TESTS_NUM; j++)
@@ -729,18 +792,18 @@ int tst_test_select (const char * test_string, int * test_list, int * test_list_
               /*
                * First search for this test in the test_list -- if already in, continue!
                */
-              if (tst_test_search (j, test_list, *test_list_num))
+              if (-1 != tst_test_search (j, test_list, *test_list_num))
                 {
-                  WARNING (printf ("Test:%s selected through class:%s was already "
+                  DEBUG (printf ("Test:%s selected through class:%s was already "
                                    "included in list -- not including\n",
                                    tst_tests[j].description,
-                                   tst_test_class_strings[i]));
+                                   tst_test_class_strings[tst_class]));
                   continue;
                 }
-              if (tst_tests[j].class & (1 << i))
+              if (tst_tests[j].class & (1 << tst_class))
                 {
-                  DEBUG (printf ("test_string:%s test j:%d i:%d with class:%d matches, test_list_num:%d\n",
-                                 test_string, j, (1 << i), tst_tests[j].class, *test_list_num));
+                  DEBUG (printf ("test_string:%s test j:%d (1 << tst_class):%d with class:%d matches, test_list_num:%d\n",
+                                 test_string, j, (1 << tst_class), tst_tests[j].class, *test_list_num));
                   test_list[*test_list_num] = j;
                   (*test_list_num)++;
                   if (*test_list_num == test_list_max)
@@ -758,7 +821,7 @@ int tst_test_select (const char * test_string, int * test_list, int * test_list_
     {
       if (!strcasecmp (test_string, tst_tests[i].description))
         {
-          if (tst_test_search (i, test_list, *test_list_num))
+          if (-1 != tst_test_search (i, test_list, *test_list_num))
             {
               WARNING (printf ("Test:%s was already included in list -- not including\n",
                                tst_tests[i].description));
@@ -785,6 +848,85 @@ int tst_test_select (const char * test_string, int * test_list, int * test_list_
   }
   return 0;
 }
+
+
+
+int tst_test_deselect (const char * test_string, int * test_list, const int test_list_max, int * test_list_num)
+{
+  int i;
+
+  if (test_string == NULL || test_list == NULL || test_list_num == NULL)
+    ERROR (EINVAL, "Passed a NULL parameter");
+
+  for (i = 0; i < TST_TEST_CLASS_NUM; i++)
+    {
+      /*
+       * In case we match a complete class of tests, exclude every one!
+       */
+      if (!strcasecmp (test_string, tst_test_class_strings[i]))
+        {
+          int j;
+          int tst_class = i-1;
+          DEBUG (printf ("test_string:%s matched with tst_test_class_strings[%d]:%s\n",
+                         test_string, i, tst_test_class_strings[i]));
+          for (j = 0; j < TST_TESTS_NUM; j++)
+            {
+              int ret;
+              /*
+               * Search for this test in the test_list --
+               * if it belongs to this class and is already included, deselect
+               */
+              if (((ret = tst_test_search (j, test_list, *test_list_num)) != -1) &&
+                  tst_tests[j].class & (1 << tst_class))
+                {
+                  DEBUG (printf ("test_string:%s test j:%d (1 << tst_class):%d with class:%d matches for deselect, test_list_num:%d\n",
+                                 test_string, j, (1 << tst_class), tst_tests[j].class, *test_list_num));
+                  test_list[ret] = -1;
+                  (*test_list_num)--;
+                  if (*test_list_num < 0)
+                    ERROR (EINVAL, "Negative selected tests: This should not happen");
+                }
+            }
+          return 0;
+        }
+    }
+
+  /*
+   * In case we didn't match a complete class of tests, test for every single one...
+   */
+  for (i = 0; i < TST_TESTS_NUM; i++)
+    {
+      if (!strcasecmp (test_string, tst_tests[i].description))
+        {
+          int ret;
+          if ((ret = tst_test_search (i, test_list, *test_list_num)) == -1)
+            {
+              WARNING (printf ("Test:%s was not included in list -- not excluding\n",
+                               tst_tests[i].description));
+              return 0;
+            }
+
+          test_list[ret] = -1;
+          (*test_list_num)--;
+          if (*test_list_num < 0)
+            ERROR (EINVAL, "Negative selected tests: This should not happen");
+
+          DEBUG (printf ("test_string:%s matched with test_list_num:%d excluding\n",
+                         test_string, *test_list_num));
+
+          return 0;
+        }
+    }
+
+  {
+    char buffer[128];
+    sprintf (buffer, "Test %s not recognized",
+             test_string);
+    ERROR (EINVAL, buffer);
+  }
+  return 0;
+}
+
 
 int tst_test_recordfailure (const struct tst_env * env)
 {

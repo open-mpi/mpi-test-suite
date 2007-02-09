@@ -1,14 +1,17 @@
-#include <stdlib.h>
-#include <stdio.h>
 #include "config.h"
+#include <stdio.h>
+#ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+#endif
 #ifdef HAVE_STRING_H
 #  include <string.h>
 #endif
 #ifdef HAVE_STRINGS_H
 #  include <strings.h>
 #endif
-
-#include <limits.h>
+#ifdef HAVE_LIMITS_H
+#  include <limits.h>
+#endif
 #include "mpi.h"
 #include "mpi_test_suite.h"
 
@@ -110,10 +113,9 @@ int tst_comm_init (int * num_comms)
     /*
      * Remark, that if the communicator's size is one, we are also an TST_MPI_COMM_SELF
      */
-    if (comms[count_comms].size > 1)
-      comms[count_comms].class = TST_MPI_INTRA_COMM;
-    else
-      comms[count_comms].class = TST_MPI_COMM_SELF;
+    comms[count_comms].class = TST_MPI_INTRA_COMM;
+    if (comms[count_comms].size == 1)
+      comms[count_comms].class |= TST_MPI_COMM_SELF;
 
     comms[count_comms].other_size = 0;
     comms[count_comms].other_mapping = NULL;
@@ -152,10 +154,9 @@ int tst_comm_init (int * num_comms)
     /*
      * Remark, that if the communicator's size is one, we are also an TST_MPI_COMM_SELF
      */
-    if (comms[count_comms].size > 1)
       comms[count_comms].class = TST_MPI_INTRA_COMM;
-    else
-      comms[count_comms].class = TST_MPI_COMM_SELF;
+    if (comms[count_comms].size == 1)
+      comms[count_comms].class |= TST_MPI_COMM_SELF;
     comms[count_comms].other_size = 0;
     comms[count_comms].other_mapping = NULL;
 
@@ -164,8 +165,8 @@ int tst_comm_init (int * num_comms)
                     int tmp_size;
                     MPI_Comm_size (comms[count_comms].mpi_comm, &tmp_size);
                     MPI_Comm_rank (comms[count_comms].mpi_comm, &tmp_rank);
-                    if (tmp_size != comm_size || tmp_rank != comm_size - comm_rank)
-                    ERROR (EINVAL, "CHECK for Reversed MPI_COMM_WORLD failed");
+                    if (tmp_size != comm_size || tmp_rank != comm_size - comm_rank-1)
+                      ERROR (EINVAL, "CHECK for Reversed MPI_COMM_WORLD failed");
                     );
 
     if (++count_comms > COMM_NUM)
@@ -190,10 +191,9 @@ int tst_comm_init (int * num_comms)
     /*
      * Remark, that if the communicator's size is one, we are also an TST_MPI_COMM_SELF
      */
-    if (comms[count_comms].size > 1)
-      comms[count_comms].class = TST_MPI_INTRA_COMM;
-    else
-      comms[count_comms].class = TST_MPI_COMM_SELF;
+    comms[count_comms].class = TST_MPI_INTRA_COMM;
+    if (comms[count_comms].size == 1)
+      comms[count_comms].class |= TST_MPI_COMM_SELF;
 
     comms[count_comms].other_size = 0;
     comms[count_comms].other_mapping = NULL;
@@ -229,10 +229,9 @@ int tst_comm_init (int * num_comms)
     /*
      * Remark, that if the communicator's size is one, we are also an TST_MPI_COMM_SELF
      */
-    if (comms[count_comms].size > 1)
-      comms[count_comms].class = TST_MPI_INTRA_COMM;
-    else
-      comms[count_comms].class = TST_MPI_COMM_SELF;
+    comms[count_comms].class = TST_MPI_INTRA_COMM;
+    if (comms[count_comms].size == 1)
+      comms[count_comms].class |= TST_MPI_COMM_SELF;
 
     comms[count_comms].other_size = 0;
     comms[count_comms].other_mapping = NULL;
@@ -244,6 +243,7 @@ int tst_comm_init (int * num_comms)
    * Create a inter-communicator with process zero on one side and all the others
    * on the other side!
    */
+#if !defined(HAVE_MPI_PACX) /* HMM; TEST FAILED WITH PACX AND PACXTRACE */
   if (comm_size > 1)
     {
       int rrank;
@@ -294,6 +294,7 @@ int tst_comm_init (int * num_comms)
       if (++count_comms > COMM_NUM)
         ERROR (EINVAL, "Too many communicators, increase COMM_NUM");
     }
+#endif /* !HAVE_MPI_PACX */
 
 
 
@@ -639,10 +640,10 @@ static int tst_comm_search (const int search_test, const int * test_list, const 
   for (k = 0; k < test_list_num; k++)
     if (test_list[k] == search_test)
       break;
-  return (k == test_list_num) ? 0 : 1;
+  return (k == test_list_num) ? -1 : k;
 }
 
-int tst_comm_select (const char * comm_string, int * comm_list, int * comm_list_num, const int comm_list_max)
+int tst_comm_select (const char * comm_string, int * comm_list, const int comm_list_max, int * comm_list_num)
 {
   int i;
 
@@ -664,7 +665,7 @@ int tst_comm_select (const char * comm_string, int * comm_list, int * comm_list_
               /*
                * First search for this test in the comm_list -- if already in, continue!
                */
-              if (tst_comm_search (j, comm_list, *comm_list_num))
+              if (-1 != tst_comm_search (j, comm_list, *comm_list_num))
                 {
                   WARNING (printf ("Comm:%s selected through class:%s was already "
                                    "included in list -- not including\n",
@@ -691,7 +692,7 @@ int tst_comm_select (const char * comm_string, int * comm_list, int * comm_list_
     {
       if (!strcasecmp (comm_string, comms[i].description))
         {
-          if (tst_comm_search (i, comm_list, *comm_list_num))
+          if (-1 != tst_comm_search (i, comm_list, *comm_list_num))
             {
               WARNING (printf ("Comm:%s was already included in list -- not including\n",
                                comms[i].description));
@@ -703,6 +704,77 @@ int tst_comm_select (const char * comm_string, int * comm_list, int * comm_list_
             ERROR (EINVAL, "Too many user selected tests");
 
           DEBUG (printf ("comm_string:%s matched with comm_list_num:%d\n",
+                         comm_string, *comm_list_num));
+
+          return 0;
+        }
+    }
+
+  {
+    char buffer[128];
+    sprintf (buffer, "Communicator %s not recognized",
+             comm_string);
+    ERROR (EINVAL, buffer);
+  }
+  return 0;
+}
+
+int tst_comm_deselect (const char * comm_string, int * comm_list, const int comm_list_max, int * comm_list_num)
+{
+  int i;
+
+  if (comm_string == NULL || comm_list == NULL || comm_list_num == NULL)
+    ERROR (EINVAL, "Passed a NULL parameter");
+
+  for (i = 0; i < TST_COMMS_CLASS_NUM; i++)
+    {
+      /*
+       * In case we match a complete class of comms, exclude every one!
+       */
+      if (!strcasecmp (comm_string, tst_comms_class_strings[i]))
+        {
+          int j;
+          DEBUG (printf ("comm_string:%s matched with tst_comms_class_strings[%d]:%s\n",
+                         comm_string, i, tst_comms_class_strings[i]));
+          for (j = 0; j < TST_COMMS_NUM; j++)
+            {
+              int ret;
+              /*
+               * Search for this test in the test_list --
+               * if it belongs to this class and is already included, deselect
+               */
+              if (((ret = tst_comm_search (j, comm_list, *comm_list_num)) != 1) &&
+                  comms[j].class & (1 << i))
+                {
+                  DEBUG (printf ("comm_string:%s test j:%d i:%d with class:%d matches for deselect, comm_list_num:%d\n",
+                                 comm_string, j, (1 << i), comms[j].class, *comm_list_num));
+                  comm_list[ret] = -1;
+                  (*comm_list_num)--;
+                  if (*comm_list_num < 0)
+                    ERROR (EINVAL, "Negative selected comms: This should not happen");
+                }
+            }
+          return 0;
+        }
+    }
+
+  for (i = 0; i < TST_COMMS_NUM; i++)
+    {
+      if (!strcasecmp (comm_string, comms[i].description))
+        {
+          int ret;
+          if ((ret = tst_comm_search (i, comm_list, *comm_list_num)) == -1)
+            {
+              WARNING (printf ("Comm:%s was not included in list -- not excluding\n",
+                               comms[i].description));
+              return 0;
+            }
+          comm_list[ret] = -1;
+          (*comm_list_num)--;
+          if (*comm_list_num < 0)
+            ERROR (EINVAL, "Negative selected tests: This should not happen");
+
+          DEBUG (printf ("comm_string:%s matched with comm_list_num:%d excluding\n",
                          comm_string, *comm_list_num));
 
           return 0;

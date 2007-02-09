@@ -16,22 +16,26 @@
  */
 #include "mpi.h"
 #include "mpi_test_suite.h"
+#include "tst_output.h"
 
 #undef DEBUG
 #define DEBUG(x)
 
+/*
+ * XXx
 static char * send_buffer = NULL;
 static char * recv_buffer = NULL;
 static int * send_counts = NULL;
 static int * send_displs = NULL;
+ */
 
 int tst_coll_scatterv_stride_init (struct tst_env * env)
 {
   int comm_size;
   int comm_rank;
   MPI_Comm comm;
-  DEBUG (printf ("(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
-                 tst_global_rank, env->comm, env->type, env->values_num));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
+                 tst_global_rank, env->comm, env->type, env->values_num);
 
   comm = tst_comm_getcomm (env->comm);
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
@@ -41,11 +45,11 @@ int tst_coll_scatterv_stride_init (struct tst_env * env)
    * WITH the stride of one element, we have 1 element for proc 0, 2 elements for proc 1
    * See tst_coll_scatterv, where there is no stride of one additional Element.
    */
-  send_buffer = tst_type_allocvalues (env->type, (comm_size * (comm_size + 1) /2) +1);
-  recv_buffer = tst_type_allocvalues (env->type, comm_rank);
+  env->send_buffer = tst_type_allocvalues (env->type, (comm_size * (comm_size + 1) /2) +1);
+  env->recv_buffer = tst_type_allocvalues (env->type, comm_rank);
 
-  send_counts = malloc (comm_size * sizeof (int));
-  send_displs = malloc (comm_size * sizeof (int));
+  env->send_counts = malloc (comm_size * sizeof (int));
+  env->send_displs = malloc (comm_size * sizeof (int));
 
   /*
    * Every process only receives comm_rank values -- needed for
@@ -56,7 +60,7 @@ int tst_coll_scatterv_stride_init (struct tst_env * env)
   return 0;
 }
 
-int tst_coll_scatterv_stride_run (const struct tst_env * env)
+int tst_coll_scatterv_stride_run (struct tst_env * env)
 {
   const int type_size = tst_type_gettypesize (env->type);
   int comm_rank;
@@ -71,8 +75,8 @@ int tst_coll_scatterv_stride_run (const struct tst_env * env)
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
   MPI_CHECK (MPI_Comm_size (comm, &comm_size));
 
-  DEBUG (printf ("(Rank:%d) comm_size:%d comm_rank:%d\n",
-                 tst_global_rank, comm_size, comm_rank));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) comm_size:%d comm_rank:%d\n",
+                 tst_global_rank, comm_size, comm_rank);
 
 
   for (root=0; root < comm_size; root++)
@@ -85,35 +89,35 @@ int tst_coll_scatterv_stride_run (const struct tst_env * env)
           /*
            * First write the first hole; it's not sent anyway.
            */
-          send_counts [0] = 0;
-          send_displs [0] = 0;
-          tst_type_setvalue (env->type, send_buffer, TST_TYPE_SET_MIN, 0);
+          env->send_counts [0] = 0;
+          env->send_displs [0] = 0;
+          tst_type_setvalue (env->type, env->send_buffer, TST_TYPE_SET_MIN, 0);
 
           for (j = 1; j < comm_size; j++)
             {
-              tst_type_setstandardarray (env->type, j, &(send_buffer[pos]), j);
-              send_counts[j] = j;
+              tst_type_setstandardarray (env->type, j, &(env->send_buffer[pos]), j);
+              env->send_counts[j] = j;
               /*
               * We have a dispacement of ONE element, BUT since we do not send to ourselve
               * we have to substract again.
               */
-              send_displs[j] = displs;
+              env->send_displs[j] = displs;
               /*
               * Fill this element with something sensible, to check later again.
               */
-              tst_type_setvalue (env->type, &(send_buffer[pos+j*type_size]), TST_TYPE_SET_MIN, 0);
+              tst_type_setvalue (env->type, &(env->send_buffer[pos+j*type_size]), TST_TYPE_SET_MIN, 0);
               pos += (j+1)*type_size;
               displs += (j+1);
             }
         }
-      DEBUG (printf ("(Rank:%d) Going to Scatter with root:%d\n",
-                     tst_global_rank, root));
+      tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) Going to Scatter with root:%d\n",
+                     tst_global_rank, root);
 
-      MPI_CHECK (MPI_Scatterv (send_buffer, send_counts, send_displs, type,
-                               recv_buffer, comm_rank, type,
+      MPI_CHECK (MPI_Scatterv (env->send_buffer, env->send_counts, env->send_displs, type,
+                               env->recv_buffer, comm_rank, type,
                                root, comm));
 
-      tst_test_checkstandardarray (env, recv_buffer, comm_rank);
+      tst_test_checkstandardarray (env, env->recv_buffer, comm_rank);
 
       /*
        * Now, check the send_buffer for the values NOT send, whether they still are the same
@@ -134,11 +138,11 @@ int tst_coll_scatterv_stride_run (const struct tst_env * env)
   return 0;
 }
 
-int tst_coll_scatterv_stride_cleanup (const struct tst_env * env)
+int tst_coll_scatterv_stride_cleanup (struct tst_env * env)
 {
-  tst_type_freevalues (env->type, send_buffer, env->values_num);
-  tst_type_freevalues (env->type, recv_buffer, env->values_num);
-  free (send_counts);
-  free (send_displs);
+  tst_type_freevalues (env->type, env->send_buffer, env->values_num);
+  tst_type_freevalues (env->type, env->recv_buffer, env->values_num);
+  free (env->send_counts);
+  free (env->send_displs);
   return 0;
 }

@@ -1,10 +1,15 @@
+#include "config.h"
 #include <stdio.h>
-#include <unistd.h>
+#ifdef HAVE_UNISTD_H
+#  include <unistd.h>
+#endif
 #ifdef HAVE_GETOPT_H
-# include <getopt.h>
+#  include <getopt.h>
 #endif
 #include "mpi.h"
 #include "mpi_test_suite.h"
+
+#include "tst_output.h"
 
 #undef DEBUG
 #define DEBUG(x)
@@ -19,6 +24,19 @@ int tst_global_size = 0;
 int tst_verbose = 0;
 tst_report_types tst_report = TST_REPORT_SUMMARY;
 tst_mode_types tst_mode = TST_MODE_RELAXED;
+
+/*
+ * Declaration of output_relevant data
+ * Do not remove or change the following without modifying tst_output.h!
+ */
+tst_output_stream tst_output;
+
+#define DEBUG_REPORT_TYPE     TST_REPORT_MAX
+#define DEBUG_LOG_TYPE        TST_OUTPUT_TYPE_LOGFILE
+
+/* If type was not STDOUT, give a filename */
+#define DEBUG_LOG_FILENAME  "tst.log"
+
 
 /*
  * This should correspond to the enum tst_report
@@ -48,15 +66,38 @@ int tst_hash_value (const struct tst_env * env)
           env->test) % tst_tag_ub;
 }
 
+static int tst_array_compress (int * list, const int list_max, int * list_num)
+{
+  int i;
+  int current_pos;
+  /*
+   * Compress array, by removing all -1 entries.
+   */
+  for (current_pos = i = 0; i < list_max; i++)
+    {
+      list[current_pos] = list[i];
+      tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "(Rank:%d) tst_array_compress list[%d]=list[%d]:%d\n",
+                         tst_global_rank, current_pos, i, list[current_pos]);
+      if (list[i] != -1)
+        current_pos++;
+    }
+  (*list_num) = current_pos;
+  return 0;
+}
+
+
+
 static int usage (void)
 {
-  fprintf (stderr, "Usage: mpi_test_suite [-t test] [-c comm] [-d datatype] [-n num_values] [-r report] [-x test_mode] [-v] [-l] [-h]\n"
+  fprintf (stderr, "Usage: mpi_test_suite [-t test] [-c comm] [-d datatype] [-n num_values]\n"
+           "       [-r report] [-x execution_mode] [-j num_threads] [-v] [-l] [-h]\n"
            "test:\t\tone (or more) tests or test-classes (see -l) and\n"
            "comm:\t\tone (or more) communicator or communicator-classes (see -l)\n"
            "datatype:\tone (or more) datatype or datatype-classes (see -l)\n"
            "num_values:\tone (or more) numbers of values to communicate (default:%d)\n"
            "report:\t\tlevel of detail for tests being run, see -l (default:SUMMARY)\n"
-           "test_mode:\tlevel of correctness testing, tests to run and internal tests, see -l (default:RELAXED)\n"
+           "execution_mode:\tlevel of correctness testing, tests to run and internal tests, see -l (default:RELAXED)\n"
+           "num_threads:\tnumber of threads to execute the tests (default:no threads)\n"
            "\n"
            "All multiple test/comm/datatype-declarations must be separated by commas\n"
            "The option -l/--list lists all available tests, communicators and datatypes\n"
@@ -83,6 +124,7 @@ int main (int argc, char * argv[])
   int num_types;
   int num_tests;
   int num_values = 1;
+  int num_threads = 0;
   struct tst_env tst_env;
   int * tst_test_array;
   int tst_test_array_max;
@@ -93,9 +135,24 @@ int main (int argc, char * argv[])
   int tst_value_array[32] = {NUM_VALUES, 0, };
   int tst_value_array_max = 32;
   int * val;
+  int tst_thread_level_provided;
 
+#ifdef HAVE_MPI2_THREADS
+  struct tst_thread_env_t ** tst_thread_env;
 
+  MPI_Init_thread (&argc, &argv, MPI_THREAD_MULTIPLE, &tst_thread_level_provided);
+
+  if (tst_thread_level_provided != MPI_THREAD_MULTIPLE)
+    { 
+      printf ("Thread level support:%d unequal MPI_THREAD_MULTIPLE\n", tst_thread_level_provided);
+      tst_thread_level_provided = MPI_THREAD_SINGLE;
+    }
+     
+#else
+  tst_thread_level_provided = 0;   /* MPI_THREAD_SINGLE would not work, if not MPI-2, as not defined */
+  num_threads = 0;                 /* silence the compiler */
   MPI_Init (&argc, &argv);
+#endif
   MPI_Comm_rank (MPI_COMM_WORLD, &tst_global_rank);
   MPI_Comm_size (MPI_COMM_WORLD, &tst_global_size);
 
@@ -105,9 +162,19 @@ int main (int argc, char * argv[])
       gethostname (hostname, 256);
       hostname[255] = '\0';
       printf ("(Rank:%d) host:%s pid:%ld Going to sleep\n",
-              tst_global_rank, hostname, getpid());
+              tst_global_rank, hostname, (long int)getpid());
       sleep (30);
     }
+
+  tst_output_init ( DEBUG_LOG, TST_OUTPUT_RANK_SELF, DEBUG_REPORT_TYPE, DEBUG_LOG_TYPE, DEBUG_LOG_FILENAME);
+
+#ifndef HAVE_MPI2_THREADS
+  tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "Testsuite was compiled without MPI2_THREADS");
+#endif
+  /*
+   * Output example:
+   * tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "Hello from rank %d\n", tst_global_rank);
+   */
 
   MPI_CHECK (MPI_Attr_get (MPI_COMM_WORLD, MPI_TAG_UB, &val, &flag));
   if (!flag)
@@ -115,8 +182,8 @@ int main (int argc, char * argv[])
 
   tst_tag_ub = *val;
 
-  DEBUG (printf ("(Rank:%d) MPI_TAG_UB:%d\n",
-                 tst_global_rank, tst_tag_ub));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "(Rank:%d) MPI_TAG_UB:%d\n",
+                    tst_global_rank, tst_tag_ub);
 
   tst_comm_init (&num_comms);
   tst_type_init (&num_types);
@@ -175,7 +242,7 @@ int main (int argc, char * argv[])
       };
       */
 
-      c = getopt (argc, argv, "t:c:d:n:r:x:lvh");
+      c = getopt (argc, argv, "t:c:d:n:r:x:j:lvh");
 
       if (c == -1)
         break;
@@ -188,14 +255,45 @@ int main (int argc, char * argv[])
             /*
              * At first, reset the tst_test_array
              */
-            memset (tst_test_array, 0, sizeof (int)*num_tests);
+            for (i = 0; i < tst_test_array_max; i++)
+              tst_test_array[i] = -1;
             num_tests = 0;
 
             str = strtok (optarg, ",");
             while (str)
               {
-                tst_test_select (str, tst_test_array, &num_tests, tst_test_array_max);
+                /*
+                 * In case we find the magic word all, we reset the list as above.
+                 * In case we find a '!', deselect the test (test-class)
+                 */
+                /* Need to Check how to test for 'All' but not getting in the way of sthing like 'Alltoall with' */
+                if (!strncasecmp ("All", str, strlen("All")))
+                  {
+                    for (i = 0; i < tst_test_array_max; i++)
+                      tst_test_array[i] = i;
+                    num_tests = tst_test_array_max;
+                  }
+                else if ('!' == str[0])
+                  {
+                    char tmp_str[TST_DESCRIPTION_LEN+1];
+
+                    INTERNAL_CHECK (if (strlen(str) > TST_DESCRIPTION_LEN) ERROR (EINVAL, "Name of test too long for negation"));
+
+                    strncpy (tmp_str, &(str[1]), TST_DESCRIPTION_LEN);
+                    tst_test_deselect (tmp_str, tst_test_array, tst_test_array_max, &num_tests);
+                  }
+                else
+                  tst_test_select (str, tst_test_array, tst_test_array_max, &num_tests);
                 str = strtok (NULL, ",");
+              }
+            tst_array_compress (tst_test_array, tst_test_array_max, &num_tests);
+            if (tst_global_rank == 0)
+              {
+                for (i = 0; i < num_tests; i++)
+                  {
+                    printf ("(Rank:0) tst_test_array[%d]:%s\n",
+                            i, tst_test_getdescription(tst_test_array[i]));
+                  }
               }
             break;
           }
@@ -206,16 +304,37 @@ int main (int argc, char * argv[])
             /*
              * At first, reset the tst_comm_array
              */
-            memset (tst_comm_array, 0, sizeof (int)*num_comms);
+            for (i = 0; i < tst_comm_array_max; i++)
+              tst_comm_array[i] = -1;
             num_comms = 0;
 
             str = strtok (optarg, ",");
             while (str)
               {
-                tst_comm_select (str, tst_comm_array, &num_comms, tst_comm_array_max);
+                /*
+                 * In case we find the magic word all, we reset the list as above.
+                 * In case we find a '!', deselect the communicator (communicators of a comm-class)
+                 */
+                if (!strncasecmp ("All", str, strlen("All")))
+                  {
+                    for (i = 0; i < tst_comm_array_max; i++)
+                      tst_comm_array[i] = i;
+                    num_comms = tst_comm_array_max;
+                  }
+                else if ('!' == str[0])
+                  {
+                    char tmp_str[TST_DESCRIPTION_LEN+1];
+
+                    INTERNAL_CHECK (if (strlen(str) > TST_DESCRIPTION_LEN) ERROR (EINVAL, "Name of comm too long for negation"));
+
+                    strncpy (tmp_str, &(str[1]), TST_DESCRIPTION_LEN);
+                    tst_comm_deselect (tmp_str, tst_comm_array, tst_comm_array_max, &num_comms);
+                  }
+                else
+                  tst_comm_select (str, tst_comm_array, tst_comm_array_max, &num_comms);
                 str = strtok (NULL, ",");
               }
-
+            tst_array_compress (tst_comm_array, tst_comm_array_max, &num_comms);
             break;
           }
         case 'd':
@@ -224,15 +343,37 @@ int main (int argc, char * argv[])
             /*
              * At first, reset the tst_comm_array
              */
-            memset (tst_type_array, 0, sizeof (int)*num_types);
+            for (i = 0; i < tst_type_array_max; i++)
+              tst_type_array[i] = -1;
             num_types = 0;
 
             str = strtok (optarg, ",");
             while (str)
               {
-                tst_type_select (str, tst_type_array, &num_types, tst_type_array_max);
+                /*
+                 * In case we find the magic word all, we reset the list as above.
+                 * In case we find a '!', deselect the type (types of a type-class)
+                 */
+                if (!strncasecmp ("All", str, strlen("All")))
+                  {
+                    for (i = 0; i < tst_type_array_max; i++)
+                      tst_type_array[i] = i;
+                    num_types = tst_type_array_max;
+                  }
+                else if ('!' == str[0])
+                  {
+                    char tmp_str[TST_DESCRIPTION_LEN+1];
+
+                    INTERNAL_CHECK (if (strlen(str) > TST_DESCRIPTION_LEN) ERROR (EINVAL, "Name of type too long for negation"));
+
+                    strncpy (tmp_str, &(str[1]), TST_DESCRIPTION_LEN);
+                    tst_type_deselect (tmp_str, tst_type_array, tst_type_array_max, &num_types);
+                  }
+                else
+                  tst_type_select (str, tst_type_array, tst_type_array_max, &num_types);
                 str = strtok (NULL, ",");
               }
+            tst_array_compress (tst_type_array, tst_type_array_max, &num_types);
             break;
           }
         case 'n':
@@ -288,6 +429,16 @@ int main (int argc, char * argv[])
               usage ();
             }
           break;
+        case 'j':
+#ifdef HAVE_MPI2_THREADS
+          if (tst_thread_level_provided != MPI_THREAD_MULTIPLE)
+            printf ("Threads are not enabled by the MPI-Implementation\n");
+          else
+            num_threads = atoi (optarg);
+#else
+          printf ("Threads are not enabled by configure\n");
+#endif
+          break;
         case 'v':
           tst_verbose = 1;
           break;
@@ -305,25 +456,36 @@ int main (int argc, char * argv[])
         }
     }
 
+#ifdef HAVE_MPI2_THREADS
+  tst_thread_init (num_threads, &tst_thread_env);
+#endif
+
   /*
    * For every test included in the tst_*_array, check if runnable and run!
    */
-  DEBUG (printf ("num_tests:%d num_comms:%d num_types:%d\n",
-                 num_tests, num_comms, num_types));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "num_tests:%d num_comms:%d num_types:%d\n",
+                     num_tests, num_comms, num_types);
 
+#if 1
   for (i = 0; i < num_tests; i++)
     for (j = 0; j < num_comms; j++)
       for (k = 0; k < num_types; k++)
         for (l = 0; l < num_values; l++)
           {
-            tst_env.comm       = tst_comm_array[j];
-            tst_env.type       = tst_type_array[k];
-            tst_env.test       = tst_test_array[i];
-            tst_env.values_num = tst_value_array[l];
+            /*
+             * Before setting the mandatory first fields needed, reset.
+             * Every test should clean up after itself.
+             */
+            memset (&tst_env, 0, sizeof (tst_env));
+            tst_env.test        = tst_test_array[i];
+            tst_env.values_num  = tst_value_array[l];
+            tst_env.type        = tst_type_array[k];
+            tst_env.tag         = (i+j+k+l) % tst_tag_ub;
+            tst_env.comm        = tst_comm_array[j];
 
             if (!tst_test_check_run (&tst_env))
               {
-                DEBUG(printf ("Not running tst_env.test:%d\n", tst_env.test));
+                tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "Not running tst_env.test:%d\n", tst_env.test);
                 continue;
               }
 
@@ -338,23 +500,112 @@ int main (int argc, char * argv[])
                       tst_test_getdescription (tst_env.test), tst_env.test+1, num_tests,
                       tst_comm_getdescription (tst_env.comm), tst_env.comm+1, num_comms,
                       tst_type_getdescription (tst_env.type), tst_env.type+1, num_types);
-            tst_test_init_func (&tst_env);
-            tst_test_run_func (&tst_env);
-            tst_test_cleanup_func (&tst_env);
+#ifdef HAVE_MPI2_THREADS
+            if (num_threads > 0)
+              {
+                tst_thread_assign_all (&tst_env, tst_thread_env);
+                tst_thread_execute_init (&tst_env);
+                tst_thread_execute_run (&tst_env);
+                tst_thread_execute_cleanup (&tst_env);
+              }
+            else
+#else
+              {
+                tst_test_init_func (&tst_env);
+                tst_test_run_func (&tst_env);
+                tst_test_cleanup_func (&tst_env);
+              }
+#endif
             if (tst_test_check_sync (&tst_env))
               MPI_Barrier (MPI_COMM_WORLD);
           }
+
+#else
+
+            /*
+            * Before setting the mandatory first fields needed, reset.
+            * Every test should clean up after itself.
+            */
+
+            if (num_tests != 1 || num_comms != 2)
+              printf ("(Rank:%d) Error expected num_tests:%d to be 1 and num_comms:%d to be 2\n",
+                      tst_global_rank, num_tests, num_comms);
+
+
+            i = 0; /* test */
+            j = 0; /* communicator */
+            k = 0; /* type */
+            l = 0; /* values_num */
+            memset (&tst_env, 0, sizeof (tst_env));
+            tst_env.test        = tst_test_array[i];
+            tst_env.values_num  = tst_value_array[l];
+            tst_env.type        = tst_type_array[k];
+            tst_env.tag         = (i+j+k+l) % tst_tag_ub;
+            tst_env.comm        = tst_comm_array[j];
+
+            /*
+             * Assign the first test
+             */
+            tst_thread_assign_reset (tst_thread_env);
+            tst_thread_assign_one (&tst_env, 0, tst_thread_env);
+
+            if (tst_global_rank == 0 && tst_report > TST_REPORT_SUMMARY)
+              printf ("%s tests %s (%d/%d), comm %s (%d/%d), type %s (%d/%d) AND ",
+                      tst_test_getclass (tst_test_array[i]),
+                      tst_test_getdescription (tst_test_array[i]), tst_test_array[i+1], num_tests,
+                      tst_comm_getdescription (tst_comm_array[j]), tst_comm_array[j+1], num_comms,
+                      tst_type_getdescription (tst_type_array[k]), tst_type_array[k+1], num_types);
+
+            i = 0; /* test */
+            j = 1; /* communicator */
+            k = 0; /* type */
+            l = 0; /* values_num */
+            memset (&tst_env, 0, sizeof (tst_env));
+            tst_env.test        = tst_test_array[i];
+            tst_env.values_num  = tst_value_array[l];
+            tst_env.type        = tst_type_array[k];
+            tst_env.tag         = (i+j+k+l) % tst_tag_ub;
+            tst_env.comm        = tst_comm_array[j];
+
+            /*
+             * Assign the second test
+             */
+            tst_thread_assign_one (&tst_env, 1, tst_thread_env);
+
+            if (tst_global_rank == 0 && tst_report > TST_REPORT_SUMMARY)
+              printf (" on Thread 2: %s tests %s (%d/%d), comm %s (%d/%d), type %s (%d/%d)\n",
+                      tst_test_getclass (tst_test_array[i]),
+                      tst_test_getdescription (tst_test_array[i]), tst_test_array[i+1], num_tests,
+                      tst_comm_getdescription (tst_comm_array[j]), tst_comm_array[j+1], num_comms,
+                      tst_type_getdescription (tst_type_array[k]), tst_type_array[k+1], num_types);
+
+#ifdef HAVE_MPI2_THREADS
+            tst_thread_execute_init (&tst_env);
+            tst_thread_execute_run (&tst_env);
+            tst_thread_execute_cleanup (&tst_env);
+#endif /* HAVE_MPI2_THREADS */
+#endif /* 1 */
   if (tst_global_rank == 0)
     tst_test_print_failed ();
 
+/*
+ * XXX Disable for Thread Checker test, as we free twice???
+ */
+/*
   tst_comm_cleanup ();
   tst_type_cleanup ();
   tst_test_cleanup ();
   free (tst_comm_array);
   free (tst_type_array);
   free (tst_test_array);
-  DEBUG (printf ("(Rank:%d) Going to MPI_Finalize\n",
-                 tst_global_rank));
+*/
+
+  tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "(Rank:%d) Going to MPI_Finalize\n",
+                     tst_global_rank);
+
+  tst_output_close (DEBUG_LOG);
+
   MPI_Finalize ();
+
   return 0;
 }

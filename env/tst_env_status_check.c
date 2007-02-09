@@ -10,49 +10,59 @@
  */
 #include "mpi.h"
 #include "mpi_test_suite.h"
+#include "tst_output.h"
 
 #undef DEBUG
 #define DEBUG(x)
 
-int tst_env_status_check_init (const struct tst_env * env)
+#define LOCAL_CHECK(func_string,var,op,expected) \
+  if (var op expected) { \
+    if (tst_report == TST_REPORT_FULL) \
+      printf ("(Rank:%d) Failed in " func_string " " #var " " #op " expected:%d but got:%d\n", \
+              tst_global_rank, expected, var); \
+    tst_test_recordfailure (env); \
+  }
+
+
+int tst_env_status_check_init (struct tst_env * env)
 {
-  DEBUG (printf ("(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
-                 tst_global_rank, env->comm, env->type, env->values_num));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
+                 tst_global_rank, env->comm, env->type, env->values_num);
   return 0;
 }
 
-int tst_env_status_check_run (const struct tst_env * env)
+int tst_env_status_check_run (struct tst_env * env)
 {
   MPI_Status status;
+  int cancelled, get_count, get_elements;
 
-  memset (&status, 0, sizeof (status));
+  memset (&status, 0xFF, sizeof (status));
   status.MPI_ERROR = 4711;
 
   MPI_CHECK (MPI_Recv (NULL, 0, MPI_CHAR, MPI_PROC_NULL, 4711, MPI_COMM_WORLD, &status));
 
+  MPI_CHECK (MPI_Test_cancelled (&status, &cancelled));
+  MPI_CHECK (MPI_Get_count (&status, MPI_CHAR, &get_count));
+  MPI_CHECK (MPI_Get_elements (&status, MPI_CHAR, &get_elements));
+
   /*
-   * The above call should not change the value of MPI_ERROR (see MPI-1.2, sec. 3.2.5,
-   * p. 22).
-   * Only functions working on multiple requests/statuse may
-   * change MPI_ERROR and set MPI_ERR_IN_STATUS (see MPI-1.2 sec. 3.7.5)
+   * If interpreting MPI-1.2, sec. 3.2.5, p. 22 (changing status.MPI_ERROR for single-completion
+   * wait/test calls) in the same sense for MPI_Recv, status.MPI_ERROR should not be changed,
+   *
+   * Nevertheless, we are not that anal.
    */
-  if (status.MPI_ERROR != 4711 ||
-      status.MPI_SOURCE != MPI_PROC_NULL ||
-      status.MPI_TAG != MPI_ANY_TAG)
-    {
-      if (tst_report >= TST_REPORT_FULL)
-        {
-          printf ("(Rank:%d) error:%d source:%d tag:%d\n"
-                  "(Rank:%d) But expected error:%d source:%d tag:%d\n",
-                  tst_global_rank, status.MPI_ERROR, status.MPI_SOURCE, status.MPI_TAG,
-                  tst_global_rank, 4711, MPI_ANY_SOURCE, MPI_ANY_TAG);
-        }
-      tst_test_recordfailure (env);
-    }
+  LOCAL_CHECK ("MPI_Recv", (status.MPI_ERROR != MPI_SUCCESS) && status.MPI_ERROR, !=, 4711);
+  LOCAL_CHECK ("MPI_Recv", status.MPI_SOURCE, !=, MPI_PROC_NULL);
+  LOCAL_CHECK ("MPI_Recv", status.MPI_TAG, !=, MPI_ANY_TAG);
+
+  LOCAL_CHECK ("MPI_Recv", cancelled, !=, 0);
+  LOCAL_CHECK ("MPI_Recv", get_count, !=, 0);
+  LOCAL_CHECK ("MPI_Recv", get_elements, !=, 0);
+
   return 0;
 }
 
-int tst_env_status_check_cleanup (const struct tst_env * env)
+int tst_env_status_check_cleanup (struct tst_env * env)
 {
   return 0;
 }

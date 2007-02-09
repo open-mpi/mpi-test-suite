@@ -12,33 +12,37 @@
  */
 #include "mpi.h"
 #include "mpi_test_suite.h"
+#include "tst_output.h"
 
 #undef DEBUG
 #define DEBUG(x)
 
-static char * buffer = NULL;
+/*
+ * XXX
+static char * send_buffer = NULL;
+ */
 
-int tst_p2p_many_to_one_iprobe_anysource_init (const struct tst_env * env)
+int tst_p2p_many_to_one_iprobe_anysource_init (struct tst_env * env)
 {
   int comm_rank;
   MPI_Comm comm;
 
-  DEBUG (printf ("(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
-                 tst_global_rank, env->comm, env->type, env->values_num));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
+                     tst_global_rank, env->comm, env->type, env->values_num);
 
-  buffer = tst_type_allocvalues (env->type, env->values_num);
+  env->send_buffer = tst_type_allocvalues (env->type, env->values_num);
 
   /*
-   * Now, initialize the buffer
+   * Now, initialize the send_buffer
    */
   comm = tst_comm_getcomm (env->comm);
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
 
-  tst_type_setstandardarray (env->type, env->values_num, buffer, comm_rank);
+  tst_type_setstandardarray (env->type, env->values_num, env->send_buffer, comm_rank);
   return 0;
 }
 
-int tst_p2p_many_to_one_iprobe_anysource_run (const struct tst_env * env)
+int tst_p2p_many_to_one_iprobe_anysource_run (struct tst_env * env)
 {
   int comm_size;
   int comm_rank;
@@ -51,7 +55,7 @@ int tst_p2p_many_to_one_iprobe_anysource_run (const struct tst_env * env)
   comm = tst_comm_getcomm (env->comm);
   type = tst_type_getdatatype (env->type);
 
-  if (tst_comm_getcommclass (env->comm) == TST_MPI_INTRA_COMM)
+  if (tst_comm_getcommclass (env->comm) & TST_MPI_INTRA_COMM)
     MPI_CHECK (MPI_Comm_size (comm, &comm_size));
   else
     MPI_CHECK (MPI_Comm_remote_size (comm, &comm_size));
@@ -60,8 +64,8 @@ int tst_p2p_many_to_one_iprobe_anysource_run (const struct tst_env * env)
 
   hash_value = tst_hash_value (env);
 
-  DEBUG (printf ("(Rank:%d) comm_size:%d comm_rank:%d\n",
-                 tst_global_rank, comm_size, comm_rank));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) comm_size:%d comm_rank:%d\n",
+                     tst_global_rank, comm_size, comm_rank);
 
   if (comm_rank == 0)
     {
@@ -84,7 +88,7 @@ int tst_p2p_many_to_one_iprobe_anysource_run (const struct tst_env * env)
           source = status.MPI_SOURCE;
           tag = status.MPI_TAG;
 
-          MPI_CHECK (MPI_Recv (buffer, env->values_num, type, source, tag, comm, &status));
+          MPI_CHECK (MPI_Recv (env->send_buffer, env->values_num, type, source, tag, comm, &status));
           if (status.MPI_SOURCE != source ||
               status.MPI_TAG != tag)
             ERROR (EINVAL, "Error in status after MPI_Recv");
@@ -94,17 +98,17 @@ int tst_p2p_many_to_one_iprobe_anysource_run (const struct tst_env * env)
                if(recv_count != env->values_num)
                   ERROR(EINVAL, "Error in Count");
             }
-          tst_test_checkstandardarray (env, buffer, source);
+          tst_test_checkstandardarray (env, env->send_buffer, source);
         }
     }
   else
-    MPI_CHECK (MPI_Send (buffer, env->values_num, type, 0, hash_value, comm));
+    MPI_CHECK (MPI_Send (env->send_buffer, env->values_num, type, 0, hash_value, comm));
 
   return 0;
 }
 
-int tst_p2p_many_to_one_iprobe_anysource_cleanup (const struct tst_env * env)
+int tst_p2p_many_to_one_iprobe_anysource_cleanup (struct tst_env * env)
 {
-  tst_type_freevalues (env->type, buffer, env->values_num);
+  tst_type_freevalues (env->type, env->send_buffer, env->values_num);
   return 0;
 }

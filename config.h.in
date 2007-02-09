@@ -69,9 +69,13 @@
 /* Define to 1 if you have the <limits.h> header file. */
 #undef HAVE_LIMITS_H
 
-/* Define to 1 if long double works and has more range or precision than
-   double. */
+/* Define to 1 if the type `long double' works and has more range or precision
+   than `double'. */
 #undef HAVE_LONG_DOUBLE
+
+/* Define to 1 if the type `long double' works and has more range or precision
+   than `double'. */
+#undef HAVE_LONG_DOUBLE_WIDER
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
@@ -88,11 +92,17 @@
 /* Define to support MPI2's one-sided communication */
 #undef HAVE_MPI2_ONE_SIDED
 
+/* Define to support MPI2's thread initialization */
+#undef HAVE_MPI2_THREADS
+
 /* Defined if Fortran MPI_Types are available in C */
 #undef HAVE_MPI_FORTRAN_TYPES_IN_C
 
 /* Define to 1 if you have the `poll' function. */
 #undef HAVE_POLL
+
+/* Define to 1 if you have the <pthread.h> header file. */
+#undef HAVE_PTHREAD_H
 
 /* Define to 1 if you have the `select' function. */
 #undef HAVE_SELECT
@@ -166,13 +176,13 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
-/* The size of a `char', as computed by sizeof. */
+/* The size of `char', as computed by sizeof. */
 #undef SIZEOF_CHAR
 
-/* The size of a `double', as computed by sizeof. */
+/* The size of `double', as computed by sizeof. */
 #undef SIZEOF_DOUBLE
 
-/* The size of a `float', as computed by sizeof. */
+/* The size of `float', as computed by sizeof. */
 #undef SIZEOF_FLOAT
 
 /* The size of a Fortran `CHARACTER', as computed by sizeof. */
@@ -223,22 +233,22 @@
 /* The size of a Fortran `REAL*8', as computed by sizeof. */
 #undef SIZEOF_FORTRAN_REALp8
 
-/* The size of a `int', as computed by sizeof. */
+/* The size of `int', as computed by sizeof. */
 #undef SIZEOF_INT
 
-/* The size of a `long', as computed by sizeof. */
+/* The size of `long', as computed by sizeof. */
 #undef SIZEOF_LONG
 
-/* The size of a `long double', as computed by sizeof. */
+/* The size of `long double', as computed by sizeof. */
 #undef SIZEOF_LONG_DOUBLE
 
-/* The size of a `long long', as computed by sizeof. */
+/* The size of `long long', as computed by sizeof. */
 #undef SIZEOF_LONG_LONG
 
-/* The size of a `pid_t', as computed by sizeof. */
+/* The size of `pid_t', as computed by sizeof. */
 #undef SIZEOF_PID_T
 
-/* The size of a `short', as computed by sizeof. */
+/* The size of `short', as computed by sizeof. */
 #undef SIZEOF_SHORT
 
 /* The size of a MPI structure `MPI_2INT', as computed by sizeof. */
@@ -260,16 +270,16 @@
 /* The size of a MPI structure `MPI_SHORT_INT', as computed by sizeof. */
 #undef SIZEOF_STRUCT_MPI_SHORT_INT
 
-/* The size of a `unsigned int', as computed by sizeof. */
+/* The size of `unsigned int', as computed by sizeof. */
 #undef SIZEOF_UNSIGNED_INT
 
-/* The size of a `unsigned long', as computed by sizeof. */
+/* The size of `unsigned long', as computed by sizeof. */
 #undef SIZEOF_UNSIGNED_LONG
 
-/* The size of a `unsigned long long', as computed by sizeof. */
+/* The size of `unsigned long long', as computed by sizeof. */
 #undef SIZEOF_UNSIGNED_LONG_LONG
 
-/* The size of a `unsigned short', as computed by sizeof. */
+/* The size of `unsigned short', as computed by sizeof. */
 #undef SIZEOF_UNSIGNED_SHORT
 
 /* Define to 1 if you have the ANSI C header files. */
@@ -278,6 +288,11 @@
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
 #undef WORDS_BIGENDIAN
+
+/* Enable GNU extensions on systems that have them.  */
+#ifndef _GNU_SOURCE
+# undef _GNU_SOURCE
+#endif
 
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const
@@ -295,7 +310,7 @@
    supported. Do not define if restrict is supported directly. */
 #undef restrict
 
-/* Define to `unsigned' if <sys/types.h> does not define. */
+/* Define to `unsigned int' if <sys/types.h> does not define. */
 #undef size_t
 
 /* Define to `int' if neither <sys/types.h> nor <sys/socket.h> define it. */

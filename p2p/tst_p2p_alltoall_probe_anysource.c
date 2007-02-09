@@ -12,75 +12,81 @@
  *
  * Date: September 9th 2003
  */
-#include <stdlib.h>
+#include "config.h"
+#ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+#endif
 #include "mpi.h"
 #include "mpi_test_suite.h"
+#include "tst_output.h"
 
 #undef DEBUG
 #define DEBUG(x)
 
-static char ** buffer_send = NULL;
-static char ** buffer_recv = NULL;
-static int * received = NULL;
-static int received_num;
-static MPI_Request * requests = NULL;
-static MPI_Status * statuses = NULL;
+/*
+ * XXX
+static char ** send_buffer_array = NULL;
+static char ** recv_buffer_array = NULL;
+static MPI_Request * req_buffer = NULL;
+static MPI_Status * status_buffer = NULL;
 static char * mpi_buffer = NULL;
 static int mpi_buffer_size = 0;
+ */
 
-int tst_p2p_alltoall_probe_anysource_init (const struct tst_env * env)
+int tst_p2p_alltoall_probe_anysource_init (struct tst_env * env)
 {
   int comm_rank;
   int comm_size;
   MPI_Comm comm;
   int i;
 
-  DEBUG (printf ("(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
-                 tst_global_rank, env->comm, env->type, env->values_num));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
+                     tst_global_rank, env->comm, env->type, env->values_num);
 
   /*
    * Now, initialize the buffer
    */
   comm = tst_comm_getcomm (env->comm);
-  MPI_CHECK (MPI_Comm_size (comm, &comm_size));
+  if (tst_comm_getcommclass (env->comm) & TST_MPI_INTRA_COMM)
+    MPI_CHECK (MPI_Comm_size (comm, &comm_size));
+  else
+    MPI_CHECK (MPI_Comm_remote_size (comm, &comm_size));
+
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
 
-  if ((buffer_send = malloc (comm_size * sizeof (char *))) == NULL)
+  if ((env->send_buffer_array = malloc (comm_size * sizeof (char *))) == NULL)
     ERROR (errno, "malloc");
 
-  if ((buffer_recv = malloc (comm_size * sizeof (char *))) == NULL)
+  if ((env->recv_buffer_array = malloc (comm_size * sizeof (char *))) == NULL)
     ERROR (errno, "malloc");
 
-  if ((requests = malloc (comm_size * sizeof (MPI_Request))) == NULL)
+  if ((env->req_buffer = malloc (comm_size * sizeof (MPI_Request))) == NULL)
     ERROR (errno, "malloc");
 
-  if ((statuses = malloc (comm_size * sizeof (MPI_Status))) == NULL)
-    ERROR (errno, "malloc");
-
-  if ((received = malloc (comm_size * sizeof (int))) == NULL)
+  if ((env->status_buffer = malloc (comm_size * sizeof (MPI_Status))) == NULL)
     ERROR (errno, "malloc");
 
   for (i=0; i < comm_size; i++)
     {
-      buffer_send[i] = tst_type_allocvalues (env->type, env->values_num);
-      tst_type_setstandardarray (env->type, env->values_num, buffer_send[i], comm_rank + i);
+      env->send_buffer_array[i] = tst_type_allocvalues (env->type, env->values_num);
+      tst_type_setstandardarray (env->type, env->values_num, env->send_buffer_array[i], comm_rank + i);
 
-      buffer_recv[i] = tst_type_allocvalues (env->type, env->values_num);
+      env->recv_buffer_array[i] = tst_type_allocvalues (env->type, env->values_num);
 
-      requests[i] = MPI_REQUEST_NULL;
-      memset (&(statuses[i]), 0, sizeof (MPI_Status));
+      env->req_buffer[i] = MPI_REQUEST_NULL;
+      memset (&(env->status_buffer[i]), 0, sizeof (MPI_Status));
     }
 
-  mpi_buffer_size = tst_type_gettypesize (env->type) * env->values_num * (comm_size - 1) + MPI_BUFFER_OVERHEAD;
-  if ((mpi_buffer = malloc (mpi_buffer_size)) == NULL)
+  env->mpi_buffer_size = tst_type_gettypesize (env->type) * env->values_num * (comm_size - 1) + MPI_BUFFER_OVERHEAD;
+  if ((env->mpi_buffer = malloc (env->mpi_buffer_size)) == NULL)
     ERROR (errno, "malloc");
 
-  MPI_CHECK (MPI_Buffer_attach (mpi_buffer, mpi_buffer_size));
+  MPI_CHECK (MPI_Buffer_attach (env->mpi_buffer, env->mpi_buffer_size));
 
   return 0;
 }
 
-int tst_p2p_alltoall_probe_anysource_run (const struct tst_env * env)
+int tst_p2p_alltoall_probe_anysource_run (struct tst_env * env)
 {
   int comm_size;
   int comm_rank;
@@ -88,6 +94,7 @@ int tst_p2p_alltoall_probe_anysource_run (const struct tst_env * env)
   int dest;
   int tag;
   int recv_count;
+  int received_num;
   MPI_Comm comm;
   MPI_Datatype type;
   MPI_Status status;
@@ -95,7 +102,7 @@ int tst_p2p_alltoall_probe_anysource_run (const struct tst_env * env)
   comm = tst_comm_getcomm (env->comm);
   type = tst_type_getdatatype (env->type);
 
-  if (tst_comm_getcommclass (env->comm) == TST_MPI_INTRA_COMM)
+  if (tst_comm_getcommclass (env->comm) & TST_MPI_INTRA_COMM)
     MPI_CHECK (MPI_Comm_size (comm, &comm_size));
   else
     MPI_CHECK (MPI_Comm_remote_size (comm, &comm_size));
@@ -104,8 +111,8 @@ int tst_p2p_alltoall_probe_anysource_run (const struct tst_env * env)
 
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
 
-  DEBUG (printf ("(Rank:%d) comm_size:%d comm_rank:%d\n",
-                 tst_global_rank, comm_size, comm_rank));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) comm_size:%d comm_rank:%d\n",
+                 tst_global_rank, comm_size, comm_rank);
 
   /*
    * We mix sending and receiving of messages and mark the already received messages.
@@ -115,15 +122,15 @@ int tst_p2p_alltoall_probe_anysource_run (const struct tst_env * env)
     {
       int flag;
 
-      DEBUG (printf ("(Rank:%d) Going to MPI_Ibsend to dest:%d\n",
-                     comm_rank, dest));
+      tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) Going to MPI_Ibsend to dest:%d\n",
+                     comm_rank, dest);
 
-      MPI_CHECK (MPI_Ibsend (buffer_send[dest], env->values_num, type, dest, comm_rank, comm, &requests[dest]));
+      MPI_CHECK (MPI_Ibsend (env->send_buffer_array[dest], env->values_num, type, dest, comm_rank, comm, &env->req_buffer[dest]));
       MPI_CHECK (MPI_Iprobe (MPI_ANY_SOURCE, MPI_ANY_TAG, comm, &flag, &status));
       if (flag)
         {
-          DEBUG (printf ("(Rank:%d) Early finish from source:%d received_num:%d\n",
-                         comm_rank, status.MPI_SOURCE, received_num));
+          tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) Early finish from source:%d received_num:%d\n",
+                             comm_rank, status.MPI_SOURCE, received_num);
           if (status.MPI_SOURCE < 0 ||
               status.MPI_SOURCE >= comm_size ||
               status.MPI_SOURCE == comm_rank ||
@@ -133,7 +140,7 @@ int tst_p2p_alltoall_probe_anysource_run (const struct tst_env * env)
           source = status.MPI_SOURCE;
           tag = status.MPI_TAG;
 
-          MPI_CHECK (MPI_Recv (buffer_recv[source], env->values_num, type, source, tag, comm, &status));
+          MPI_CHECK (MPI_Recv (env->recv_buffer_array[source], env->values_num, type, source, tag, comm, &status));
           if (source != tag ||
               status.MPI_SOURCE != source ||
               status.MPI_TAG != tag)
@@ -144,13 +151,13 @@ int tst_p2p_alltoall_probe_anysource_run (const struct tst_env * env)
               if(recv_count != env->values_num)
                 ERROR(EINVAL, "Error in Count");
             }
-          tst_test_checkstandardarray (env, buffer_recv[source], source + comm_rank);
+          tst_test_checkstandardarray (env, env->recv_buffer_array[source], source + comm_rank);
 
           received_num--;
         }
     }
 
-  MPI_CHECK (MPI_Waitall (comm_size, requests, statuses));
+  MPI_CHECK (MPI_Waitall (comm_size, env->req_buffer, env->status_buffer));
 
   while (received_num > 0)
     {
@@ -165,7 +172,7 @@ int tst_p2p_alltoall_probe_anysource_run (const struct tst_env * env)
       source = status.MPI_SOURCE;
       tag = status.MPI_TAG;
 
-      MPI_CHECK (MPI_Recv (buffer_recv[source], env->values_num, type, source, tag, comm, &status));
+      MPI_CHECK (MPI_Recv (env->recv_buffer_array[source], env->values_num, type, source, tag, comm, &status));
       if (source != tag ||
           status.MPI_SOURCE != source ||
           status.MPI_TAG != tag)
@@ -177,7 +184,7 @@ int tst_p2p_alltoall_probe_anysource_run (const struct tst_env * env)
               ERROR(EINVAL, "Error in Count");
         }
 
-      tst_test_checkstandardarray (env, buffer_recv[source], source + comm_rank);
+      tst_test_checkstandardarray (env, env->recv_buffer_array[source], source + comm_rank);
 
       received_num--;
     }
@@ -185,31 +192,34 @@ int tst_p2p_alltoall_probe_anysource_run (const struct tst_env * env)
   return 0;
 }
 
-int tst_p2p_alltoall_probe_anysource_cleanup (const struct tst_env * env)
+int tst_p2p_alltoall_probe_anysource_cleanup (struct tst_env * env)
 {
   MPI_Comm comm;
   int comm_size;
   int i;
 
-  MPI_CHECK (MPI_Buffer_detach (&mpi_buffer, &mpi_buffer_size));
-  free (mpi_buffer);
-  mpi_buffer = NULL;
-  mpi_buffer_size = 0;
+  MPI_CHECK (MPI_Buffer_detach (&env->mpi_buffer, &env->mpi_buffer_size));
+  free (env->mpi_buffer);
+  env->mpi_buffer = NULL;
+  env->mpi_buffer_size = 0;
 
   comm = tst_comm_getcomm (env->comm);
-  MPI_CHECK (MPI_Comm_size (comm, &comm_size));
+  if (tst_comm_getcommclass (env->comm) & TST_MPI_INTRA_COMM)
+    MPI_CHECK (MPI_Comm_size (comm, &comm_size));
+  else
+    MPI_CHECK (MPI_Comm_remote_size (comm, &comm_size));
+
 
   for (i=0; i < comm_size; i++)
     {
-      tst_type_freevalues (env->type, buffer_recv[i], env->values_num);
-      tst_type_freevalues (env->type, buffer_send[i], env->values_num);
+      tst_type_freevalues (env->type, env->recv_buffer_array[i], env->values_num);
+      tst_type_freevalues (env->type, env->send_buffer_array[i], env->values_num);
     }
 
-  free (buffer_send);
-  free (buffer_recv);
-  free (received);
-  free (requests);
-  free (statuses);
+  free (env->send_buffer_array);
+  free (env->recv_buffer_array);
+  free (env->req_buffer);
+  free (env->status_buffer);
 
   return 0;
 }

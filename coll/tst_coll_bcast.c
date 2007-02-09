@@ -11,23 +11,27 @@
  */
 #include "mpi.h"
 #include "mpi_test_suite.h"
+#include "tst_output.h"
 
 #undef DEBUG
 #define DEBUG(x)
 
-static char * buffer = NULL;
+/*
+ * XXX
+static char * send_buffer = NULL;
+ */
 
-int tst_coll_bcast_init (const struct tst_env * env)
+int tst_coll_bcast_init (struct tst_env * env)
 {
-  DEBUG (printf ("(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
-                 tst_global_rank, env->comm, env->type, env->values_num));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
+                 tst_global_rank, env->comm, env->type, env->values_num);
 
-  buffer = tst_type_allocvalues (env->type, env->values_num);
+  env->send_buffer = tst_type_allocvalues (env->type, env->values_num);
 
   return 0;
 }
 
-int tst_coll_bcast_run (const struct tst_env * env)
+int tst_coll_bcast_run (struct tst_env * env)
 {
   int comm_rank;
   int comm_size;
@@ -41,13 +45,13 @@ int tst_coll_bcast_run (const struct tst_env * env)
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
   MPI_CHECK (MPI_Comm_size (comm, &comm_size));
 
-  DEBUG (printf ("(Rank:%d) comm_size:%d comm_rank:%d\n",
-                 tst_global_rank, comm_size, comm_rank));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) comm_size:%d comm_rank:%d\n",
+                 tst_global_rank, comm_size, comm_rank);
 
   for (i=0; i < comm_size; i++)
     {
       int root;
-      tst_type_setstandardarray (env->type, env->values_num, buffer, i);
+      tst_type_setstandardarray (env->type, env->values_num, env->send_buffer, i);
 
       if (tst_comm_getcommclass (env->comm) == TST_MPI_INTRA_COMM)
         root = i;
@@ -68,18 +72,18 @@ int tst_coll_bcast_run (const struct tst_env * env)
                    if we don't HAVE_MPI_EXTENDED_COLLECTIVES */
 #endif /* HAVE_MPI_EXTENDED_COLLECTIVES */
 
-      DEBUG (printf ("(Rank:%d) Going to Bcast with root:%d\n",
-                     tst_global_rank, root));
+      tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) Going to Bcast with root:%d\n",
+                     tst_global_rank, root);
 
-      MPI_CHECK (MPI_Bcast (buffer, env->values_num, type, root, comm));
-      tst_test_checkstandardarray (env, buffer, i);
+      MPI_CHECK (MPI_Bcast (env->send_buffer, env->values_num, type, root, comm));
+      tst_test_checkstandardarray (env, env->send_buffer, i);
     }
 
   return 0;
 }
 
-int tst_coll_bcast_cleanup (const struct tst_env * env)
+int tst_coll_bcast_cleanup (struct tst_env * env)
 {
-  tst_type_freevalues (env->type, buffer, env->values_num);
+  tst_type_freevalues (env->type, env->send_buffer, env->values_num);
   return 0;
 }

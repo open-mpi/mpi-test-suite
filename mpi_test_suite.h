@@ -14,6 +14,7 @@
 #endif
 
 #include "mpi.h"
+#include "tst_output.h"
 
 /*
  * Global macros and defines
@@ -26,18 +27,21 @@
   } while (0)
 
 #define INTERNAL_CHECK(x) do { \
+  x;\
   } while (0)
+
 
 #define ERROR(e,s) do {                                           \
     int __error = (e);                                            \
-    fprintf (stderr, "(%s:%d) ERROR: %s; %s(%d)\n",               \
+    tst_output_printf (DEBUG_LOG, TST_REPORT_SUMMARY, "(%s:%d) ERROR: %s; %s(%d)\n", \
              __FILE__, __LINE__, (s), strerror(__error), __error);\
     exit (__error);                                               \
   } while(0)
 
+
 #define MPI_CHECK(x) do {                   \
     int __ret;                              \
-    if ((__ret = (x)) != MPI_SUCCESS)       \
+    if (MPI_SUCCESS != (__ret = (x)))       \
       ERROR (__ret, "MPI returned error");  \
   } while (0)
 
@@ -74,6 +78,7 @@
 #define TST_CLASS_P2P         2
 #define TST_CLASS_COLL        4
 #define TST_CLASS_ONE_SIDED   8
+#define TST_CLASS_THREADED   16
 
 /*
  * The internal translation of the used datatypes
@@ -247,10 +252,30 @@
 #endif
 
 struct tst_env {
-  int comm;
-  int type;
   int test;
   int values_num;
+  int type;
+  int tag;
+  int comm;
+  char * send_buffer;
+  char * send_pack_buffer;
+  char * recv_buffer;
+  char * recv_pack_buffer;
+  char ** send_buffer_array;
+  char ** recv_buffer_array;
+  MPI_Request * req_buffer;
+  MPI_Status * status_buffer;
+  int * neighbors;
+  char * mpi_buffer;
+  int mpi_buffer_size;
+  char * check_buffer;
+  int * cancelled;
+  MPI_Datatype extra_type_send;
+  int position;
+  int * send_to;
+  int * recv_from;
+  int * send_counts;
+  int * send_displs;
 };
 
 struct tst_mpi_float_int {
@@ -312,12 +337,6 @@ extern int tst_global_size;
 extern int tst_verbose;
 
 extern const char * tst_reports[];
-typedef enum {
-  TST_REPORT_SUMMARY=0,     /* No output, except for failed tests at the end of the run */
-  TST_REPORT_RUN,           /* Output every test that runs, plus the previous */
-  TST_REPORT_FULL,          /* Full output, including the hexdump of wrong memory */
-  TST_REPORT_MAX
-} tst_report_types;
 extern tst_report_types tst_report;
 
 extern const char * tst_modes[];
@@ -329,12 +348,14 @@ typedef enum {
 } tst_mode_types;
 extern tst_mode_types tst_mode;
 
+
+struct tst_thread_env_t; /* Just a forward declaration */
+
 #define TST_TESTS_NUM_FAILED_MAX 1000
 
 /*
  * Global function definitions
  */
-
 extern int tst_comm_init (int * num_comms);
 extern int tst_comm_cleanup (void);
 extern MPI_Comm tst_comm_getcomm (int comm);
@@ -342,7 +363,9 @@ extern int tst_comm_getcommclass (int comm);
 extern const char * tst_comm_getdescription (int comm);
 extern void tst_comm_list (void);
 extern int tst_comm_select (const char * comm_string,
-                            int * comm_list, int * comm_list_num, const int comm_list_max);
+                            int * comm_list, const int comm_list_max, int * comm_list_num);
+extern int tst_comm_deselect (const char * comm_string,
+                            int * comm_list, const int comm_list_max, int * comm_list_num);
 
 extern int tst_test_init (int * num_tests);
 extern int tst_test_cleanup (void);
@@ -352,11 +375,17 @@ extern int tst_test_getmode (int i);
 extern int tst_test_init_func (struct tst_env * env);
 extern int tst_test_run_func (struct tst_env * env);
 extern int tst_test_cleanup_func (struct tst_env * env);
+void *  tst_test_get_init_func (struct tst_env * env);
+void *  tst_test_get_run_func (struct tst_env * env);
+void *  tst_test_get_cleanup_func (struct tst_env * env);
 extern int tst_test_check_run (struct tst_env * env);
 extern int tst_test_check_sync (struct tst_env * env);
 extern void tst_test_list (void);
 extern int tst_test_select (const char * test_string,
-                            int * test_list, int * test_list_num, const int test_list_max);
+                            int * test_list, const int test_list_max, int * test_list_num);
+extern int tst_test_deselect (const char * test_string,
+                              int * test_list, const int test_list_max, int * test_list_num);
+
 extern int tst_test_checkstandardarray (const struct tst_env * env,
                                         char * buffer,
                                         int comm_rank);
@@ -379,198 +408,248 @@ extern int tst_type_setstandardarray (int type, int values_num, char * buffer, i
 extern int tst_type_getstandardarray_size (int type, int values_num, MPI_Aint * size);
 extern void tst_type_list (void);
 extern int tst_type_select (const char * type_string,
-                            int * type_list, int * type_list_num, const int type_list_max);
-
+                            int * type_list, const int type_list_max, int * type_list_num);
+extern int tst_type_deselect (const char * type_string,
+                            int * type_list, const int type_list_max, int * type_list_num);
 
 extern int tst_hash_value (const struct tst_env * env);
+
+extern int tst_thread_init (int max_threads, struct tst_thread_env_t *** thread_env);
+extern int tst_thread_cleanup (struct tst_thread_env_t ** thread_env);
+extern int tst_thread_assign_reset (struct tst_thread_env_t ** thread_env);
+extern int tst_thread_assign_all (struct tst_env * env, struct tst_thread_env_t ** thread_env);
+extern int tst_thread_assign_one (struct tst_env * env, int thread_number, struct tst_thread_env_t ** thread_env);
+extern int tst_thread_execute_init (struct tst_env * env);
+extern int tst_thread_execute_run (struct tst_env * env);
+extern int tst_thread_execute_cleanup (struct tst_env * env);
+
+extern int tst_thread_get_num (void);
+extern int tst_thread_running (void);
+extern int tst_thread_num_threads (void);
+
+extern int tst_thread_signal_init (int num);
+extern int tst_thread_signal_cleanup (void);
+extern int tst_thread_signal_wait (int tag);
+extern int tst_thread_signal_send (int tag);
+
+extern void * tst_thread_global_buffer_init (int size);
+extern int tst_thread_global_buffer_cleanup (void);
+extern void * tst_thread_get_global_buffer ();
+extern int tst_thread_get_global_buffer_size ();
+
+extern MPI_Request * tst_thread_alloc_global_requests (int num);
+extern MPI_Request * tst_thread_get_global_request (int num);
+extern int tst_thread_free_global_requests (void);
 
 /*
  * Test functions
  * First the environment functions
  */
-extern int tst_env_status_check_init (const struct tst_env * env);
-extern int tst_env_status_check_run (const struct tst_env * env);
-extern int tst_env_status_check_cleanup (const struct tst_env * env);
+extern int tst_env_status_check_init (struct tst_env * env);
+extern int tst_env_status_check_run (struct tst_env * env);
+extern int tst_env_status_check_cleanup (struct tst_env * env);
 
-extern int tst_env_request_null_init (const struct tst_env * env);
-extern int tst_env_request_null_run (const struct tst_env * env);
-extern int tst_env_request_null_cleanup (const struct tst_env * env);
+extern int tst_env_request_null_init (struct tst_env * env);
+extern int tst_env_request_null_run (struct tst_env * env);
+extern int tst_env_request_null_cleanup (struct tst_env * env);
 
 /*
  * Following all p2p-functions
  */
-extern int tst_p2p_alltoall_init (const struct tst_env * env);
-extern int tst_p2p_alltoall_run (const struct tst_env * env);
-extern int tst_p2p_alltoall_cleanup (const struct tst_env * env);
+extern int tst_p2p_alltoall_init (struct tst_env * env);
+extern int tst_p2p_alltoall_run (struct tst_env * env);
+extern int tst_p2p_alltoall_cleanup (struct tst_env * env);
 
-extern int tst_p2p_alltoall_persistent_init (const struct tst_env * env);
-extern int tst_p2p_alltoall_persistent_run (const struct tst_env * env);
-extern int tst_p2p_alltoall_persistent_cleanup (const struct tst_env * env);
+extern int tst_p2p_alltoall_persistent_init (struct tst_env * env);
+extern int tst_p2p_alltoall_persistent_run (struct tst_env * env);
+extern int tst_p2p_alltoall_persistent_cleanup (struct tst_env * env);
 
-extern int tst_p2p_alltoall_xisend_init (const struct tst_env * env);
-extern int tst_p2p_alltoall_xisend_run (const struct tst_env * env);
-extern int tst_p2p_alltoall_xisend_cleanup (const struct tst_env * env);
+extern int tst_p2p_alltoall_xisend_init (struct tst_env * env);
+extern int tst_p2p_alltoall_xisend_run (struct tst_env * env);
+extern int tst_p2p_alltoall_xisend_cleanup (struct tst_env * env);
 
-extern int tst_p2p_alltoall_irsend_init (const struct tst_env * env);
-extern int tst_p2p_alltoall_irsend_run (const struct tst_env * env);
-extern int tst_p2p_alltoall_irsend_cleanup (const struct tst_env * env);
+extern int tst_p2p_alltoall_irsend_init (struct tst_env * env);
+extern int tst_p2p_alltoall_irsend_run (struct tst_env * env);
+extern int tst_p2p_alltoall_irsend_cleanup (struct tst_env * env);
 
-extern int tst_p2p_alltoall_issend_init (const struct tst_env * env);
-extern int tst_p2p_alltoall_issend_run (const struct tst_env * env);
-extern int tst_p2p_alltoall_issend_cleanup (const struct tst_env * env);
+extern int tst_p2p_alltoall_issend_init (struct tst_env * env);
+extern int tst_p2p_alltoall_issend_run (struct tst_env * env);
+extern int tst_p2p_alltoall_issend_cleanup (struct tst_env * env);
 
-extern int tst_p2p_alltoall_probe_anysource_init (const struct tst_env * env);
-extern int tst_p2p_alltoall_probe_anysource_run (const struct tst_env * env);
-extern int tst_p2p_alltoall_probe_anysource_cleanup (const struct tst_env * env);
+extern int tst_p2p_alltoall_probe_anysource_init (struct tst_env * env);
+extern int tst_p2p_alltoall_probe_anysource_run (struct tst_env * env);
+extern int tst_p2p_alltoall_probe_anysource_cleanup (struct tst_env * env);
 
-extern int tst_p2p_alltoall_sendrecv_init (const struct tst_env * env);
-extern int tst_p2p_alltoall_sendrecv_run (const struct tst_env * env);
-extern int tst_p2p_alltoall_sendrecv_cleanup (const struct tst_env * env);
+extern int tst_p2p_alltoall_sendrecv_init (struct tst_env * env);
+extern int tst_p2p_alltoall_sendrecv_run (struct tst_env * env);
+extern int tst_p2p_alltoall_sendrecv_cleanup (struct tst_env * env);
 
-extern int tst_p2p_alltoall_graph_init (const struct tst_env * env);
-extern int tst_p2p_alltoall_graph_run (const struct tst_env * env);
-extern int tst_p2p_alltoall_graph_cleanup (const struct tst_env * env);
+extern int tst_p2p_alltoall_graph_init (struct tst_env * env);
+extern int tst_p2p_alltoall_graph_run (struct tst_env * env);
+extern int tst_p2p_alltoall_graph_cleanup (struct tst_env * env);
 
-extern int tst_p2p_direct_partner_intercomm_init (const struct tst_env * env);
-extern int tst_p2p_direct_partner_intercomm_run (const struct tst_env * env);
-extern int tst_p2p_direct_partner_intercomm_cleanup (const struct tst_env * env);
+extern int tst_p2p_direct_partner_intercomm_init (struct tst_env * env);
+extern int tst_p2p_direct_partner_intercomm_run (struct tst_env * env);
+extern int tst_p2p_direct_partner_intercomm_cleanup (struct tst_env * env);
 
-extern int tst_p2p_many_to_one_init (const struct tst_env * env);
-extern int tst_p2p_many_to_one_run (const struct tst_env * env);
-extern int tst_p2p_many_to_one_cleanup (const struct tst_env * env);
+extern int tst_p2p_many_to_one_init (struct tst_env * env);
+extern int tst_p2p_many_to_one_run (struct tst_env * env);
+extern int tst_p2p_many_to_one_cleanup (struct tst_env * env);
 
-extern int tst_p2p_many_to_one_probe_anysource_init (const struct tst_env * env);
-extern int tst_p2p_many_to_one_probe_anysource_run (const struct tst_env * env);
-extern int tst_p2p_many_to_one_probe_anysource_cleanup (const struct tst_env * env);
+extern int tst_p2p_many_to_one_probe_anysource_init (struct tst_env * env);
+extern int tst_p2p_many_to_one_probe_anysource_run (struct tst_env * env);
+extern int tst_p2p_many_to_one_probe_anysource_cleanup (struct tst_env * env);
 
-extern int tst_p2p_many_to_one_iprobe_anysource_init (const struct tst_env * env);
-extern int tst_p2p_many_to_one_iprobe_anysource_run (const struct tst_env * env);
-extern int tst_p2p_many_to_one_iprobe_anysource_cleanup (const struct tst_env * env);
+extern int tst_p2p_many_to_one_iprobe_anysource_init (struct tst_env * env);
+extern int tst_p2p_many_to_one_iprobe_anysource_run (struct tst_env * env);
+extern int tst_p2p_many_to_one_iprobe_anysource_cleanup (struct tst_env * env);
 
-extern int tst_p2p_simple_ring_init (const struct tst_env * env);
-extern int tst_p2p_simple_ring_run (const struct tst_env * env);
-extern int tst_p2p_simple_ring_cleanup (const struct tst_env * env);
+extern int tst_p2p_simple_ring_init (struct tst_env * env);
+extern int tst_p2p_simple_ring_run (struct tst_env * env);
+extern int tst_p2p_simple_ring_cleanup (struct tst_env * env);
 
-extern int tst_p2p_simple_ring_bottom_init (const struct tst_env * env);
-extern int tst_p2p_simple_ring_bottom_run (const struct tst_env * env);
-extern int tst_p2p_simple_ring_bottom_cleanup (const struct tst_env * env);
+extern int tst_p2p_simple_ring_bottom_init (struct tst_env * env);
+extern int tst_p2p_simple_ring_bottom_run (struct tst_env * env);
+extern int tst_p2p_simple_ring_bottom_cleanup (struct tst_env * env);
 
-extern int tst_p2p_simple_ring_pack_init (const struct tst_env * env);
-extern int tst_p2p_simple_ring_pack_run (const struct tst_env * env);
-extern int tst_p2p_simple_ring_pack_cleanup (const struct tst_env * env);
+extern int tst_p2p_simple_ring_pack_init (struct tst_env * env);
+extern int tst_p2p_simple_ring_pack_run (struct tst_env * env);
+extern int tst_p2p_simple_ring_pack_cleanup (struct tst_env * env);
 
-extern int tst_p2p_simple_ring_bsend_init (const struct tst_env * env);
-extern int tst_p2p_simple_ring_bsend_run (const struct tst_env * env);
-extern int tst_p2p_simple_ring_bsend_cleanup (const struct tst_env * env);
+extern int tst_p2p_simple_ring_bsend_init (struct tst_env * env);
+extern int tst_p2p_simple_ring_bsend_run (struct tst_env * env);
+extern int tst_p2p_simple_ring_bsend_cleanup (struct tst_env * env);
 
-extern int tst_p2p_simple_ring_isend_init (const struct tst_env * env);
-extern int tst_p2p_simple_ring_isend_run (const struct tst_env * env);
-extern int tst_p2p_simple_ring_isend_cleanup (const struct tst_env * env);
+extern int tst_p2p_simple_ring_isend_init (struct tst_env * env);
+extern int tst_p2p_simple_ring_isend_run (struct tst_env * env);
+extern int tst_p2p_simple_ring_isend_cleanup (struct tst_env * env);
 
-extern int tst_p2p_simple_ring_ibsend_init (const struct tst_env * env);
-extern int tst_p2p_simple_ring_ibsend_run (const struct tst_env * env);
-extern int tst_p2p_simple_ring_ibsend_cleanup (const struct tst_env * env);
+extern int tst_p2p_simple_ring_ibsend_init (struct tst_env * env);
+extern int tst_p2p_simple_ring_ibsend_run (struct tst_env * env);
+extern int tst_p2p_simple_ring_ibsend_cleanup (struct tst_env * env);
 
-extern int tst_p2p_simple_ring_irsend_init (const struct tst_env * env);
-extern int tst_p2p_simple_ring_irsend_run (const struct tst_env * env);
-extern int tst_p2p_simple_ring_irsend_cleanup (const struct tst_env * env);
+extern int tst_p2p_simple_ring_irsend_init (struct tst_env * env);
+extern int tst_p2p_simple_ring_irsend_run (struct tst_env * env);
+extern int tst_p2p_simple_ring_irsend_cleanup (struct tst_env * env);
 
-extern int tst_p2p_simple_ring_issend_init (const struct tst_env * env);
-extern int tst_p2p_simple_ring_issend_run (const struct tst_env * env);
-extern int tst_p2p_simple_ring_issend_cleanup (const struct tst_env * env);
+extern int tst_p2p_simple_ring_issend_init (struct tst_env * env);
+extern int tst_p2p_simple_ring_issend_run (struct tst_env * env);
+extern int tst_p2p_simple_ring_issend_cleanup (struct tst_env * env);
 
-extern int tst_p2p_simple_ring_ssend_init (const struct tst_env * env);
-extern int tst_p2p_simple_ring_ssend_run (const struct tst_env * env);
-extern int tst_p2p_simple_ring_ssend_cleanup (const struct tst_env * env);
+extern int tst_p2p_simple_ring_rsend_init (struct tst_env * env);
+extern int tst_p2p_simple_ring_rsend_run (struct tst_env * env);
+extern int tst_p2p_simple_ring_rsend_cleanup (struct tst_env * env);
 
-extern int tst_p2p_simple_ring_sendrecv_init (const struct tst_env * env);
-extern int tst_p2p_simple_ring_sendrecv_run (const struct tst_env * env);
-extern int tst_p2p_simple_ring_sendrecv_cleanup (const struct tst_env * env);
+extern int tst_p2p_simple_ring_ssend_init (struct tst_env * env);
+extern int tst_p2p_simple_ring_ssend_run (struct tst_env * env);
+extern int tst_p2p_simple_ring_ssend_cleanup (struct tst_env * env);
 
-extern int tst_p2p_simple_ring_shift_init (const struct tst_env * env);
-extern int tst_p2p_simple_ring_shift_run (const struct tst_env * env);
-extern int tst_p2p_simple_ring_shift_cleanup (const struct tst_env * env);
+extern int tst_p2p_simple_ring_sendrecv_init (struct tst_env * env);
+extern int tst_p2p_simple_ring_sendrecv_run (struct tst_env * env);
+extern int tst_p2p_simple_ring_sendrecv_cleanup (struct tst_env * env);
 
-extern int tst_p2p_simple_ring_xsend_init (const struct tst_env * env);
-extern int tst_p2p_simple_ring_xsend_run (const struct tst_env * env);
-extern int tst_p2p_simple_ring_xsend_cleanup (const struct tst_env * env);
+extern int tst_p2p_simple_ring_shift_init (struct tst_env * env);
+extern int tst_p2p_simple_ring_shift_run (struct tst_env * env);
+extern int tst_p2p_simple_ring_shift_cleanup (struct tst_env * env);
 
-extern int tst_p2p_many_to_one_isend_cancel_init (const struct tst_env * env);
-extern int tst_p2p_many_to_one_isend_cancel_run (const struct tst_env * env);
-extern int tst_p2p_many_to_one_isend_cancel_cleanup (const struct tst_env * env);
+extern int tst_p2p_simple_ring_xsend_init (struct tst_env * env);
+extern int tst_p2p_simple_ring_xsend_run (struct tst_env * env);
+extern int tst_p2p_simple_ring_xsend_cleanup (struct tst_env * env);
 
-extern int tst_coll_bcast_init (const struct tst_env * env);
-extern int tst_coll_bcast_run (const struct tst_env * env);
-extern int tst_coll_bcast_cleanup (const struct tst_env * env);
+extern int tst_p2p_many_to_one_isend_cancel_init (struct tst_env * env);
+extern int tst_p2p_many_to_one_isend_cancel_run (struct tst_env * env);
+extern int tst_p2p_many_to_one_isend_cancel_cleanup (struct tst_env * env);
 
-extern int tst_coll_gather_init (const struct tst_env * env);
-extern int tst_coll_gather_run (const struct tst_env * env);
-extern int tst_coll_gather_cleanup (const struct tst_env * env);
+extern int tst_coll_bcast_init (struct tst_env * env);
+extern int tst_coll_bcast_run (struct tst_env * env);
+extern int tst_coll_bcast_cleanup (struct tst_env * env);
 
-extern int tst_coll_allgather_init (const struct tst_env * env);
-extern int tst_coll_allgather_run (const struct tst_env * env);
-extern int tst_coll_allgather_cleanup (const struct tst_env * env);
+extern int tst_coll_gather_init (struct tst_env * env);
+extern int tst_coll_gather_run (struct tst_env * env);
+extern int tst_coll_gather_cleanup (struct tst_env * env);
 
-extern int tst_coll_allgather_in_place_init (const struct tst_env * env);
-extern int tst_coll_allgather_in_place_run (const struct tst_env * env);
-extern int tst_coll_allgather_in_place_cleanup (const struct tst_env * env);
+extern int tst_coll_allgather_init (struct tst_env * env);
+extern int tst_coll_allgather_run (struct tst_env * env);
+extern int tst_coll_allgather_cleanup (struct tst_env * env);
 
-extern int tst_coll_reduce_max_cleanup (const struct tst_env * env);
-extern int tst_coll_reduce_max_run (const struct tst_env * env);
-extern int tst_coll_reduce_max_init (const struct tst_env * env);
+extern int tst_coll_allgather_in_place_init (struct tst_env * env);
+extern int tst_coll_allgather_in_place_run (struct tst_env * env);
+extern int tst_coll_allgather_in_place_cleanup (struct tst_env * env);
 
-extern int tst_coll_reduce_min_cleanup (const struct tst_env * env);
-extern int tst_coll_reduce_min_run (const struct tst_env * env);
-extern int tst_coll_reduce_min_init (const struct tst_env * env);
+extern int tst_coll_reduce_max_cleanup (struct tst_env * env);
+extern int tst_coll_reduce_max_run (struct tst_env * env);
+extern int tst_coll_reduce_max_init (struct tst_env * env);
 
-extern int tst_coll_reduce_in_place_max_cleanup (const struct tst_env * env);
-extern int tst_coll_reduce_in_place_max_run (const struct tst_env * env);
-extern int tst_coll_reduce_in_place_max_init (const struct tst_env * env);
+extern int tst_coll_reduce_min_cleanup (struct tst_env * env);
+extern int tst_coll_reduce_min_run (struct tst_env * env);
+extern int tst_coll_reduce_min_init (struct tst_env * env);
 
-extern int tst_coll_reduce_in_place_min_cleanup (const struct tst_env * env);
-extern int tst_coll_reduce_in_place_min_run (const struct tst_env * env);
-extern int tst_coll_reduce_in_place_min_init (const struct tst_env * env);
+extern int tst_coll_reduce_in_place_max_cleanup (struct tst_env * env);
+extern int tst_coll_reduce_in_place_max_run (struct tst_env * env);
+extern int tst_coll_reduce_in_place_max_init (struct tst_env * env);
 
-extern int tst_coll_scan_sum_init (const struct tst_env * env);
-extern int tst_coll_scan_sum_run (const struct tst_env * env);
-extern int tst_coll_scan_sum_cleanup (const struct tst_env * env);
+extern int tst_coll_reduce_in_place_min_cleanup (struct tst_env * env);
+extern int tst_coll_reduce_in_place_min_run (struct tst_env * env);
+extern int tst_coll_reduce_in_place_min_init (struct tst_env * env);
 
-extern int tst_coll_scatter_init (const struct tst_env * env);
-extern int tst_coll_scatter_run (const struct tst_env * env);
-extern int tst_coll_scatter_cleanup (const struct tst_env * env);
+extern int tst_coll_scan_sum_init (struct tst_env * env);
+extern int tst_coll_scan_sum_run (struct tst_env * env);
+extern int tst_coll_scan_sum_cleanup (struct tst_env * env);
+
+extern int tst_coll_scatter_init (struct tst_env * env);
+extern int tst_coll_scatter_run (struct tst_env * env);
+extern int tst_coll_scatter_cleanup (struct tst_env * env);
 
 extern int tst_coll_scatterv_init (struct tst_env * env);
-extern int tst_coll_scatterv_run (const struct tst_env * env);
-extern int tst_coll_scatterv_cleanup (const struct tst_env * env);
+extern int tst_coll_scatterv_run (struct tst_env * env);
+extern int tst_coll_scatterv_cleanup (struct tst_env * env);
 
 extern int tst_coll_scatterv_stride_init (struct tst_env * env);
-extern int tst_coll_scatterv_stride_run (const struct tst_env * env);
-extern int tst_coll_scatterv_stride_cleanup (const struct tst_env * env);
+extern int tst_coll_scatterv_stride_run (struct tst_env * env);
+extern int tst_coll_scatterv_stride_cleanup (struct tst_env * env);
 
-extern int tst_coll_allreduce_init (const struct tst_env * env);
-extern int tst_coll_allreduce_run (const struct tst_env * env);
-extern int tst_coll_allreduce_cleanup (const struct tst_env * env);
+extern int tst_coll_allreduce_init (struct tst_env * env);
+extern int tst_coll_allreduce_run (struct tst_env * env);
+extern int tst_coll_allreduce_cleanup (struct tst_env * env);
 
-extern int tst_coll_allreduce_in_place_init (const struct tst_env * env);
-extern int tst_coll_allreduce_in_place_run (const struct tst_env * env);
-extern int tst_coll_allreduce_in_place_cleanup (const struct tst_env * env);
+extern int tst_coll_allreduce_in_place_init (struct tst_env * env);
+extern int tst_coll_allreduce_in_place_run (struct tst_env * env);
+extern int tst_coll_allreduce_in_place_cleanup (struct tst_env * env);
 
-extern int tst_coll_alltoall_init (const struct tst_env * env);
-extern int tst_coll_alltoall_run (const struct tst_env * env);
-extern int tst_coll_alltoall_cleanup (const struct tst_env * env);
+extern int tst_coll_alltoall_init (struct tst_env * env);
+extern int tst_coll_alltoall_run (struct tst_env * env);
+extern int tst_coll_alltoall_cleanup (struct tst_env * env);
 
 #ifdef HAVE_MPI2_ONE_SIDED
-extern int tst_one_sided_simple_ring_get_init (const struct tst_env * env);
-extern int tst_one_sided_simple_ring_get_run (const struct tst_env * env);
-extern int tst_one_sided_simple_ring_get_cleanup (const struct tst_env * env);
+extern int tst_one_sided_simple_ring_get_init (struct tst_env * env);
+extern int tst_one_sided_simple_ring_get_run (struct tst_env * env);
+extern int tst_one_sided_simple_ring_get_cleanup (struct tst_env * env);
 
-extern int tst_one_sided_simple_ring_get_post_init (const struct tst_env * env);
-extern int tst_one_sided_simple_ring_get_post_run (const struct tst_env * env);
-extern int tst_one_sided_simple_ring_get_post_cleanup (const struct tst_env * env);
+extern int tst_one_sided_simple_ring_get_post_init (struct tst_env * env);
+extern int tst_one_sided_simple_ring_get_post_run (struct tst_env * env);
+extern int tst_one_sided_simple_ring_get_post_cleanup (struct tst_env * env);
 
-extern int tst_one_sided_simple_ring_put_init (const struct tst_env * env);
-extern int tst_one_sided_simple_ring_put_run (const struct tst_env * env);
-extern int tst_one_sided_simple_ring_put_cleanup (const struct tst_env * env);
+extern int tst_one_sided_simple_ring_put_init (struct tst_env * env);
+extern int tst_one_sided_simple_ring_put_run (struct tst_env * env);
+extern int tst_one_sided_simple_ring_put_cleanup (struct tst_env * env);
+#endif
+
+#ifdef HAVE_MPI2_THREADS
+extern int tst_threaded_ring_init (struct tst_env * env);
+extern int tst_threaded_ring_run (struct tst_env * env);
+extern int tst_threaded_ring_cleanup (struct tst_env * env);
+
+extern int tst_threaded_ring_isend_init (struct tst_env * env);
+extern int tst_threaded_ring_isend_run (struct tst_env * env);
+extern int tst_threaded_ring_isend_cleanup (struct tst_env * env);
+
+extern int tst_threaded_ring_bsend_init (struct tst_env * env);
+extern int tst_threaded_ring_bsend_run (struct tst_env * env);
+extern int tst_threaded_ring_bsend_cleanup (struct tst_env * env);
+
+extern int tst_threaded_ring_persistent_init (struct tst_env * env);
+extern int tst_threaded_ring_persistent_run (struct tst_env * env);
+extern int tst_threaded_ring_persistent_cleanup (struct tst_env * env);
 #endif
 
 #endif /* __MPI_TESTSUITE_H__ */

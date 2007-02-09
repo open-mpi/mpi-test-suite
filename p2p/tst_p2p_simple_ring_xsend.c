@@ -12,27 +12,31 @@
  */
 #include "mpi.h"
 #include "mpi_test_suite.h"
+#include "tst_output.h"
 
 #undef DEBUG
 #define DEBUG(x)
 
-static MPI_Datatype send_type;
+/*
+ * XXX
+static MPI_Datatype extra_type_send;
 static char * send_buffer = NULL;
 static char * check_buffer = NULL;
 static char * recv_buffer = NULL;
+ */
 
-int tst_p2p_simple_ring_xsend_init (const struct tst_env * env)
+int tst_p2p_simple_ring_xsend_init (struct tst_env * env)
 {
   int comm_rank;
   MPI_Comm comm;
   MPI_Datatype type;
 
-  DEBUG (printf ("(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
-                 tst_global_rank, env->comm, env->type, env->values_num));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
+                 tst_global_rank, env->comm, env->type, env->values_num);
 
-  send_buffer = tst_type_allocvalues (env->type, 1);
-  check_buffer = tst_type_allocvalues (env->type, 1);
-  recv_buffer = tst_type_allocvalues (env->type, env->values_num);
+  env->send_buffer = tst_type_allocvalues (env->type, 1);
+  env->check_buffer = tst_type_allocvalues (env->type, 1);
+  env->recv_buffer = tst_type_allocvalues (env->type, env->values_num);
 
   /*
    * Now, initialize the send_buffer
@@ -40,18 +44,18 @@ int tst_p2p_simple_ring_xsend_init (const struct tst_env * env)
   comm = tst_comm_getcomm (env->comm);
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
 
-  tst_type_setvalue (env->type, send_buffer, TST_TYPE_SET_VALUE, comm_rank);
+  tst_type_setvalue (env->type, env->send_buffer, TST_TYPE_SET_VALUE, comm_rank);
 
   /*
    * Create the derived datatype to send multiple entries of this type
    */
   type = tst_type_getdatatype (env->type);
-  MPI_Type_hvector (env->values_num, 1, 0, type, &send_type);
-  MPI_Type_commit (&send_type);
+  MPI_Type_hvector (env->values_num, 1, 0, type, &env->extra_type_send);
+  MPI_Type_commit (&env->extra_type_send);
   return 0;
 }
 
-int tst_p2p_simple_ring_xsend_run (const struct tst_env * env)
+int tst_p2p_simple_ring_xsend_run (struct tst_env * env)
 {
   int comm_size;
   int comm_rank;
@@ -91,24 +95,24 @@ int tst_p2p_simple_ring_xsend_run (const struct tst_env * env)
   else
     ERROR (EINVAL, "tst_p2p_simple_ring cannot run with this kind of communicator");
 
-  DEBUG (printf ("(Rank:%d) comm_rank:%d comm_size:%d "
-                 "send_to:%d recv_from:%d 4711:%d\n",
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) comm_rank:%d comm_size:%d "
+                 "send_to:%d recv_from:%d env->tag:%d\n",
                  tst_global_rank, comm_rank, comm_size,
-                 send_to, recv_from, 4711));
+                 send_to, recv_from, env->tag);
 
   if (comm_rank == 0)
     {
-      MPI_CHECK (MPI_Send (send_buffer, 1, send_type, send_to, 4711, comm));
-      MPI_CHECK (MPI_Recv (recv_buffer, env->values_num, type, recv_from, 4711, comm, &status));
+      MPI_CHECK (MPI_Send (env->send_buffer, 1, env->extra_type_send, send_to, env->tag, comm));
+      MPI_CHECK (MPI_Recv (env->recv_buffer, env->values_num, type, recv_from, env->tag, comm, &status));
     }
   else
     {
-      MPI_CHECK (MPI_Recv (recv_buffer, env->values_num, type, recv_from, 4711, comm, &status));
-      MPI_CHECK (MPI_Send (send_buffer, 1, send_type, send_to, 4711, comm));
+      MPI_CHECK (MPI_Recv (env->recv_buffer, env->values_num, type, recv_from, env->tag, comm, &status));
+      MPI_CHECK (MPI_Send (env->send_buffer, 1, env->extra_type_send, send_to, env->tag, comm));
     }
 
   if (status.MPI_SOURCE != recv_from ||
-      (recv_from != MPI_PROC_NULL && status.MPI_TAG != 4711) ||
+      (recv_from != MPI_PROC_NULL && status.MPI_TAG != env->tag) ||
       (recv_from == MPI_PROC_NULL && status.MPI_TAG != MPI_ANY_TAG))
     ERROR (EINVAL, "Error in status");
   if (tst_mode == TST_MODE_STRICT)
@@ -127,15 +131,15 @@ int tst_p2p_simple_ring_xsend_run (const struct tst_env * env)
       int i;
       int errors=0;
 
-      tst_type_setvalue (env->type, check_buffer, TST_TYPE_SET_VALUE, recv_from);
+      tst_type_setvalue (env->type, env->check_buffer, TST_TYPE_SET_VALUE, recv_from);
 
       for (i = 0; i < env->values_num; i++)
-        if (0 != tst_type_cmpvalue (env->type, check_buffer, &recv_buffer[i*type_size]))
+        if (0 != tst_type_cmpvalue (env->type, env->check_buffer, &env->recv_buffer[i*type_size]))
           {
             if (tst_report >= TST_REPORT_FULL)
               {
-                tst_type_hexdump ("Expected cmp_value", check_buffer, type_size);
-                tst_type_hexdump ("Received buffer", &(recv_buffer[i*type_size]), type_size);
+                tst_type_hexdump ("Expected cmp_value", env->check_buffer, type_size);
+                tst_type_hexdump ("Received buffer", &(env->recv_buffer[i*type_size]), type_size);
               }
             errors++;
           }
@@ -146,11 +150,11 @@ int tst_p2p_simple_ring_xsend_run (const struct tst_env * env)
   return 0;
 }
 
-int tst_p2p_simple_ring_xsend_cleanup (const struct tst_env * env)
+int tst_p2p_simple_ring_xsend_cleanup (struct tst_env * env)
 {
-  tst_type_freevalues (env->type, send_buffer, 1);
-  tst_type_freevalues (env->type, check_buffer, 1);
-  tst_type_freevalues (env->type, recv_buffer, env->values_num);
-  MPI_Type_free (&send_type);
+  tst_type_freevalues (env->type, env->send_buffer, 1);
+  tst_type_freevalues (env->type, env->check_buffer, 1);
+  tst_type_freevalues (env->type, env->recv_buffer, env->values_num);
+  MPI_Type_free (&env->extra_type_send);
   return 0;
 }

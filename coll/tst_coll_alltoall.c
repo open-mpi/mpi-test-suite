@@ -11,29 +11,31 @@
  */
 #include "mpi.h"
 #include "mpi_test_suite.h"
+#include "tst_output.h"
 
 #undef DEBUG
 #define DEBUG(x)
 
 
-static int tst_coll_alltoall_setarray (const struct tst_env * env,
+static int tst_coll_alltoall_setarray (struct tst_env * env,
                                        char * send_buffer,
                                        int comm_rank, int comm_size);
-static int tst_coll_alltoall_checkarray (const struct tst_env * env,
+static int tst_coll_alltoall_checkarray (struct tst_env * env,
                                          char * recv_buffer,
                                          int comm_rank, int comm_size);
 
-
+/*
+ * XXX
 static char * send_buffer = NULL;
 static char * recv_buffer = NULL;
+ */
 
-
-int tst_coll_alltoall_init (const struct tst_env * env)
+int tst_coll_alltoall_init (struct tst_env * env)
 {
   int comm_size;
   MPI_Comm comm;
-  DEBUG (printf ("(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
-                 tst_global_rank, env->comm, env->type, env->values_num));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
+                 tst_global_rank, env->comm, env->type, env->values_num);
 
   /*
    * We have to allocate comm_size as many values!
@@ -42,13 +44,13 @@ int tst_coll_alltoall_init (const struct tst_env * env)
 
   MPI_CHECK (MPI_Comm_size (comm, &comm_size));
 
-  send_buffer = tst_type_allocvalues (env->type, env->values_num * comm_size);
-  recv_buffer = tst_type_allocvalues (env->type, env->values_num * comm_size);
+  env->send_buffer = tst_type_allocvalues (env->type, env->values_num * comm_size);
+  env->recv_buffer = tst_type_allocvalues (env->type, env->values_num * comm_size);
 
   return 0;
 }
 
-static int tst_coll_alltoall_setarray (const struct tst_env * env,
+static int tst_coll_alltoall_setarray (struct tst_env * env,
                                        char * send_buffer,
                                        int comm_rank, int comm_size)
 {
@@ -74,7 +76,7 @@ static int tst_coll_alltoall_setarray (const struct tst_env * env,
 }
 
 
-static int tst_coll_alltoall_checkarray (const struct tst_env * env,
+static int tst_coll_alltoall_checkarray (struct tst_env * env,
                                          char * recv_buffer,
                                          int comm_rank, int comm_size)
 {
@@ -121,7 +123,7 @@ static int tst_coll_alltoall_checkarray (const struct tst_env * env,
         else
           {
             tst_type_setvalue (type, cmp_value, TST_TYPE_SET_VALUE, (100000*comm_rank) + (1000*k) + j);
-            if (tst_type_cmpvalue (type, &(send_buffer[(k*values_num + j) * type_size]), cmp_value))
+            if (tst_type_cmpvalue (type, &(env->send_buffer[(k*values_num + j) * type_size]), cmp_value))
               {
                 if (tst_report >= TST_REPORT_FULL)
                   {
@@ -139,7 +141,7 @@ static int tst_coll_alltoall_checkarray (const struct tst_env * env,
 }
 
 
-int tst_coll_alltoall_run (const struct tst_env * env)
+int tst_coll_alltoall_run (struct tst_env * env)
 {
   int comm_rank;
   int comm_size;
@@ -152,25 +154,25 @@ int tst_coll_alltoall_run (const struct tst_env * env)
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
   MPI_CHECK (MPI_Comm_size (comm, &comm_size));
 
-  DEBUG (printf ("(Rank:%d) comm_size:%d comm_rank:%d\n",
-                 tst_global_rank, comm_size, comm_rank));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) comm_size:%d comm_rank:%d\n",
+                 tst_global_rank, comm_size, comm_rank);
 
-  tst_coll_alltoall_setarray (env, send_buffer, comm_rank, comm_size);
+  tst_coll_alltoall_setarray (env, env->send_buffer, comm_rank, comm_size);
 
-  DEBUG (printf ("(Rank:%d) Going to Alltoall\n",
-                 tst_global_rank));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) Going to Alltoall\n",
+                 tst_global_rank);
 
-  MPI_CHECK (MPI_Alltoall (send_buffer, env->values_num, type,
-                           recv_buffer, env->values_num, type, comm));
+  MPI_CHECK (MPI_Alltoall (env->send_buffer, env->values_num, type,
+                           env->recv_buffer, env->values_num, type, comm));
 
-  tst_coll_alltoall_checkarray (env, recv_buffer, comm_rank, comm_size);
+  tst_coll_alltoall_checkarray (env, env->recv_buffer, comm_rank, comm_size);
 
   return 0;
 }
 
-int tst_coll_alltoall_cleanup (const struct tst_env * env)
+int tst_coll_alltoall_cleanup (struct tst_env * env)
 {
-  tst_type_freevalues (env->type, send_buffer, env->values_num);
-  tst_type_freevalues (env->type, recv_buffer, env->values_num);
+  tst_type_freevalues (env->type, env->send_buffer, env->values_num);
+  tst_type_freevalues (env->type, env->recv_buffer, env->values_num);
   return 0;
 }

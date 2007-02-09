@@ -1229,12 +1229,12 @@ static int tst_type_search (const int search_test, const int * test_list, const 
   for (k = 0; k < test_list_num; k++)
     if (test_list[k] == search_test)
       break;
-  return (k == test_list_num) ? 0 : 1;
+  return (k == test_list_num) ? -1 : k;
 }
 
 
 int tst_type_select (const char * type_string,
-                     int * type_list, int * type_list_num, const int type_list_max)
+                     int * type_list, const int type_list_max, int * type_list_num)
 {
   int i;
 
@@ -1256,7 +1256,7 @@ int tst_type_select (const char * type_string,
               /*
                * First search for this test in the type_list -- if already in, continue!
                */
-              if (tst_type_search (j, type_list, *type_list_num))
+              if (-1 != tst_type_search (j, type_list, *type_list_num))
                 {
                   WARNING (printf ("Type:%s selected through class:%s was already "
                                    "included in list -- not including\n",
@@ -1267,8 +1267,7 @@ int tst_type_select (const char * type_string,
               if (types[j].type_class & tst_types_class_strings[i].class)
                 {
                   DEBUG (printf ("type_string:%s test j:%d i:%d with class:%d matches, type_list_num:%d\n",
-                                 type_string, j, (1 << i), types[j].type_class,
-                                 *type_list_num));
+                                 type_string, j, (1 << i), types[j].type_class, *type_list_num));
                   type_list[*type_list_num] = j;
                   (*type_list_num)++;
                   if (*type_list_num == type_list_max)
@@ -1286,7 +1285,7 @@ int tst_type_select (const char * type_string,
     {
       if (!strcasecmp (type_string, types[i].description))
         {
-          if (tst_type_search (i, type_list, *type_list_num))
+          if (-1 != tst_type_search (i, type_list, *type_list_num))
             {
               WARNING (printf ("Type:%s was already included in list -- not including\n",
                                types[i].description));
@@ -1299,6 +1298,81 @@ int tst_type_select (const char * type_string,
             ERROR (EINVAL, "Too many user selected types");
 
           DEBUG (printf ("type_string:%s matched with type_list_num:%d\n",
+                         type_string, *type_list_num));
+          return 0;
+        }
+    }
+
+  {
+    char buffer[128];
+    sprintf (buffer, "Datatype %s not recognized",
+             type_string);
+    ERROR (EINVAL, buffer);
+  }
+  return -1;
+}
+
+int tst_type_deselect (const char * type_string,
+                     int * type_list, const int type_list_max, int * type_list_num)
+{
+  int i;
+
+  if (type_string == NULL || type_list == NULL || type_list_num == NULL)
+    ERROR (EINVAL, "Passed a NULL parameter");
+
+  for (i = 0; i < TST_TYPES_CLASS_NUM; i++)
+    {
+      /*
+       * In case we match a complete class of types, exclude every one!
+       */
+      if (!strcasecmp (type_string, tst_types_class_strings[i].class_string))
+        {
+          int j;
+          DEBUG (printf ("type_string:%s matched with tst_types_class_strings[%d]:%s\n",
+                         type_string, i, tst_types_class_strings[i].class_string));
+          for (j = 0; j < TST_TYPES_NUM; j++)
+            {
+              int ret;
+              /*
+               * Search for this type in the type_list --
+               * if it belongs to this class and is already included, deselect
+               */
+              if (((ret = tst_type_search (j, type_list, *type_list_num)) != -1) &&
+                  types[j].type_class & tst_types_class_strings[i].class)
+                {
+                  DEBUG (printf ("type_string:%s test j:%d i:%d with class:%d matches for deselect, type_list_num:%d\n",
+                                 type_string, j, (1 << i), types[j].type_class, *type_list_num));
+                  type_list[ret] = -1;
+                  (*type_list_num)--;
+                  if (*type_list_num < 0)
+                    ERROR (EINVAL, "Negative selected tests: This should not happen");
+                }
+            }
+          return 0;
+        }
+    }
+
+  /*
+   * In case we didn't match a complete class of types, test for every single one...
+   */
+  for (i = 0; i < TST_TYPES_NUM; i++)
+    {
+      if (!strcasecmp (type_string, types[i].description))
+        {
+          int ret;
+          if ((ret = tst_type_search (i, type_list, *type_list_num)) == -1)
+            {
+              WARNING (printf ("Type:%s was not included in list -- not excluding\n",
+                               types[i].description));
+              return 0;
+            }
+
+          type_list[ret] = -1;
+          (*type_list_num)--;
+          if (*type_list_num < 0)
+            ERROR (EINVAL, "Negative selected types: This should not happen");
+
+          DEBUG (printf ("type_string:%s matched with type_list_num:%d excluding\n",
                          type_string, *type_list_num));
           return 0;
         }

@@ -13,41 +13,45 @@
  */
 #include "mpi.h"
 #include "mpi_test_suite.h"
+#include "tst_output.h"
 
 #undef DEBUG
 #define DEBUG(x)
 
+/*
+ * XXX
 static char * send_buffer = NULL;
 static char * recv_buffer = NULL;
+ */
 
 #define ROOT 0
 
-int tst_coll_reduce_min_init (const struct tst_env * env)
+int tst_coll_reduce_min_init (struct tst_env * env)
 {
   int comm_rank;
   MPI_Comm comm;
 
-  DEBUG (printf ("(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
-                 tst_global_rank, env->comm, env->type, env->values_num));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
+                 tst_global_rank, env->comm, env->type, env->values_num);
 
   comm = tst_comm_getcomm (env->comm);
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
 
-  send_buffer = tst_type_allocvalues (env->type, env->values_num);
-  tst_type_setstandardarray (env->type, env->values_num, send_buffer, comm_rank);
+  env->send_buffer = tst_type_allocvalues (env->type, env->values_num);
+  tst_type_setstandardarray (env->type, env->values_num, env->send_buffer, comm_rank);
 
   /*
    * MPIch2-1.0.3 and MPI/SX checks even on NON-Root proceeses, whether recv_buffer is set!
    */
-#if !defined(HAVE_MPICH2) && !defined(HAVE_MPISX)
+#if !defined(HAVE_MPI_MPICH2) && !defined(HAVE_MPI_MPISX)
   if (ROOT == comm_rank)
 #endif
-    recv_buffer = tst_type_allocvalues (env->type, env->values_num);
+    env->recv_buffer = tst_type_allocvalues (env->type, env->values_num);
 
   return 0;
 }
 
-int tst_coll_reduce_min_run (const struct tst_env * env)
+int tst_coll_reduce_min_run (struct tst_env * env)
 {
   int comm_rank;
   int comm_size;
@@ -60,22 +64,22 @@ int tst_coll_reduce_min_run (const struct tst_env * env)
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
   MPI_CHECK (MPI_Comm_size (comm, &comm_size));
 
-  DEBUG (printf ("(Rank:%d) comm_size:%d comm_rank:%d\n",
-                 tst_global_rank, comm_size, comm_rank));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) comm_size:%d comm_rank:%d\n",
+                 tst_global_rank, comm_size, comm_rank);
 
-  DEBUG (printf ("(Rank:%d) Going to Reduce\n",
-                 tst_global_rank));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) Going to Reduce\n",
+                 tst_global_rank);
 
-  MPI_CHECK (MPI_Reduce (send_buffer, recv_buffer, env->values_num, type, MPI_MIN, ROOT, comm));
+  MPI_CHECK (MPI_Reduce (env->send_buffer, env->recv_buffer, env->values_num, type, MPI_MIN, ROOT, comm));
 
   if (ROOT == comm_rank) {
-    tst_test_checkstandardarray (env, recv_buffer, 0);
+    tst_test_checkstandardarray (env, env->recv_buffer, 0);
   }
 
   return 0;
 }
 
-int tst_coll_reduce_min_cleanup (const struct tst_env * env)
+int tst_coll_reduce_min_cleanup (struct tst_env * env)
 {
   int comm_rank;
   MPI_Comm comm;
@@ -83,11 +87,11 @@ int tst_coll_reduce_min_cleanup (const struct tst_env * env)
   comm = tst_comm_getcomm (env->comm);
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
 
-  tst_type_freevalues (env->type, send_buffer, env->values_num);
-#if !defined(HAVE_MPICH2) && !defined(HAVE_MPISX)
+  tst_type_freevalues (env->type, env->send_buffer, env->values_num);
+#if !defined(HAVE_MPI_MPICH2) && !defined(HAVE_MPI_MPISX)
   if (ROOT == comm_rank)
 #endif
-    tst_type_freevalues (env->type, recv_buffer, env->values_num);
+    tst_type_freevalues (env->type, env->recv_buffer, env->values_num);
 
   return 0;
 }

@@ -311,6 +311,38 @@ AC_DEFUN(AC_CHECK_MPI2_DYNAMIC_PROCESSES,
 
 
 dnl
+dnl Check for MPI2's thread initialization functions
+dnl
+dnl This check for support is really lousy,
+dnl just check, whether the test-case compiles.
+dnl
+AC_DEFUN(AC_CHECK_MPI2_THREADS,
+  [
+  AC_CACHE_CHECK([whether MPI supports thread initialization], [ac_cv_have_mpi2_threads],
+  [
+    AC_LANG_SAVE()
+    ac_ext=c
+    ac_compile=$ac_cv_mpicc_compile
+    ac_link=$ac_cv_mpicc_link
+    AC_TRY_COMPILE([
+#     include <stdio.h>
+#     include "mpi.h"
+],[ 
+      int provided;
+      int my_argc = 0;
+      char * my_argv[] = {NULL};
+      MPI_Init_threads (&my_argc, &my_argv, MPI_THREAD_MULTIPLE, &provided);
+      return 0;
+    ], [ac_cv_have_mpi2_threads="yes"], [ac_cv_have_mpi2_threads="no"])
+    AC_LANG_RESTORE()
+  ])
+  if test "x$ac_cv_have_mpi2_threads" = "xyes" ; then
+    AC_DEFINE([HAVE_MPI2_THREADS], 1, [Define to support MPI2's thread initialization])
+  fi
+])
+
+
+dnl
 dnl Check for size of Fortran datatypes
 dnl This is very tricky: We first compile a Fortran-object code, which contains a
 dnl an array of two elements of the datatype in question and
@@ -909,7 +941,7 @@ AC_DEFUN([AC_CHECK_STDARG], [
           va_start(ap, bar);
           n = va_arg (ap, int);
           va_end (ap);
-        
+
           if (n != 4711)
             return 1;
           return 0;

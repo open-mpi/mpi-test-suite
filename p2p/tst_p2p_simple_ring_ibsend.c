@@ -12,26 +12,41 @@
  */
 #include "mpi.h"
 #include "mpi_test_suite.h"
+#include "tst_output.h"
+
+#ifdef HAVE_PTHREAD_H
+#  include <pthread.h>
+#endif
 
 #undef DEBUG
 #define DEBUG(x)
 
+/*
+ * XXX
 static char * send_buffer = NULL;
 static char * recv_buffer = NULL;
 
 static char * mpi_buffer = NULL;
 static int mpi_buffer_size = 0;
+ */
 
-int tst_p2p_simple_ring_ibsend_init (const struct tst_env * env)
+static int buffer_attached = 0;
+#ifdef HAVE_MPI2_THREADS
+static pthread_mutex_t buffer_attached_mutex = PTHREAD_MUTEX_INITIALIZER;
+#endif
+
+
+
+int tst_p2p_simple_ring_ibsend_init (struct tst_env * env)
 {
   int comm_rank;
   MPI_Comm comm;
 
-  DEBUG (printf ("(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
-                 tst_global_rank, env->comm, env->type, env->values_num));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
+                 tst_global_rank, env->comm, env->type, env->values_num);
 
-  send_buffer = tst_type_allocvalues (env->type, env->values_num);
-  recv_buffer = tst_type_allocvalues (env->type, env->values_num);
+  env->send_buffer = tst_type_allocvalues (env->type, env->values_num);
+  env->recv_buffer = tst_type_allocvalues (env->type, env->values_num);
 
   /*
    * Now, initialize the send_buffer
@@ -39,18 +54,32 @@ int tst_p2p_simple_ring_ibsend_init (const struct tst_env * env)
   comm = tst_comm_getcomm (env->comm);
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
 
-  tst_type_setstandardarray (env->type, env->values_num, send_buffer, comm_rank);
+  tst_type_setstandardarray (env->type, env->values_num, env->send_buffer, comm_rank);
 
-  mpi_buffer_size = tst_type_gettypesize (env->type) * env->values_num + MPI_BUFFER_OVERHEAD;
-  if ((mpi_buffer = malloc (mpi_buffer_size)) == NULL)
+  env->mpi_buffer_size = tst_type_gettypesize (env->type) * env->values_num + MPI_BUFFER_OVERHEAD;
+  if ((env->mpi_buffer = malloc (env->mpi_buffer_size)) == NULL)
     ERROR (errno, "malloc");
 
-  MPI_CHECK (MPI_Buffer_attach (mpi_buffer, mpi_buffer_size));
+  /*
+   * The buffer may be attached by one thread of the processes, only
+   * Actually, the standard doesn't even say so.
+   */
+#ifdef HAVE_MPI2_THREADS
+  pthread_mutex_lock (&buffer_attached_mutex);
+#endif
+  if (!buffer_attached)
+    {
+      buffer_attached = 1;
+      MPI_CHECK (MPI_Buffer_attach (env->mpi_buffer, env->mpi_buffer_size));
+    }
+#ifdef HAVE_MPI2_THREADS
+  pthread_mutex_unlock (&buffer_attached_mutex);
+#endif
 
   return 0;
 }
 
-int tst_p2p_simple_ring_ibsend_run (const struct tst_env * env)
+int tst_p2p_simple_ring_ibsend_run (struct tst_env * env)
 {
   int comm_size;
   int comm_rank;
@@ -83,13 +112,13 @@ int tst_p2p_simple_ring_ibsend_run (const struct tst_env * env)
   else
     ERROR (EINVAL, "tst_p2p_simple_ring_ibsend cannot run with this kind of communicator");
 
-  DEBUG (printf ("(Rank:%d) comm_rank:%d comm_size:%d "
-                 "send_to:%d recv_from:%d 4711:%d\n",
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) comm_rank:%d comm_size:%d "
+                 "send_to:%d recv_from:%d tag:%d\n",
                  tst_global_rank, comm_rank, comm_size,
-                 send_to, recv_from, 4711));
+                 send_to, recv_from, env->tag);
 
-  MPI_CHECK (MPI_Irecv (recv_buffer, env->values_num, type, recv_from, 4711, comm, &requests[1]));
-  MPI_CHECK (MPI_Ibsend (send_buffer, env->values_num, type, send_to, 4711, comm, &requests[0]));
+  MPI_CHECK (MPI_Irecv (env->recv_buffer, env->values_num, type, recv_from, env->tag, comm, &requests[1]));
+  MPI_CHECK (MPI_Ibsend (env->send_buffer, env->values_num, type, send_to, env->tag, comm, &requests[0]));
 
   MPI_Waitall (2, requests, statuses);
 
@@ -98,7 +127,7 @@ int tst_p2p_simple_ring_ibsend_run (const struct tst_env * env)
     ERROR (EINVAL, "Error in requests");
 
   if (statuses[1].MPI_SOURCE != recv_from ||
-      (recv_from != MPI_PROC_NULL && statuses[1].MPI_TAG != 4711) ||
+      (recv_from != MPI_PROC_NULL && statuses[1].MPI_TAG != env->tag) ||
       (recv_from == MPI_PROC_NULL && statuses[1].MPI_TAG != MPI_ANY_TAG))
     ERROR (EINVAL, "Error in statuses");
 
@@ -110,19 +139,30 @@ int tst_p2p_simple_ring_ibsend_run (const struct tst_env * env)
           if (recv_count != env->values_num)
             ERROR(EINVAL, "Error in count");
         }
-      tst_test_checkstandardarray (env, recv_buffer, recv_from);
+      tst_test_checkstandardarray (env, env->recv_buffer, recv_from);
     }
   return 0;
 }
 
-int tst_p2p_simple_ring_ibsend_cleanup (const struct tst_env * env)
+int tst_p2p_simple_ring_ibsend_cleanup (struct tst_env * env)
 {
-  MPI_CHECK (MPI_Buffer_detach (&mpi_buffer, &mpi_buffer_size));
-  free (mpi_buffer);
-  mpi_buffer = NULL;
-  mpi_buffer_size = 0;
+#ifdef HAVE_MPI2_THREADS
+  pthread_mutex_lock (&buffer_attached_mutex);
+#endif
+  if (buffer_attached == 1)
+    {
+      buffer_attached = 0;
+      MPI_CHECK (MPI_Buffer_detach (&env->mpi_buffer, &env->mpi_buffer_size));
+    }
+#ifdef HAVE_MPI2_THREADS
+  pthread_mutex_unlock (&buffer_attached_mutex);
+#endif
 
-  tst_type_freevalues (env->type, send_buffer, env->values_num);
-  tst_type_freevalues (env->type, recv_buffer, env->values_num);
+  free (env->mpi_buffer);
+  env->mpi_buffer = NULL;
+  env->mpi_buffer_size = 0;
+
+  tst_type_freevalues (env->type, env->send_buffer, env->values_num);
+  tst_type_freevalues (env->type, env->recv_buffer, env->values_num);
   return 0;
 }
