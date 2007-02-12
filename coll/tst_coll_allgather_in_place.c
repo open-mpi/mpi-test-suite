@@ -27,8 +27,6 @@ int tst_coll_allgather_in_place_init (struct tst_env * env)
   int comm_size;
   char * local_buffer;
   MPI_Comm comm;
-  MPI_Datatype type;
-  MPI_Aint true_lb, true_extent, lb, extent;
 
   DEBUG (printf ("(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
                  tst_global_rank, env->comm, env->type, env->values_num));
@@ -37,12 +35,8 @@ int tst_coll_allgather_in_place_init (struct tst_env * env)
   MPI_CHECK (MPI_Comm_size (comm, &comm_size));
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
 
-  type = tst_type_getdatatype (env->type);
-  MPI_CHECK (MPI_Type_get_true_extent (type, &true_lb, &true_extent));
-  MPI_CHECK (MPI_Type_get_extent (type, &lb, &extent));
-
   env->recv_buffer = tst_type_allocvalues (env->type, comm_size * env->values_num);
-  local_buffer = env->recv_buffer + true_extent + (comm_rank * env->values_num - 1) * extent;
+  local_buffer = env->recv_buffer + (comm_rank * env->values_num) * tst_type_gettypesize (env->type);
 
   tst_type_setstandardarray (env->type, env->values_num, local_buffer, comm_rank);
 
@@ -69,7 +63,7 @@ int tst_coll_allgather_in_place_run (struct tst_env * env)
 
   DEBUG (printf ("(Rank:%d) Going to Allgather\n",
                  tst_global_rank));
-  MPI_CHECK (MPI_Allgather (MPI_IN_PLACE, env->values_num, type, 
+  MPI_CHECK (MPI_Allgather (MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, 
                             env->recv_buffer, env->values_num, type,
                             comm));
 
