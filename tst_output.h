@@ -11,13 +11,13 @@
 
 #ifndef _TST_OUTPUT_INCLUDED
 #define _TST_OUTPUT_INCLUDED
- 
+
 /****************************************************************************/
 /**                                                                        **/
 /**                     MODULES USED                                       **/
 /**                                                                        **/
 /****************************************************************************/
- 
+
 #include "config.h"
 
 #ifdef HAVE_STDIO_H
@@ -27,7 +27,7 @@
 #  include <stdarg.h>
 #endif
 
- 
+
 
 /****************************************************************************/
 /**                                                                        **/
@@ -50,30 +50,30 @@
 /****************************************************************************/
 
 typedef enum {
-    TST_OUTPUT_TYPE_NONE = 0,			/* No Output opened */
-    TST_OUTPUT_TYPE_STDERR,			/* Output on stderr */
-    TST_OUTPUT_TYPE_STDOUT,			/* Output on stdout */
-    TST_OUTPUT_TYPE_LOGFILE,			/* Output into logfile */
-    TST_OUTPUT_TYPE_LATEX,			/* Output into latex file */
-    TST_OUTPUT_TYPE_HTML			/* Output into html file */
+  TST_OUTPUT_TYPE_NONE = 0,			/* No Output opened */
+  TST_OUTPUT_TYPE_STDERR,			/* Output on stderr */
+  TST_OUTPUT_TYPE_STDOUT,			/* Output on stdout */
+  TST_OUTPUT_TYPE_LOGFILE,			/* Output into logfile */
+  TST_OUTPUT_TYPE_LATEX,			/* Output into latex file */
+  TST_OUTPUT_TYPE_HTML			/* Output into html file */
 } tst_output_types;
 
 typedef enum {
-    TST_REPORT_SUMMARY=0,     /* No output, except for failed tests at the end of the run */
-    TST_REPORT_RUN,           /* Output every test that runs, plus the previous */
-    TST_REPORT_FULL,          /* Full output, including the hexdump of wrong memory */
-    TST_REPORT_MAX
+  TST_REPORT_SUMMARY=0,     /* No output, except for failed tests at the end of the run */
+  TST_REPORT_RUN,           /* Output every test that runs, plus the previous */
+  TST_REPORT_FULL,          /* Full output, including the hexdump of wrong memory */
+  TST_REPORT_MAX
 } tst_report_types;
 
- 
+
 
 typedef struct {
-	FILE * streamptr;		/* Pointer on the stream */
-	tst_output_types type;		
-	char filename[256];		/* Filename if stream writes to file */
-	tst_report_types level;		
-	int rank;			/* Thread responsible for output */
-	int isopen;			/* 1 if open */
+  FILE * streamptr;		/* Pointer on the stream */
+  tst_output_types type;		
+  char filename[256];		/* Filename if stream writes to file */
+  tst_report_types level;		
+  int rank;			/* Thread responsible for output */
+  int isopen;			/* 1 if open */
 } tst_output_stream;
 
 /****************************************************************************/
@@ -81,11 +81,11 @@ typedef struct {
 /**                     EXPORTED VARIABLES                                 **/
 /**                                                                        **/
 /****************************************************************************/
- 
+
 #ifndef _TST_OUTPUT_C_SRC
 extern tst_output_stream tst_output;
 #endif
- 
+
 /****************************************************************************/
 /**                                                                        **/
 /**                     EXPORTED FUNCTIONS                                 **/
@@ -131,7 +131,7 @@ int tst_set_output_level (tst_output_stream * output, tst_report_types level);
  * Fail:		TST_OUTPUT_TYPE_NONE
  */
 tst_output_types tst_output_init (tst_output_stream * output, int rank,
-                                  tst_report_types level, tst_output_types type, ...);
+    tst_report_types level, tst_output_types type, ...);
 
 /* Closes an opened output.
  *
@@ -160,7 +160,7 @@ int tst_output_close (tst_output_stream * output);
  * Fail:	0
  */
 int tst_output_printf (tst_output_stream * output, 
-                       tst_report_types error_level, char * format, ...);
+    tst_report_types error_level, char * format, ...);
 
 #endif
 

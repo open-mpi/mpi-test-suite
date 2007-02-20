@@ -33,8 +33,11 @@
 
 #define ERROR(e,s) do {                                           \
     int __error = (e);                                            \
+    fprintf (stderr, "(%s:%d) ERROR: %s; %s(%d)\n",               \
+             __FILE__, __LINE__, (s), strerror(__error), __error);\
     tst_output_printf (DEBUG_LOG, TST_REPORT_SUMMARY, "(%s:%d) ERROR: %s; %s(%d)\n", \
              __FILE__, __LINE__, (s), strerror(__error), __error);\
+    tst_output_close (DEBUG_LOG);                                 \
     exit (__error);                                               \
   } while(0)
 
