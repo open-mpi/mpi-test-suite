@@ -608,6 +608,13 @@ static struct tst_test tst_tests[] = {
    TST_MODE_RELAXED,
    TST_NONE,
    &tst_threaded_ring_persistent_init, &tst_threaded_ring_persistent_run, &tst_threaded_ring_persistent_cleanup},
+
+  {TST_CLASS_THREADED, "Threaded bcast on duplicated comms",
+   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
+   TST_NONE,
+   &tst_threaded_comm_dup_init, &tst_threaded_comm_dup_run, &tst_threaded_comm_dup_cleanup},
 #endif
 
   {TST_CLASS_UNSPEC, "None",

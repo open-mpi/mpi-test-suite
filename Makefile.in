@@ -96,6 +96,7 @@ OBJ =   mpi_test_suite.o                        \
         threaded/tst_threaded_ring.o            \
         threaded/tst_threaded_ring_isend.o      \
         threaded/tst_threaded_ring_bsend.o      \
+        threaded/tst_threaded_comm_dup.o        \
         threaded/tst_threaded_ring_persistent.o
 
 
