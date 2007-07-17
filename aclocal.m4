@@ -6,6 +6,7 @@ dnl
 dnl Dependancies: AC_PROG_F77
 dnl
 AC_DEFUN(AC_CHECK_FORTRAN_NAME_CONVENTION,[
+  AC_REQUIRE([AC_PROG_GREP])
   AC_MSG_CHECKING(for Fortran naming convention)
   AC_LANG_PUSH([Fortran 77])
   AC_COMPILE_IFELSE([AC_LANG_SOURCE([
@@ -14,37 +15,26 @@ AC_DEFUN(AC_CHECK_FORTRAN_NAME_CONVENTION,[
       end
   ])],
   [
-dnl Problem:
-dnl On some systems, strings delivers all kinds of symbols with offset, the first line chosen by sed wont help.
-dnl For example on SGI we have a problem, that with compile option -Ofast, the first string returned is
-dnl the WRONG naming convention.
-dnl Either, we make sed smarter to replace such expressions:
-dnl  strings -a conftest.o | grep -i mpir_init_fop | sed -n -e '1p' | sed -e 's/:F(0,19)$//'
-dnl Or we omit them with grep -v:
-    nameform=`strings -a conftest.$ac_objext | grep -i mpir_init_fop | grep -v ':' | sed -n -e '1p'`
-  ],
-  [AC_MSG_ERROR(Could not compile test-program to figure out Fortran-naming convention)])
-
-  if test "x$nameform" = "xmpir_init_fop__" ; then
+  if nm conftest.$ac_objext | $GREP mpir_init_fop__ >/dev/null 2>&1 ; then
     ac_cv_fortran_name_convention="FORTRANDOUBLEUNDERSCORE"
     AWK_COMMAND_PACX='[{printf("#define %s %s__\n",$][2,tolower($][2))}]'
     AWK_COMMAND_PPACX='[{printf("#define %s p%s__\n",$][2,tolower($][2))}]'
     AC_DEFINE([FORTRANDOUBLEUNDERSCORE], 1, [Defined if name convention of Fortran uses "lowercase__"])
     AC_MSG_RESULT(Fortran externals are lower case and have two trailing underscores)
-  elif test "x$nameform" = "xmpir_init_fop_" ; then
+  elif nm conftest.$ac_objext | $GREP mpir_init_fop_ >/dev/null 2>&1 ; then
     # We do not set this in CFLAGS; it is a default case
     ac_cv_fortran_name_convention="FORTRANUNDERSCORE"
     AWK_COMMAND_PACX='[{printf("#define %s %s_\n",$][2,tolower($][2))}]'
     AWK_COMMAND_PPACX='[{printf("#define %s p%s_\n",$][2,tolower($][2))}]'
     AC_DEFINE([FORTRANUNDERSCORE], 1, [Defined if name convention of Fortran uses "lowercase_"])
     AC_MSG_RESULT(Fortran externals are lower case and have one trailing underscore)
-  elif test "x$nameform" = "xMPIR_INIT_FOP" ; then
+  elif nm conftest.$ac_objext | $GREP MPIR_INIT_FOP >/dev/null 2>&1 ; then
     ac_cv_fortran_name_convention="FORTRANCAPS"
     AWK_COMMAND_PACX='[{printf("#define %s %s\n",$][2,toupper($][2))}]'
     AWK_COMMAND_PPACX='[{printf("#define %s P%s\n",$][2,toupper($][2))}]'
     AC_DEFINE([FORTRANCAPS], 1, [Defined if name convention of Fortran uses "UPPERCASE"])
     AC_MSG_RESULT(Fortran externals are uppercase)
-  elif test "x$nameform" = "xmpir_init_fop" ; then
+  elif nm conftest.$ac_objext | $GREP mpir_init_fop >/dev/null 2>&1 ; then
     ac_cv_fortran_name_convention="FORTRANNOUNDERSCORE"
     AWK_COMMAND_PACX='[{printf("#define %s %s\n",$][2,tolower($][2))}]'
     AWK_COMMAND_PPACX='[{printf("#define %s p%s\n",$][2,tolower($][2))}]'
@@ -59,6 +49,9 @@ dnl Or we omit them with grep -v:
     AC_MSG_RESULT(Unable to determine the form of Fortran external names)
     AC_MSG_RESULT(Choosing the default: lower case symbols without underscores)
   fi
+  ],
+  [AC_MSG_ERROR(Could not compile test-program to figure out Fortran-naming convention)])
+
   AC_LANG_POP([Fortran 77])
 ])
 
@@ -155,9 +148,9 @@ AC_DEFUN(AC_CHECK_FORTRAN_MPI_DATATYPE, [
   AC_CACHE_CHECK([whether MPI has (opt.) Fortran [$1]], [ac_cv_have_mpi_fortran_[$1]],
   [
     AC_LANG_PUSH([Fortran 77])
-    ac_ext=f
-    ac_compile=$ac_cv_mpif_compile
-    ac_link=$ac_cv_mpif_link
+    dnl ac_ext=f
+    dnl ac_compile=$ac_cv_mpif_compile
+    dnl ac_link=$ac_cv_mpif_link
 
     AC_TRY_RUN([
         implicit none
@@ -318,13 +311,18 @@ dnl just check, whether the test-case compiles.
 dnl
 AC_DEFUN(AC_CHECK_MPI2_THREADS,
   [
-  AC_CACHE_CHECK([whether MPI supports thread initialization], [ac_cv_have_mpi2_threads],
-  [
-    AC_LANG_SAVE()
-    ac_ext=c
-    ac_compile=$ac_cv_mpicc_compile
-    ac_link=$ac_cv_mpicc_link
-    AC_TRY_COMPILE([
+  if test -x $mpi_dir/bin/ompi_info ; then
+    AC_CACHE_CHECK([whether Open MPI supports threads], [ac_cv_have_mpi2_threads], [
+        ac_cv_have_mpi2_threads=`$mpi_dir/bin/ompi_info --parseable | grep option:threads: | cut -d\  -f3 |cut -d, -f1`
+    ])
+  else 
+    AC_CACHE_CHECK([whether MPI supports thread initialization], [ac_cv_have_mpi2_threads],
+    [
+        AC_LANG_SAVE()
+        ac_ext=c
+        ac_compile=$ac_cv_mpicc_compile
+        ac_link=$ac_cv_mpicc_link
+        AC_TRY_COMPILE([
 #     include <stdio.h>
 #     include "mpi.h"
 ],[ 
@@ -336,6 +334,7 @@ AC_DEFUN(AC_CHECK_MPI2_THREADS,
     ], [ac_cv_have_mpi2_threads="yes"], [ac_cv_have_mpi2_threads="no"])
     AC_LANG_RESTORE()
   ])
+  fi
   if test "x$ac_cv_have_mpi2_threads" = "xyes" ; then
     AC_DEFINE([HAVE_MPI2_THREADS], 1, [Define to support MPI2's thread initialization])
   fi
