@@ -559,7 +559,7 @@ static struct tst_test tst_tests[] = {
     *  Odd/Even split MPI_COMM_WORLD (ONLY on *this* one, all other intra-comms work)
     * OpenMPI-v9189 also has problems
     */
-#if !defined(HAVE_MPI_MPICH2) && !defined(HAVE_MPI_NECSX) && !defined(HAVE_MPI_OPENMPI)
+#if 0 && !defined(HAVE_MPI_MPICH2) && !defined(HAVE_MPI_NECSX) && !defined(HAVE_MPI_OPENMPI)
   {TST_CLASS_ONE_SIDED, "One-sided Ring with Get using Post",
    TST_MPI_INTRA_COMM, /* XXX possible with MPI_COMM_SELF?? */
    TST_MPI_STANDARD_C_TYPES, /* Fails with TST_MPI_ALL_C_TYPES, as the struct-datatypes are not supported */
