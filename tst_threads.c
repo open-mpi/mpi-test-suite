@@ -8,7 +8,7 @@
 #undef DEBUG
 #define DEBUG(x)
 
-static int num_threads;
+static int num_threads; /* Number of available threads - 1 */
 static int working;
 static pthread_mutex_t working_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t working_cond = PTHREAD_COND_INITIALIZER;
@@ -247,6 +247,9 @@ int tst_thread_cleanup (struct tst_thread_env_t ** thread_env)
   return 0;
 }
 
+/*
+ * Returns the thread ID of the current thread
+ */
 inline int tst_thread_get_num (void)
 {
   int i = 0;
