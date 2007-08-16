@@ -30,16 +30,11 @@ static char * mpi_buffer = NULL;
 static int mpi_buffer_size = 0;
  */
 
-static int buffer_attached = 0;
-#ifdef HAVE_MPI2_THREADS
-static pthread_mutex_t buffer_attached_mutex = PTHREAD_MUTEX_INITIALIZER;
-#endif
-
-
 
 int tst_p2p_simple_ring_ibsend_init (struct tst_env * env)
 {
   int comm_rank;
+  int num_threads = 1;
   MPI_Comm comm;
 
   tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
@@ -48,6 +43,9 @@ int tst_p2p_simple_ring_ibsend_init (struct tst_env * env)
   env->send_buffer = tst_type_allocvalues (env->type, env->values_num);
   env->recv_buffer = tst_type_allocvalues (env->type, env->values_num);
 
+#ifdef HAVE_MPI2_THREADS
+  num_threads = tst_thread_num_threads ();
+#endif
   /*
    * Now, initialize the send_buffer
    */
@@ -56,7 +54,7 @@ int tst_p2p_simple_ring_ibsend_init (struct tst_env * env)
 
   tst_type_setstandardarray (env->type, env->values_num, env->send_buffer, comm_rank);
 
-  env->mpi_buffer_size = tst_type_gettypesize (env->type) * env->values_num + MPI_BUFFER_OVERHEAD;
+  env->mpi_buffer_size = num_threads * (tst_type_gettypesize (env->type) * env->values_num + MPI_BUFFER_OVERHEAD);
   if ((env->mpi_buffer = malloc (env->mpi_buffer_size)) == NULL)
     ERROR (errno, "malloc");
 
@@ -65,15 +63,11 @@ int tst_p2p_simple_ring_ibsend_init (struct tst_env * env)
    * Actually, the standard doesn't even say so.
    */
 #ifdef HAVE_MPI2_THREADS
-  pthread_mutex_lock (&buffer_attached_mutex);
+  if ( tst_thread_get_num() == 0 ) {
 #endif
-  if (!buffer_attached)
-    {
-      buffer_attached = 1;
-      MPI_CHECK (MPI_Buffer_attach (env->mpi_buffer, env->mpi_buffer_size));
-    }
+    MPI_CHECK (MPI_Buffer_attach (env->mpi_buffer, env->mpi_buffer_size));
 #ifdef HAVE_MPI2_THREADS
-  pthread_mutex_unlock (&buffer_attached_mutex);
+  }
 #endif
 
   return 0;
@@ -147,15 +141,11 @@ int tst_p2p_simple_ring_ibsend_run (struct tst_env * env)
 int tst_p2p_simple_ring_ibsend_cleanup (struct tst_env * env)
 {
 #ifdef HAVE_MPI2_THREADS
-  pthread_mutex_lock (&buffer_attached_mutex);
+  if ( tst_thread_get_num () == 0 ) {
 #endif
-  if (buffer_attached == 1)
-    {
-      buffer_attached = 0;
-      MPI_CHECK (MPI_Buffer_detach (&env->mpi_buffer, &env->mpi_buffer_size));
-    }
+    MPI_CHECK (MPI_Buffer_detach (&env->mpi_buffer, &env->mpi_buffer_size));
 #ifdef HAVE_MPI2_THREADS
-  pthread_mutex_unlock (&buffer_attached_mutex);
+  }
 #endif
 
   free (env->mpi_buffer);

@@ -37,11 +37,16 @@ int tst_p2p_alltoall_probe_anysource_init (struct tst_env * env)
 {
   int comm_rank;
   int comm_size;
+  int num_threads = 1;
   MPI_Comm comm;
   int i;
 
   tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
                      tst_global_rank, env->comm, env->type, env->values_num);
+
+#ifdef HAVE_MPI2_THREADS
+  num_threads = tst_thread_num_threads();
+#endif
 
   /*
    * Now, initialize the buffer
@@ -77,11 +82,16 @@ int tst_p2p_alltoall_probe_anysource_init (struct tst_env * env)
       memset (&(env->status_buffer[i]), 0, sizeof (MPI_Status));
     }
 
-  env->mpi_buffer_size = tst_type_gettypesize (env->type) * env->values_num * (comm_size - 1) + MPI_BUFFER_OVERHEAD;
+  env->mpi_buffer_size = num_threads * (tst_type_gettypesize (env->type) * env->values_num * (comm_size - 1) + MPI_BUFFER_OVERHEAD);
   if ((env->mpi_buffer = malloc (env->mpi_buffer_size)) == NULL)
     ERROR (errno, "malloc");
-
+#ifdef HAVE_MPI2_THREADS
+  if ( tst_thread_get_num () == 0 ) {
+#endif
   MPI_CHECK (MPI_Buffer_attach (env->mpi_buffer, env->mpi_buffer_size));
+#ifdef HAVE_MPI2_THREADS
+  }
+#endif
 
   return 0;
 }
@@ -198,7 +208,13 @@ int tst_p2p_alltoall_probe_anysource_cleanup (struct tst_env * env)
   int comm_size;
   int i;
 
+#ifdef HAVE_MPI2_THREADS
+  if ( tst_thread_get_num () == 0 ) {
+#endif
   MPI_CHECK (MPI_Buffer_detach (&env->mpi_buffer, &env->mpi_buffer_size));
+#ifdef HAVE_MPI2_THREADS
+  }
+#endif
   free (env->mpi_buffer);
   env->mpi_buffer = NULL;
   env->mpi_buffer_size = 0;
