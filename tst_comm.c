@@ -601,6 +601,15 @@ MPI_Comm tst_comm_getcomm (int i)
   return comms[i].mpi_comm;
 }
 
+int tst_comm_getcommsize (int i)
+{
+  int size;
+  CHECK_ARG (i, -1);
+
+  MPI_Comm_size (comms[i].mpi_comm, &size);
+  return size;
+}
+
 int tst_comm_getcommclass (int i)
 {
   CHECK_ARG (i, -1);

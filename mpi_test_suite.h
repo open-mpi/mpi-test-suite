@@ -363,6 +363,7 @@ extern int tst_comm_init (int * num_comms);
 extern int tst_comm_cleanup (void);
 extern MPI_Comm tst_comm_getcomm (int comm);
 extern int tst_comm_getcommclass (int comm);
+extern int tst_comm_getcommsize (int comm);
 extern const char * tst_comm_getdescription (int comm);
 extern void tst_comm_list (void);
 extern int tst_comm_select (const char * comm_string,

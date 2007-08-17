@@ -37,6 +37,7 @@ struct tst_test {
   int class;
   const char * description;
   int run_with_comm;
+  int min_comm_size;
   tst_uint64 run_with_type;
   int mode;
   int needs_sync;
@@ -51,6 +52,7 @@ static struct tst_test tst_tests[] = {
    */
   {TST_CLASS_ENV, "Status",
    TST_MPI_COMM_SELF,
+   1,
    TST_MPI_CHAR,
    TST_MODE_STRICT,
    TST_SYNC,
@@ -58,6 +60,7 @@ static struct tst_test tst_tests[] = {
 
   {TST_CLASS_ENV, "Request_Null",
    TST_MPI_COMM_SELF,
+   1,
    TST_MPI_CHAR,
    TST_MODE_STRICT,
    TST_SYNC,
@@ -68,6 +71,7 @@ static struct tst_test tst_tests[] = {
    */
   {TST_CLASS_P2P, "Ring",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_SYNC,
@@ -75,6 +79,7 @@ static struct tst_test tst_tests[] = {
 
   {TST_CLASS_P2P, "Ring Send Bottom",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_SYNC,
@@ -82,6 +87,7 @@ static struct tst_test tst_tests[] = {
 
   {TST_CLASS_P2P, "Ring Send Pack",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_SYNC,
@@ -89,6 +95,7 @@ static struct tst_test tst_tests[] = {
 
   {TST_CLASS_P2P, "Ring Isend",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_SYNC,
@@ -96,6 +103,7 @@ static struct tst_test tst_tests[] = {
 
   {TST_CLASS_P2P, "Ring Ibsend",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_SYNC,
@@ -103,6 +111,7 @@ static struct tst_test tst_tests[] = {
 
   {TST_CLASS_P2P, "Ring Irsend",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_SYNC,
@@ -110,6 +119,7 @@ static struct tst_test tst_tests[] = {
 
   {TST_CLASS_P2P, "Ring Issend",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_SYNC,
@@ -117,6 +127,7 @@ static struct tst_test tst_tests[] = {
 
   {TST_CLASS_P2P, "Ring Bsend",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_NONE,
@@ -124,6 +135,7 @@ static struct tst_test tst_tests[] = {
 
   {TST_CLASS_P2P, "Ring Rsend",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_SYNC,
@@ -132,6 +144,7 @@ static struct tst_test tst_tests[] = {
 
   {TST_CLASS_P2P, "Ring Ssend",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_NONE,
@@ -139,6 +152,7 @@ static struct tst_test tst_tests[] = {
 
   {TST_CLASS_P2P, "Ring Sendrecv",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_NONE,
@@ -146,6 +160,7 @@ static struct tst_test tst_tests[] = {
 
   {TST_CLASS_P2P, "Ring same value",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_SYNC,
@@ -153,6 +168,7 @@ static struct tst_test tst_tests[] = {
 
   {TST_CLASS_P2P, "Direct Partner Intercomm",
    TST_MPI_INTER_COMM,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_SYNC,
@@ -162,6 +178,7 @@ static struct tst_test tst_tests[] = {
 
   {TST_CLASS_P2P, "Many-to-one",
    TST_MPI_INTRA_COMM | TST_MPI_INTER_COMM,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed, done with hash */
@@ -169,6 +186,7 @@ static struct tst_test tst_tests[] = {
 
   {TST_CLASS_P2P, "Many-to-one with MPI_Probe (MPI_ANY_SOURCE)",
    TST_MPI_INTRA_COMM | TST_MPI_INTER_COMM,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_SYNC,            /* No synchronization needed, done with hash */
@@ -176,6 +194,7 @@ static struct tst_test tst_tests[] = {
 
   {TST_CLASS_P2P, "Many-to-one with MPI_Iprobe (MPI_ANY_SOURCE)",
    TST_MPI_INTRA_COMM | TST_MPI_INTER_COMM,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_SYNC,            /* Receiving with MPI_ANY_SOURCE and MPI_ANY_TAG */
@@ -188,6 +207,7 @@ static struct tst_test tst_tests[] = {
 #ifndef HAVE_MPI_LAM
   {TST_CLASS_P2P, "Many-to-one with Isend and Cancellation",
    TST_MPI_INTRA_COMM, /* XXX We use a MPI_Gather insided the tests -- no intercomm allowed! | TST_MPI_INTER_COMM,*/
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_SYNC,            /* Receiving with MPI_ANY_SOURCE and MPI_ANY_TAG */
@@ -196,6 +216,7 @@ static struct tst_test tst_tests[] = {
 
   {TST_CLASS_P2P, "Alltoall",
    TST_MPI_INTRA_COMM | TST_MPI_INTER_COMM,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed, done with hash */
@@ -204,6 +225,7 @@ static struct tst_test tst_tests[] = {
 #ifndef HAVE_MPI_LAM
   {TST_CLASS_P2P, "Alltoall - Persistent",
    TST_MPI_INTRA_COMM,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed, done with hash */
@@ -212,6 +234,7 @@ static struct tst_test tst_tests[] = {
 
   {TST_CLASS_P2P, "Alltoall - xIsend",
    TST_MPI_INTRA_COMM | TST_MPI_INTER_COMM,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed, done with hash */
@@ -220,6 +243,7 @@ static struct tst_test tst_tests[] = {
 
   {TST_CLASS_P2P, "Alltoall - Irsend",
    TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
@@ -227,6 +251,7 @@ static struct tst_test tst_tests[] = {
 
   {TST_CLASS_P2P, "Alltoall - Issend",
    TST_MPI_INTRA_COMM | TST_MPI_INTER_COMM,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed -- everyone waits */
@@ -234,6 +259,7 @@ static struct tst_test tst_tests[] = {
 
   {TST_CLASS_P2P, "Alltoall with MPI_Probe (MPI_ANY_SOURCE)",
    TST_MPI_INTRA_COMM,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_SYNC,            /* Probing for MPI_ANY_SOURCE and MPI_ANY_TAG */
@@ -241,6 +267,7 @@ static struct tst_test tst_tests[] = {
 
   {TST_CLASS_P2P, "Ring Send with cart comm",
    TST_MPI_CART_COMM,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_SYNC,
@@ -248,6 +275,7 @@ static struct tst_test tst_tests[] = {
 
   {TST_CLASS_P2P, "Alltoall on topo comm",
    TST_MPI_TOPO_COMM,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_SYNC,
@@ -262,6 +290,7 @@ static struct tst_test tst_tests[] = {
    */
   {TST_CLASS_COLL, "Bcast",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
@@ -273,6 +302,7 @@ static struct tst_test tst_tests[] = {
    */
   {TST_CLASS_COLL, "Gather",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
@@ -284,6 +314,7 @@ static struct tst_test tst_tests[] = {
    */
   {TST_CLASS_COLL, "Allgather",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
@@ -295,6 +326,7 @@ static struct tst_test tst_tests[] = {
    */
   {TST_CLASS_COLL, "Allgather with MPI_IN_PLACE",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
@@ -306,6 +338,7 @@ static struct tst_test tst_tests[] = {
    */
   {TST_CLASS_COLL, "Scan sum",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
    (TST_MPI_STANDARD_C_INT_TYPES |
      TST_MPI_STANDARD_C_FLOAT_TYPES |
      TST_MPI_STANDARD_FORTRAN_COMPLEX_TYPES) &
@@ -335,6 +368,7 @@ static struct tst_test tst_tests[] = {
    */
   {TST_CLASS_COLL, "Scatter",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
@@ -346,6 +380,7 @@ static struct tst_test tst_tests[] = {
    */
   {TST_CLASS_COLL, "Scatterv",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
@@ -357,6 +392,7 @@ static struct tst_test tst_tests[] = {
    */
   {TST_CLASS_COLL, "Scatterv_stride",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
@@ -368,6 +404,7 @@ static struct tst_test tst_tests[] = {
    */
   {TST_CLASS_COLL, "Reduce Min",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
    (TST_MPI_STANDARD_C_TYPES | TST_MPI_STANDARD_FORTRAN_INT_TYPES | TST_MPI_STANDARD_FORTRAN_FLOAT_TYPES) &
 #ifdef HAVE_MPI2
    /*
@@ -396,6 +433,7 @@ static struct tst_test tst_tests[] = {
    */
   {TST_CLASS_COLL, "Reduce Max",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
    (TST_MPI_STANDARD_C_TYPES | TST_MPI_STANDARD_FORTRAN_INT_TYPES | TST_MPI_STANDARD_FORTRAN_FLOAT_TYPES) &
 #ifdef HAVE_MPI2
    /*
@@ -424,6 +462,7 @@ static struct tst_test tst_tests[] = {
    */
   {TST_CLASS_COLL, "Reduce Min with MPI_IN_PLACE",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
    (TST_MPI_STANDARD_C_TYPES | TST_MPI_STANDARD_FORTRAN_INT_TYPES | TST_MPI_STANDARD_FORTRAN_FLOAT_TYPES) &
 #ifdef HAVE_MPI2
    /*
@@ -452,6 +491,7 @@ static struct tst_test tst_tests[] = {
    */
   {TST_CLASS_COLL, "Reduce Max with MPI_IN_PLACE",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
    (TST_MPI_STANDARD_C_TYPES | TST_MPI_STANDARD_FORTRAN_INT_TYPES | TST_MPI_STANDARD_FORTRAN_FLOAT_TYPES) &
 #ifdef HAVE_MPI2
    /*
@@ -484,6 +524,7 @@ static struct tst_test tst_tests[] = {
    */
   {TST_CLASS_COLL, "Allreduce MIN/MAX",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
    (TST_MPI_STANDARD_C_TYPES | TST_MPI_STANDARD_FORTRAN_INT_TYPES | TST_MPI_STANDARD_FORTRAN_FLOAT_TYPES) &
 #ifdef HAVE_MPI2
    /*
@@ -513,6 +554,7 @@ static struct tst_test tst_tests[] = {
    */
   {TST_CLASS_COLL, "Allreduce MIN/MAX with MPI_IN_PLACE",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
    (TST_MPI_STANDARD_C_TYPES | TST_MPI_STANDARD_FORTRAN_INT_TYPES | TST_MPI_STANDARD_FORTRAN_FLOAT_TYPES) &
 #ifdef HAVE_MPI2
    /*
@@ -541,6 +583,7 @@ static struct tst_test tst_tests[] = {
    */
   {TST_CLASS_COLL, "Alltoall",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
@@ -549,6 +592,7 @@ static struct tst_test tst_tests[] = {
 #ifdef HAVE_MPI2_ONE_SIDED
   {TST_CLASS_ONE_SIDED, "One-sided Ring with Get",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM, /* XXX possible with MPI_COMM_SELF?? */
+   1,
    TST_MPI_STANDARD_C_TYPES, /* Fails with TST_MPI_ALL_C_TYPES, as the struct-datatypes are not supported */
    TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
@@ -559,9 +603,10 @@ static struct tst_test tst_tests[] = {
     *  Odd/Even split MPI_COMM_WORLD (ONLY on *this* one, all other intra-comms work)
     * OpenMPI-v9189 also has problems
     */
-#if 0 && !defined(HAVE_MPI_MPICH2) && !defined(HAVE_MPI_NECSX) && !defined(HAVE_MPI_OPENMPI)
+#if !defined(HAVE_MPI_MPICH2) && !defined(HAVE_MPI_NECSX) && !defined(HAVE_MPI_OPENMPI)
   {TST_CLASS_ONE_SIDED, "One-sided Ring with Get using Post",
    TST_MPI_INTRA_COMM, /* XXX possible with MPI_COMM_SELF?? */
+   2,
    TST_MPI_STANDARD_C_TYPES, /* Fails with TST_MPI_ALL_C_TYPES, as the struct-datatypes are not supported */
    TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
@@ -570,6 +615,7 @@ static struct tst_test tst_tests[] = {
 
   {TST_CLASS_ONE_SIDED, "One-sided Ring with Put",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM, /* XXX possible with MPI_COMM_SELF?? */
+   1,
    TST_MPI_STANDARD_C_TYPES, /* Fails with TST_MPI_ALL_C_TYPES, as the struct-datatypes are not supported */
    TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
@@ -583,6 +629,7 @@ static struct tst_test tst_tests[] = {
 #ifdef HAVE_MPI2_THREADS
   {TST_CLASS_THREADED, "Threaded ring",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_NONE,
@@ -590,6 +637,7 @@ static struct tst_test tst_tests[] = {
 
   {TST_CLASS_THREADED, "Threaded ring isend",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_NONE,
@@ -597,6 +645,7 @@ static struct tst_test tst_tests[] = {
 
   {TST_CLASS_THREADED, "Threaded ring bsend",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_NONE,
@@ -604,6 +653,7 @@ static struct tst_test tst_tests[] = {
 
   {TST_CLASS_THREADED, "Threaded ring persistent",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_NONE,
@@ -611,6 +661,7 @@ static struct tst_test tst_tests[] = {
 
   {TST_CLASS_THREADED, "Threaded bcast on duplicated comms",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    TST_NONE,
@@ -618,6 +669,7 @@ static struct tst_test tst_tests[] = {
 #endif
 
   {TST_CLASS_UNSPEC, "None",
+   0,
    0,
    0,
    0,
@@ -732,12 +784,14 @@ int tst_test_check_run (struct tst_env * env)
       env->test > TST_TESTS_NUM ||
       tst_test_getmode (env->test) < tst_mode ||
       (tst_comm_getcommclass (env->comm) & tst_tests[env->test].run_with_comm) == (tst_uint64)0 ||
+      (tst_comm_getcommsize (env->comm) < tst_tests[env->test].min_comm_size) ||
       (tst_type_gettypeclass (env->type) & tst_tests[env->test].run_with_type) == (tst_uint64)0)
     {
       DEBUG (printf ("(Rank:%d) env->comm:%d getcommclass:%d test is run_with_comm:%d "
-                     "gettypeclass:%lld run_with_type:%d\n",
+                     "comm_size:%d min_comm_size:%d gettypeclass:%lld run_with_type:%d\n",
                      tst_global_rank, env->comm, tst_comm_getcommclass (env->comm),
                      tst_tests[env->test].run_with_comm,
+                     tst_comm_getcommsize(env->comm), tst_tests[env->test].min_comm_size,
                      tst_type_gettypeclass (env->type), tst_tests[env->test].run_with_type));
       return 0;
     }

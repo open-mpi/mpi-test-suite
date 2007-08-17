@@ -51,10 +51,18 @@ int tst_one_sided_simple_ring_get_post_init (struct tst_env * env)
    * Just include the process and it's predecessor to post/start/complete/wait
    */
   MPI_CHECK (MPI_Comm_group (comm, &comm_group));
+
+  /*
+   * Set up a group consisting of 1 process, containing rank-1
+   * If comm_group only has 1 process->BAD
+   */
   ranks_num = 1;
   ranks[0] = (comm_rank + comm_size - 1) % comm_size;
   MPI_CHECK (MPI_Group_incl (comm_group, ranks_num, ranks, &group_from));
 
+  /*
+   * Set up a group consisting of 1 process, containing rank+1
+   */
   ranks_num = 1;
   ranks[0] = (comm_rank + 1) % comm_size;
   MPI_CHECK (MPI_Group_incl (comm_group, ranks_num, ranks, &group_to));
@@ -62,8 +70,6 @@ int tst_one_sided_simple_ring_get_post_init (struct tst_env * env)
   /*
    * Create a window for the send and the receive buffer
    */
-  DEBUG (printf ("(Rank:%d) Going to create window pid:%ld\n",
-                 tst_global_rank, getpid()));
   MPI_CHECK (MPI_Win_create (send_buffer, send_buffer_size, type_size,
                              MPI_INFO_NULL, comm, &send_win));
 
@@ -98,7 +104,7 @@ int tst_one_sided_simple_ring_get_post_run (struct tst_env * env)
   /*
    * All processes call MPI_Get
    */
-  if (tst_global_rank % 2 == 0) {
+  if (comm_rank == 0) {
     /*
      * We first GET, then post our window
      */
