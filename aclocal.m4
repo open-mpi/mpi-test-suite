@@ -115,7 +115,7 @@ AC_DEFUN(AC_PROG_MPICC, [
     if test -x $mpi_dir/bin/mpicc ; then
       ac_cv_prog_mpicc="$mpi_dir/bin/mpicc"
       ac_cv_mpicc_compile="$ac_cv_prog_mpicc -c conftest.$ac_ext >&AS_MESSAGE_LOG_FD"
-      ac_cv_mpicc_link="$ac_cv_prog_mpicc -o conftest$ac_exeext conftest.$ac_ext $LIBS >&AS_MESSAGE_LOG_FD"
+      ac_cv_mpicc_link="$ac_cv_prog_mpicc -o conftest$ac_exeext conftest.$ac_ext $LIBS $LDFLAGS >&AS_MESSAGE_LOG_FD"
     elif test -x $mpi_dir/bin/mpcc ; then
       dnl SUN has got a stupid naming convention!
       dnl PLEASE notice the -l${lib_mpi} -- are they stupid or what ?
@@ -126,8 +126,8 @@ AC_DEFUN(AC_PROG_MPICC, [
       dnl This is our last resort -- do it by hand
       dnl This might mean, that the test-program will not run on the cpu, configure runs on!
       ac_cv_prog_mpicc="$CC"
-      ac_cv_mpicc_compile="$CC $CFLAGS -I${mpi_inc_dir} -c conftest.$ac_ext -L${mpi_lib_dir} -l${lib_mpi} $SYS_LDFLAGS >&AS_MESSAGE_LOG_FD"
-      ac_cv_mpicc_link="$CC $CFLAGS -I${mpi_inc_dir} -o conftest$ac_exeext conftest.$ac_ext -L${mpi_lib_dir} -l${lib_mpi} $SYS_LDFLAGS >&AS_MESSAGE_LOG_FD"
+      ac_cv_mpicc_compile="$CC $CFLAGS -I${mpi_inc_dir} -c conftest.$ac_ext -L${mpi_lib_dir} -l${lib_mpi} >&AS_MESSAGE_LOG_FD"
+      ac_cv_mpicc_link="$CC $CFLAGS -I${mpi_inc_dir} -o conftest$ac_exeext conftest.$ac_ext -L${mpi_lib_dir} -l${lib_mpi} $LDFLAGS $SYS_LDFLAGS >&AS_MESSAGE_LOG_FD"
     fi
   ])
 ])
@@ -507,7 +507,7 @@ AC_DEFUN(AC_CHECK_MPI_VERSION,
 #       ifdef MPI_VERSION
         fprintf (f, "%d.%d\n", MPI_VERSION, MPI_SUBVERSION);
 #       else
-        fprintf (f, "unkown\n");
+        fprintf (f, "unknown\n");
 #       endif
         return 0;
       }],
@@ -515,7 +515,7 @@ AC_DEFUN(AC_CHECK_MPI_VERSION,
       VAL=`cat ./conftestval`
       rm -f conftestval
       if test "x$VAL" = "x" ; then
-        ac_cv_mpi_version="unkown"
+        ac_cv_mpi_version="unknown"
       else
         ac_cv_mpi_version="$VAL"
         ac_cv_mpi_major_version=`echo $VAL | cut -f1 -d'.'`

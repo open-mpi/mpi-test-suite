@@ -31,13 +31,6 @@ tst_mode_types tst_mode = TST_MODE_RELAXED;
  */
 tst_output_stream tst_output;
 
-#define DEBUG_REPORT_TYPE     TST_REPORT_MAX
-#define DEBUG_LOG_TYPE        TST_OUTPUT_TYPE_LOGFILE
-
-/* If type was not STDOUT, give a filename */
-#define DEBUG_LOG_FILENAME  "tst.log"
-
-
 /*
  * This should correspond to the enum tst_report
  */
@@ -89,8 +82,8 @@ static int tst_array_compress (int * list, const int list_max, int * list_num)
 
 static int usage (void)
 {
-  fprintf (stderr, "Usage: mpi_test_suite [-t test] [-c comm] [-d datatype] [-n num_values]\n"
-           "       [-r report] [-x execution_mode] [-j num_threads] [-v] [-l] [-h]\n"
+  fprintf (stderr, "Usage: mpi_test_suite [-h] [-v] [-l] [-t test] [-c comm] [-d datatype]\n"
+           "       [-n num_values] [-r report] [-x execution_mode] [-j num_threads]\n"
            "test:\t\tone (or more) tests or test-classes (see -l) and\n"
            "comm:\t\tone (or more) communicator or communicator-classes (see -l)\n"
            "datatype:\tone (or more) datatype or datatype-classes (see -l)\n"
@@ -99,12 +92,14 @@ static int usage (void)
            "execution_mode:\tlevel of correctness testing, tests to run and internal tests, see -l (default:RELAXED)\n"
            "num_threads:\tnumber of threads to execute the tests (default:no threads)\n"
            "\n"
-           "All multiple test/comm/datatype-declarations must be separated by commas\n"
-           "The option -l/--list lists all available tests, communicators and datatypes\n"
-           "and corresponding classes.\n"
+           "All multiple test/comm/datatype-names must be comma-separated.\n"
+           "Names are not case-sensisitve, due to spaces in names, proper quoting should be used.\n"
            "\n"
-           "The option -v, verbose mode is turned on\n"
-           "The option -h shows this help\n",
+           "-h:\t\tShow this help\n"
+           "-v:\t\tTurn on verbose mode for debugging output\n"
+           "-l/--list:\tList all available tests, communicators, datatypes and\n"
+           "\t\tcorresponding classes.\n"
+           " \n",
            NUM_VALUES);
   MPI_Abort (MPI_COMM_WORLD, 0);
   exit (0);
@@ -137,6 +132,12 @@ int main (int argc, char * argv[])
   int * val;
   int tst_thread_level_provided;
 
+
+  /*
+   * Unfortunately, this has to be called before the actual MPI_Init
+   */
+  tst_profiling_init (10000, 50);
+
 #ifdef HAVE_MPI2_THREADS
   struct tst_thread_env_t ** tst_thread_env;
 
@@ -147,7 +148,7 @@ int main (int argc, char * argv[])
       printf ("Thread level support:%d unequal MPI_THREAD_MULTIPLE\n", tst_thread_level_provided);
       tst_thread_level_provided = MPI_THREAD_SINGLE;
     }
-     
+
 #else
   tst_thread_level_provided = 0;   /* MPI_THREAD_SINGLE would not work, if not MPI-2, as not defined */
   num_threads = 0;                 /* silence the compiler */
@@ -166,7 +167,7 @@ int main (int argc, char * argv[])
       sleep (30);
     }
 
-  tst_output_init ( DEBUG_LOG, TST_OUTPUT_RANK_SELF, DEBUG_REPORT_TYPE, DEBUG_LOG_TYPE, DEBUG_LOG_FILENAME);
+  tst_output_init ( DEBUG_LOG, TST_OUTPUT_RANK_MASTER, TST_REPORT_MAX, TST_OUTPUT_TYPE_LOGFILE, "tst.log");
 
 #ifndef HAVE_MPI2_THREADS
   tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "Testsuite was compiled without MPI2_THREADS");
@@ -267,7 +268,8 @@ int main (int argc, char * argv[])
                  * In case we find a '!', deselect the test (test-class)
                  */
                 /* Need to Check how to test for 'All' but not getting in the way of sthing like 'Alltoall with' */
-                if (!strncasecmp ("All", str, strlen("All")))
+                if (!strncasecmp ("All", str, strlen("All")) &&
+                    (str[strlen("All")+1]==','))
                   {
                     for (i = 0; i < tst_test_array_max; i++)
                       tst_test_array[i] = i;
@@ -595,6 +597,7 @@ int main (int argc, char * argv[])
   tst_comm_cleanup ();
   tst_type_cleanup ();
   tst_test_cleanup ();
+  tst_profiling_cleanup ();
   free (tst_comm_array);
   free (tst_type_array);
   free (tst_test_array);

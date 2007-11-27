@@ -44,6 +44,7 @@ INSTALL_DIR  = @prefix@
 OBJ =   mpi_test_suite.o                        \
         tst_comm.o                              \
         tst_output.o                            \
+	tst_profiling.o				\
         tst_tests.o                             \
         tst_threads.o                           \
         tst_types.o                             \

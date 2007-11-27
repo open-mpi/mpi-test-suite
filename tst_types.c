@@ -531,7 +531,7 @@ int tst_type_gettypesize (int type)
 
 void tst_type_hexdump (const char * text, const char * data, int num)
 {
-#define NUM_COL 16
+#define NUM_COL 8
    int i;
 
    printf ("(Rank:%d) %s [%d Bytes]\n(Rank:%d) [ 0-%d]:\t",
@@ -545,7 +545,7 @@ void tst_type_hexdump (const char * text, const char * data, int num)
          printf (" 0x%.2x", data[i] & 0xFF);
        if ((i % NUM_COL) == NUM_COL-1 && i != num-1)
          printf ("\n(Rank:%d) [%d-%d]:\t",
-                 tst_global_rank, i+1, MIN(i+NUM_COL+1, num-1));
+                 tst_global_rank, i+1, MIN(i+NUM_COL, num-1));
      }
    printf("\n");
 }

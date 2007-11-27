@@ -118,10 +118,10 @@ int tst_threaded_ring_bsend_run (struct tst_env * env)
   if (0 == thread_num) {
     MPI_CHECK (MPI_Buffer_attach (tst_thread_get_global_buffer (), tst_thread_get_global_buffer_size ()));
 
-    MPI_CHECK (MPI_Bsend (env->send_buffer, env->values_num, type, send_to, env->tag, comm));
+    MPI_CHECK (MPI_Bsend (env->send_buffer, env->values_num, type, send_to, thread_tag_to, comm));
     tst_thread_signal_send (0);
 
-    MPI_CHECK (MPI_Recv (env->recv_buffer, env->values_num, type, recv_from, env->tag, comm, &status));
+    MPI_CHECK (MPI_Recv (env->recv_buffer, env->values_num, type, recv_from, thread_tag_from, comm, &status));
 
     /*
      * check results of send process
