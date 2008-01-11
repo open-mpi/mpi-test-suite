@@ -57,7 +57,7 @@ number of tests with the following commands:
 
 mpirun -np XX ./mpi_test_suite -h  shows the help:
 
-  Usage: mpi_test_suite [-t tst] [-c comm] [-d datatype] [-n num_values] [-v] [-l]
+  Usage: mpi_test_suite [-t test] [-c comm] [-d datatype] [-n num_values] [-v] [-l]
   test:   one (or more) tests or test-classes and
   comm:   one (or more) communicator or communicator-classes
   datatype:       one (or more) datatype or datatype-classes
