@@ -765,6 +765,10 @@ extern int tst_file_alloc (int type, const int values_num, const int comm_size,
                              char file_name[100], const MPI_Comm comm);
 extern int tst_file_check (int type, const int values_num, const int comm_size,
                              char file_name[100], const MPI_Comm comm);
+extern int tst_file_simple_init (struct tst_env * env);
+extern int tst_file_simple_run (struct tst_env * env);
+extern int tst_file_simple_cleanup (struct tst_env * env);
+
 extern int tst_file_read_at_init (struct tst_env * env);
 extern int tst_file_read_at_run (struct tst_env * env);
 extern int tst_file_read_at_cleanup (struct tst_env * env);
