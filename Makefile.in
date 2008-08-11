@@ -65,6 +65,7 @@ OBJ =	coll/tst_coll_allgather.o \
 	dynamic/tst_establish_communication.o \
 	env/tst_env_request_null.o \
 	env/tst_env_status_check.o \
+	io/tst_file_simple.o \
 	io/tst_file_append_mode.o \
 	io/tst_file_asyncio_atomic.o \
 	io/tst_file_io_atomic.o \

@@ -111,7 +111,8 @@ const char * tst_modes[] = {
   "relaxed"
 };
 
-static int tst_tag_ub = 32766;
+/* Upper limit for the tag defined in the MPI-2.1 p.28 and MPI-2.1 8.1.2. */
+static int tst_tag_ub = 32767;
 
 
 /****************************************************************************/

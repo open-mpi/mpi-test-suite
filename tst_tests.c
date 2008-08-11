@@ -764,6 +764,16 @@ static struct tst_test tst_tests[] = {
   /*
    * Here come the io tests
    */
+  {TST_CLASS_IO, "file simple",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_simple_init, &tst_file_simple_run, &tst_file_simple_cleanup },
+
   {TST_CLASS_IO, "read_at",
    TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
    1,
