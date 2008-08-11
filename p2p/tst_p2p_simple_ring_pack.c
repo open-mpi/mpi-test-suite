@@ -17,15 +17,6 @@
 #undef DEBUG
 #define DEBUG(x)
 
-/*
- * XXX
-static char * send_buffer = NULL;
-static char * send_pack_buffer = NULL;
-static char * recv_buffer = NULL;
-static char * recv_pack_buffer = NULL;
-static int position = 0;
- */
-
 int tst_p2p_simple_ring_pack_init (struct tst_env * env)
 {
   int comm_rank;
@@ -107,7 +98,6 @@ int tst_p2p_simple_ring_pack_run (struct tst_env * env)
     {
       MPI_CHECK (MPI_Send (env->send_pack_buffer, env->position, MPI_PACKED, send_to, env->tag, comm));
       MPI_CHECK (MPI_Recv (env->recv_pack_buffer, env->position, MPI_PACKED, recv_from, env->tag, comm, &status));
-
     }
   else
     {

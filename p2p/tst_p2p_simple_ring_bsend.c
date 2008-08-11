@@ -17,15 +17,6 @@
 #undef DEBUG
 #define DEBUG(x)
 
-/*
- * XXX
-static char * send_buffer = NULL;
-static char * recv_buffer = NULL;
-
-static char * mpi_buffer = NULL;
-static int mpi_buffer_size = 0;
- */
-
 int tst_p2p_simple_ring_bsend_init (struct tst_env * env)
 {
   int comm_rank;

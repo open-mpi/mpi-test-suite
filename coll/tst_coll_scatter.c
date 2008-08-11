@@ -13,14 +13,6 @@
 #include "mpi_test_suite.h"
 #include "tst_output.h"
 
-#undef DEBUG
-#define DEBUG(x)
-
-/*
- * XXX
-static char * send_buffer = NULL;
-static char * recv_buffer = NULL;
- */
 
 int tst_coll_scatter_init (struct tst_env * env)
 {

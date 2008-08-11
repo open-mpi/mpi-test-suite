@@ -344,7 +344,6 @@ int tst_type_init (int * num_types)
   }
 #endif
 
-
   {
     /*
      * MPI_TYPE_MIX_ARRAY
@@ -407,6 +406,7 @@ int tst_type_init (int * num_types)
     /*
      * MPI_TYPE_MIX_LB_UB
      */
+
     int block_mix[8];
     MPI_Aint disp_array[8] = {
         -1*(sizeof(char)+sizeof(long)+sizeof(double)), /* Position of LB */
@@ -539,10 +539,7 @@ void tst_type_hexdump (const char * text, const char * data, int num)
            tst_global_rank, NUM_COL-1);
    for (i = 0; i < num; i++)
      {
-       if ((i % 7) == 7)
-         printf ("  0x%.2x", data[i] & 0xFF);
-       else
-         printf (" 0x%.2x", data[i] & 0xFF);
+       printf (" 0x%.2x", data[i] & 0xFF);
        if ((i % NUM_COL) == NUM_COL-1 && i != num-1)
          printf ("\n(Rank:%d) [%d-%d]:\t",
                  tst_global_rank, i+1, MIN(i+NUM_COL, num-1));
@@ -1036,6 +1033,7 @@ int tst_type_setvalue (int type, char * buffer, int type_set, long long direct_v
 #if defined(HAVE_LONG_DOUBLE) && defined (LDBL_MAX)
       TST_TYPE_SET_STRUCT (TST_MPI_LONG_DOUBLE_INT, struct tst_mpi_long_double_int, LDBL);
 #endif
+
       TST_TYPE_SET_CONTI (TST_MPI_INT_CONTI, int, INT);
       TST_TYPE_SET_CONTI (TST_MPI_INT_VECTOR, int, INT);
       TST_TYPE_SET_CONTI (TST_MPI_INT_HVECTOR, int, INT);
@@ -1385,4 +1383,26 @@ int tst_type_deselect (const char * type_string,
     ERROR (EINVAL, buffer);
   }
   return -1;
+}
+
+/*compare two datatype  */
+int tst_type_compare(const MPI_Datatype type1, const MPI_Datatype type2)
+{
+  MPI_Aint lb1, lb2;
+  MPI_Aint true_lb1, true_lb2;
+  MPI_Aint extent1, extent2;
+  MPI_Aint true_extent1,   true_extent2;
+  MPI_Type_get_extent(type1, &lb1, &extent1);
+  MPI_Type_get_extent(type2, &lb2, &extent2);
+  MPI_Type_get_true_extent(type1, &true_lb1, &true_extent1);
+  MPI_Type_get_true_extent(type1, &true_lb2, &true_extent2);
+
+  if((lb1 == lb2) && (extent1 == extent2) &&(true_lb1 == true_lb2) &&(true_extent1 == true_extent2))
+  {
+    return TST_SUCESS;
+  }  else
+  {
+    return TST_ERROR;
+  }
+
 }

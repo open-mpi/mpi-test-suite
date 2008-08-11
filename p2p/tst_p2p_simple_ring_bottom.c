@@ -17,12 +17,6 @@
 #undef DEBUG
 #define DEBUG(x)
 
-/*
- * XXX
-static char * send_buffer = NULL;
-static char * recv_buffer = NULL;
-static MPI_Datatype extra_type_send;
- */
 
 int tst_p2p_simple_ring_bottom_init (struct tst_env * env)
 {
@@ -123,7 +117,6 @@ int tst_p2p_simple_ring_bottom_run (struct tst_env * env)
         }
       tst_test_checkstandardarray (env, env->recv_buffer, recv_from);
     }
-
   return 0;
 }
 

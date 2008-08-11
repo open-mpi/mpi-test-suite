@@ -21,13 +21,6 @@
 #undef DEBUG
 #define DEBUG(x)
 
-/*
- * XXx
-static char * send_buffer = NULL;
-static char * recv_buffer = NULL;
-static int * send_counts = NULL;
-static int * send_displs = NULL;
- */
 
 int tst_coll_scatterv_stride_init (struct tst_env * env)
 {
@@ -118,21 +111,6 @@ int tst_coll_scatterv_stride_run (struct tst_env * env)
                                root, comm));
 
       tst_test_checkstandardarray (env, env->recv_buffer, comm_rank);
-
-      /*
-       * Now, check the send_buffer for the values NOT send, whether they still are the same
-       *
-      if (root == comm_rank)
-        {
-          char * check_buffer;
-          tst_type_allocvalues (env->type, 1);
-          tst_type_setvalue (env->type, check_buffer, TST_TYPE_SET_MIN, 0);
-          for (pos = j = 0; j < comm_size; j++, pos+=(j+1)*type_size)
-           {
-             tst_type_cmpvalue (env->type, 
-           }
-        }
-       */
     }
 
   return 0;

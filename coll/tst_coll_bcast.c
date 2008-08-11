@@ -16,10 +16,6 @@
 #undef DEBUG
 #define DEBUG(x)
 
-/*
- * XXX
-static char * send_buffer = NULL;
- */
 
 int tst_coll_bcast_init (struct tst_env * env)
 {

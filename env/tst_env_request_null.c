@@ -83,7 +83,6 @@ int tst_env_request_null_run (struct tst_env * env)
    * Check MPI_Wait
    */
   tst_test_reset_statuses (1, statuses);
-  requests[0] = MPI_REQUEST_NULL;
   MPI_CHECK (MPI_Wait (&requests[0], &statuses[0]));
 
   MPI_CHECK (MPI_Test_cancelled (&statuses[0], &cancelled[0]));
@@ -142,6 +141,11 @@ int tst_env_request_null_run (struct tst_env * env)
   MPI_CHECK (MPI_Get_count (&statuses[1], MPI_CHAR, &get_count[1]));
   MPI_CHECK (MPI_Get_elements (&statuses[1], MPI_CHAR, &get_elements[1]));
 
+  /*
+   * As said, only the MULTIPLE COMPLETION calls may change the MPI_ERROR field
+   * however, it is not said, that they should change in case of inactive Requests.
+   * So, we check for the two sensible values either MPI_SUCCESS or 4711
+   */
   LOCAL_CHECK ("MPI_Waitany", (statuses[1].MPI_ERROR != MPI_SUCCESS) && statuses[1].MPI_ERROR, !=, 4711);
 
   LOCAL_CHECK ("MPI_Waitany", cancelled[1], !=, 0);
@@ -161,7 +165,6 @@ int tst_env_request_null_run (struct tst_env * env)
   MPI_CHECK (MPI_Waitsome (2, requests, &count, indices, statuses));
 
   LOCAL_CHECK ("MPI_Waitsome", count, !=, MPI_UNDEFINED);
-
 
   /*
    * Check MPI_Test

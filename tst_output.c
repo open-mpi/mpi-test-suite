@@ -260,6 +260,8 @@ int tst_output_printf (tst_output_stream * output,
   }
 #endif
 
+  // XXX CN should be removed 
+  //printf ("Open: %d\nOutput Rank: %d\nglobal rank: %d\nerror Level: %d\nLog Level: %d\n" , output->isopen, output->rank , tst_output_global_rank , error_level ,output->level) ;
   if ((output->isopen == 1) && (output->rank == tst_output_global_rank) && (error_level <= output->level)) {
     va_start(arglist, format);
     switch (output->type) {

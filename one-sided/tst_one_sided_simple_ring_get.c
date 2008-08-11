@@ -16,8 +16,12 @@
 
 #ifdef HAVE_MPI2_ONE_SIDED
 
+/* XXX CN to be removed 
 static char * send_buffer = NULL;
 static char * recv_buffer = NULL;
+*/
+
+/* XXX the following could maybe put into the env */
 static MPI_Aint send_buffer_size = 0;
 static MPI_Win send_win = MPI_WIN_NULL;
 
@@ -33,11 +37,11 @@ int tst_one_sided_simple_ring_get_init (struct tst_env * env)
   comm = tst_comm_getcomm (env->comm);
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
 
-  send_buffer = tst_type_allocvalues (env->type, env->values_num);
-  tst_type_setstandardarray (env->type, env->values_num, send_buffer, comm_rank);
+  env->send_buffer = tst_type_allocvalues (env->type, env->values_num);
+  tst_type_setstandardarray (env->type, env->values_num, env->send_buffer, comm_rank);
   tst_type_getstandardarray_size (env->type, env->values_num, &send_buffer_size);
 
-  recv_buffer = tst_type_allocvalues (env->type, env->values_num);
+  env->recv_buffer = tst_type_allocvalues (env->type, env->values_num);
   type_size = tst_type_gettypesize (env->type);
 
   /*
@@ -45,7 +49,7 @@ int tst_one_sided_simple_ring_get_init (struct tst_env * env)
    */
   tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) Going to create window\n",
                  tst_global_rank);
-  MPI_Win_create (send_buffer, send_buffer_size, type_size,
+  MPI_Win_create (env->send_buffer, send_buffer_size, type_size,
                   MPI_INFO_NULL, comm, &send_win);
 
   return 0;
@@ -78,12 +82,12 @@ int tst_one_sided_simple_ring_get_run (struct tst_env * env)
    * All processes call MPI_Put
    */
   MPI_Win_fence (MPI_MODE_NOPRECEDE, send_win);
-  MPI_Get (recv_buffer, env->values_num, type,
+  MPI_Get (env->recv_buffer, env->values_num, type,
            get_from, 0, env->values_num, type, send_win);
 
   MPI_Win_fence (MPI_MODE_NOSTORE | MPI_MODE_NOSUCCEED, send_win);
 
-  tst_test_checkstandardarray (env, recv_buffer, (comm_rank + comm_size - 1) % comm_size);
+  tst_test_checkstandardarray (env, env->recv_buffer, (comm_rank + comm_size - 1) % comm_size);
 
   return 0;
 }
@@ -96,10 +100,11 @@ int tst_one_sided_simple_ring_get_cleanup (struct tst_env * env)
   comm = tst_comm_getcomm (env->comm);
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
 
-  MPI_Win_free (&send_win);
+  //if (tst_global_rank == 0 && tst_thread_get_num() == 0)
+  	MPI_Win_free (&send_win);
 
-  tst_type_freevalues (env->type, send_buffer, env->values_num);
-  tst_type_freevalues (env->type, recv_buffer, env->values_num);
+  tst_type_freevalues (env->type, env->send_buffer, env->values_num);
+  tst_type_freevalues (env->type, env->recv_buffer, env->values_num);
 
   return 0;
 }

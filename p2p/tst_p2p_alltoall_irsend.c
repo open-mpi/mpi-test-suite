@@ -21,14 +21,6 @@
 #undef DEBUG
 #define DEBUG(x)
 
-/*
- * XXX
-static char * send_buffer = NULL;
-static char ** recv_buffer_array = NULL;
-static MPI_Request * req_buffer = NULL;
-static MPI_Status * status_buffer = NULL;
- */
-
 int tst_p2p_alltoall_irsend_init (struct tst_env * env)
 {
   MPI_Comm comm;

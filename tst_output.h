@@ -40,7 +40,7 @@
 #define DEBUG_LOG_FILENAME    "tst.log"
 #define DEBUG_LOG             (&tst_output)
 
-#define TST_OUTPUT_RANK_MASTER	(-1)
+#define TST_OUTPUT_RANK_MASTER	0
 #define TST_OUTPUT_RANK_SELF	(tst_global_rank)
 
 /****************************************************************************/

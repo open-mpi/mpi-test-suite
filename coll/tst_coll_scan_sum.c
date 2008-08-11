@@ -13,12 +13,6 @@
 #include "mpi_test_suite.h"
 #include "tst_output.h"
 
-/*
- * XXX
-static char * send_buffer = NULL;
-static char * recv_buffer = NULL;
-static char * check_buffer = NULL;
- */
 
 int tst_coll_scan_sum_init (struct tst_env * env)
 {

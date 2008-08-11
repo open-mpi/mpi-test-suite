@@ -17,10 +17,6 @@
 #undef DEBUG
 #define DEBUG(x)
 
-/*
- * XXX
-static char * send_buffer = NULL;
- */
 
 int tst_p2p_many_to_one_probe_anysource_init (struct tst_env * env)
 {
@@ -63,6 +59,9 @@ int tst_p2p_many_to_one_probe_anysource_run (struct tst_env * env)
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
 
   hash_value = tst_hash_value (env);
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, 
+      		"(Rank:%d) comm:%d type:%d test:%d hash_value:%d comm_size:%d comm_rank:%d\n",
+                tst_global_rank, env->comm, env->type, env->test, hash_value, comm_size, comm_rank);
 
   if (comm_rank == 0)
     {

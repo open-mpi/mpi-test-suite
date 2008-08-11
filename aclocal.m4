@@ -255,7 +255,7 @@ AC_DEFUN(AC_CHECK_MPI2_ONE_SIDED,
     AC_TRY_COMPILE([
 #     include <stdio.h>
 #     include "mpi.h"
-],[ 
+],[
       int a;
       MPI_Win win;
 
@@ -301,6 +301,30 @@ AC_DEFUN(AC_CHECK_MPI2_DYNAMIC_PROCESSES,
   fi
 ])
 
+dnl
+dnl Check for MPI2's io 
+dnl
+AC_DEFUN([AC_CHECK_MPI2_IO],[
+  AC_CACHE_CHECK([whether MPI supports MPI2 io], [ac_cv_have_mpi2_io],
+  [
+    AC_LANG_SAVE()
+    ac_ext=c
+    ac_compile=$ac_cv_mpicc_compile
+    ac_link=$ac_cv_mpicc_link
+
+    AC_TRY_LINK([
+#     include <stdio.h>
+#     include "mpi.h"
+],[
+            MPI_File file;
+            MPI_File_open(MPI_COMM_WORLD, "aaa", MPI_MODE_RDWR, MPI_INFO_NULL, &file);
+          ],[ac_cv_have_mpi2_io="yes"], [ac_cv_have_mpi2_io="no"])
+    AC_LANG_RESTORE()
+  ])
+  if test "x$ac_cv_have_mpi2_io" = "xyes" ; then
+    AC_DEFINE([HAVE_MPI2_IO], 1, [Define to support MPI2's Parallel IO])
+  fi
+])
 
 
 dnl
@@ -315,7 +339,7 @@ AC_DEFUN(AC_CHECK_MPI2_THREADS,
     AC_CACHE_CHECK([whether Open MPI supports threads], [ac_cv_have_mpi2_threads], [
         ac_cv_have_mpi2_threads=`$mpi_dir/bin/ompi_info --parseable | grep option:threads: | cut -d\  -f3 |cut -d, -f1`
     ])
-  else 
+  else
     AC_CACHE_CHECK([whether MPI supports thread initialization], [ac_cv_have_mpi2_threads],
     [
         AC_LANG_SAVE()
@@ -325,7 +349,7 @@ AC_DEFUN(AC_CHECK_MPI2_THREADS,
         AC_TRY_COMPILE([
 #     include <stdio.h>
 #     include "mpi.h"
-],[ 
+],[
       int provided;
       int my_argc = 0;
       char * my_argv[] = {NULL};
@@ -405,7 +429,7 @@ dnl   cc -o conftest conftest.o conftest.c
      LIBS="$old_LIBS"
      ac_cv_sizeof_fortran_[]translit($1, [A-Z *], [a-z_p])=`cat conftestval`
 dnl Since we do renaming of the object file and reset the language,
-dnl we need to manually delete the object file and the old conftest.f file. 
+dnl we need to manually delete the object file and the old conftest.f file.
      rm -f conftestval conftestf.$ac_objext conftest.f
     ])
     AC_LANG_RESTORE()
@@ -442,7 +466,7 @@ AC_DEFUN(AC_CHECK_FORTRAN_MPI_TYPES_IN_C,[
   [
     AC_DEFINE([HAVE_MPI_FORTRAN_TYPES_IN_C], 1, [Defined if Fortran MPI_Types are available in C])
     AC_MSG_RESULT(yes)
-  ], 
+  ],
   [
     AC_MSG_RESULT(no)
   ])
@@ -548,7 +572,7 @@ AC_DEFUN([AC_TYPE_SOCKLEN_T], [
 
 
 dnl
-dnl Check POSIX Thread version 
+dnl Check POSIX Thread version
 dnl
 dnl defines ac_cv_pthread_version to "final", "draft4", "draft5" or "unknown"
 dnl  "unknown" implies that the version could not be detected
@@ -643,7 +667,7 @@ dnl  echo "CFLAGS:$CFLAGS   LDFLAGS:$LDFLAGS"
 
   AC_CHECK_PTHREAD_VERSION
 
-  dnl This is necessary for Hitachi, otherwise interface of 
+  dnl This is necessary for Hitachi, otherwise interface of
   dnl early drafts of pthread.h is used.
   if test "x$ac_cv_pthread_version" != "xfinal" ; then
     AC_CACHE_CHECK([whether -D_PTHREADS_D10 is needed], [ac_cv_pthreads_needs_variable],
@@ -735,7 +759,7 @@ dnl
 dnl
 AC_DEFUN([AC_CHECK_PTHREAD_MUTEXATTR_SETKIND],[
   AC_REQUIRE([AC_CHECK_PTHREAD])
-  dnl THIS NEEDS TO BE REWRITTEN TO TAKE ADVANTAGE OF THE 
+  dnl THIS NEEDS TO BE REWRITTEN TO TAKE ADVANTAGE OF THE
   AC_CHECK_LIB(pthread, pthread_mutexattr_setkind_np,
    [AC_DEFINE([HAVE_PTHREAD_MUTEXATTR_SETKIND_NP], 1, [Define if pthreads supports pthread_,itex_attr_setkind_np])],
    [
@@ -781,7 +805,7 @@ dnl
 dnl AC_CHECK_TCP_SOLINGER
 dnl
 dnl Check for the TCP_SOLINGER Option
-dnl 
+dnl
 AC_DEFUN([AC_CHECK_TCP_SOLINGER],
 [
   AC_CACHE_CHECK([for TCP SOLINGER socket option], [ac_cv_tcp_solinger],
@@ -816,7 +840,7 @@ dnl Only known on CrayT3e; must be used before calling connect.
 dnl See http://archive.ncsa.uiuc.edu/People/vwelch/net_perf/tcp_windows.html
 dnl
 dnl Check for the TCP_WINSHIFT socket option.
-dnl 
+dnl
 AC_DEFUN([AC_CHECK_TCP_WINSHIFT],
 [
   AC_CACHE_CHECK([for TCP WINSHIFT socket option], [ac_cv_have_tcp_winshift],
@@ -850,7 +874,7 @@ dnl Mainly known on AIX servers.
 dnl See http://archive.ncsa.uiuc.edu/People/vwelch/net_perf/tcp_windows.html
 dnl
 dnl Check for the TCP_RFC1323 socket option.
-dnl 
+dnl
 AC_DEFUN([AC_CHECK_TCP_RFC1323],
 [
   AC_CACHE_CHECK([for TCP RFC1323 socket option], [ac_cv_have_tcp_rfc1323],
@@ -882,7 +906,7 @@ dnl
 dnl AC_CHECK_TCP_NODELAY ([cmds, if true], [cmds, if false])
 dnl
 dnl Check for the TCP_NODELAY Option
-dnl 
+dnl
 AC_DEFUN([AC_CHECK_TCP_NODELAY],
 [
   AC_CACHE_CHECK([for TCP NODELAY socket option], [ac_cv_have_tcp_nodelay],
@@ -926,7 +950,7 @@ AC_DEFUN([AC_PROG_AR], [
 
 
 dnl
-dnl 
+dnl
 dnl
 AC_DEFUN([AC_CHECK_STDARG], [
   AC_CACHE_CHECK([for availability of stdargs], [ac_cv_stdarg], [
@@ -960,18 +984,18 @@ dnl #include <sys/types.h>
 dnl #include <sys/stat.h>
 dnl #include <assert.h>
 dnl #include <stdio.h>
-dnl 
+dnl
 dnl int main( int, char **argv )
 dnl {
 dnl // check that off_t can hold 2^63 - 1 and perform basic operations...
 dnl #define OFF_T_64 (((off_t) 1 << 62) - 1 + ((off_t) 1 << 62))
 dnl     assert( OFF_T_64 % 2147483647 == 1 );
-dnl 
+dnl
 dnl     // stat breaks on SCO OpenServer
 dnl     struct stat buf;
 dnl     stat( argv[0], &buf );
 dnl     assert( S_ISREG(buf.st_mode) );
-dnl 
+dnl
 dnl     FILE *file = fopen( argv[0], "r" );
 dnl     off_t offset = ftello( file );
 dnl     fseek( file, offset, SEEK_CUR );

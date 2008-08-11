@@ -16,12 +16,6 @@
 #undef DEBUG
 #define DEBUG(x)
 
-/*
- * XXX
-static char * send_buffer = NULL;
-static char * recv_buffer = NULL;
- */
-
 int tst_coll_gather_init (struct tst_env * env)
 {
   int comm_size;

@@ -21,11 +21,9 @@
 #undef DEBUG
 #define DEBUG(x)
 
-//int debug_wait = 1;
 
 int tst_threaded_ring_bsend_init (struct tst_env * env)
 {
-  // while (DebugWait) ;
   int comm_rank;
   MPI_Comm comm;
   int thread_num;
@@ -49,9 +47,9 @@ int tst_threaded_ring_bsend_init (struct tst_env * env)
     /* initialize the thread signal environment */
     tst_thread_signal_init (2);
     /* initialize the global buffer */
-
     /* Buffer size calculates as dataspace + testsuite overhead + mpi overhead */
-    buffer_size = (env->values_num + 8) * tst_type_gettypesize (env->type) + MPI_BSEND_OVERHEAD;
+    buffer_size = tst_thread_num_threads() * ((env->values_num + 8) * tst_type_gettypesize (env->type) + MPI_BSEND_OVERHEAD);
+
 
     if (NULL == tst_thread_global_buffer_init (buffer_size)) {
       ERROR (errno, "Error in allocation of thread global buffer.");
@@ -86,6 +84,8 @@ int tst_threaded_ring_bsend_run (struct tst_env * env)
   thread_tag_to = env->tag + (thread_num + 1) % num_threads;    /* number of next thread */
   thread_tag_from = env->tag + (thread_num);                    /* already knows it's number */
 
+//  printf ("Rank: %d Thread: %d Tag: %d To: %d From: %d\n", tst_global_rank, tst_thread_get_num(), env->tag, thread_tag_to, thread_tag_from);
+
   if (tst_comm_getcommclass (env->comm) & TST_MPI_COMM_SELF)
     {
       comm_size = 1;
@@ -119,9 +119,12 @@ int tst_threaded_ring_bsend_run (struct tst_env * env)
     MPI_CHECK (MPI_Buffer_attach (tst_thread_get_global_buffer (), tst_thread_get_global_buffer_size ()));
 
     MPI_CHECK (MPI_Bsend (env->send_buffer, env->values_num, type, send_to, thread_tag_to, comm));
+    /* XXX CN the following sync cannot be put before the send without messing up mpi - but why? */
     tst_thread_signal_send (0);
 
     MPI_CHECK (MPI_Recv (env->recv_buffer, env->values_num, type, recv_from, thread_tag_from, comm, &status));
+    //printf ("Rank %d, Thread %d completed send-recv.\n", tst_global_rank, thread_num);
+
 
     /*
      * check results of send process
@@ -140,8 +143,22 @@ int tst_threaded_ring_bsend_run (struct tst_env * env)
 
     tst_thread_signal_wait(0);
 
+    MPI_CHECK (MPI_Recv (env->recv_buffer, env->values_num, type, recv_from, thread_tag_from, comm, &status));
+    MPI_CHECK (MPI_Bsend (env->send_buffer, env->values_num, type, send_to, thread_tag_to, comm));
+
     MPI_Buffer_detach (&globbuffaddr, &globbuffsize);
     
+    /*
+     * check results of send process
+     */
+    if (recv_from != MPI_PROC_NULL) {
+      if (tst_mode == TST_MODE_STRICT) {
+        MPI_CHECK(MPI_Get_count(&status, type, &recv_count));
+        if (recv_count != env->values_num)
+          ERROR(EINVAL, "Error in count");
+      }
+      tst_test_checkstandardarray (env, env->recv_buffer, recv_from);
+    }
     /*
      * check if buffer detach returned the correct values
      */

@@ -24,11 +24,6 @@ static int tst_coll_alltoall_checkarray (struct tst_env * env,
                                          char * recv_buffer,
                                          int comm_rank, int comm_size);
 
-/*
- * XXX
-static char * send_buffer = NULL;
-static char * recv_buffer = NULL;
- */
 
 int tst_coll_alltoall_init (struct tst_env * env)
 {

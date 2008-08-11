@@ -18,13 +18,6 @@
 #undef DEBUG
 #define DEBUG(x)
 
-/*
- * XXX
-static char * send_buffer = NULL;
-static char ** recv_buffer_array = NULL;
-static MPI_Request * req_buffer = NULL;
-static MPI_Status * status_buffer = NULL;
-*/
 
 int tst_p2p_alltoall_init (struct tst_env * env)
 {
@@ -35,7 +28,6 @@ int tst_p2p_alltoall_init (struct tst_env * env)
 
   tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
                      tst_global_rank, env->comm, env->type, env->values_num);
-
 
   /*
    * Now, initialize the buffer

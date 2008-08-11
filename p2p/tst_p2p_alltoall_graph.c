@@ -18,13 +18,6 @@
 #undef DEBUG
 #define DEBUG(x)
 
-/*
- * XXX
-static char * send_buffer = NULL;
-static char ** recv_buffer_array = NULL;
-static MPI_Status * status_buffer = NULL;
-static int * neighbors = NULL;
- */
 
 int tst_p2p_alltoall_graph_init (struct tst_env * env)
 {

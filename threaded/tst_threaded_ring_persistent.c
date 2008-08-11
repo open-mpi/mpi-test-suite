@@ -17,14 +17,9 @@
 #undef DEBUG
 #define DEBUG(x)
 
-/*
- * Set this to 1 if you want to use MPI_Startall instead seperate MPI_Starts
- * Does 
- */
+/* Set this to 1 if you want to use MPI_Startall instead seperate MPI_Starts */
 #define STARTALL 0
-/*
- * Set this to 1 if you want to use MPI_Waitall instead seperate MPI_Waits
- */
+/* Set this to 1 if you want to use MPI_Waitall instead seperate MPI_Waits */
 #define WAITALL  1
 
 int tst_threaded_ring_persistent_init (struct tst_env * env)
@@ -83,6 +78,11 @@ int tst_threaded_ring_persistent_init (struct tst_env * env)
   else
     ERROR (EINVAL, "tst_threaded_ring_persistent cannot run with this kind of communicator");
 
+  /*
+   * Calculate the tags to specify the number of the thread to send to and the thread
+   * number to recieve from.
+   * The tags are the sum of the constant env->tag and a threadspecific number.
+   */
   thread_tag_to = env->tag + (thread_num + 1) % num_threads;
   thread_tag_from = env->tag + thread_num;
 
@@ -166,6 +166,8 @@ int tst_threaded_ring_persistent_run (struct tst_env * env)
     {
      tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "source was %d instead %d\n",
                         env->status_buffer[1].MPI_SOURCE, recv_from);
+     printf ("source was %d instead %d (MPI_ANY_SOURCE: %d)\n",
+                        env->status_buffer[1].MPI_SOURCE, recv_from, MPI_ANY_SOURCE);
       ERROR (EINVAL, "Error in status");
     }
   if (recv_from != MPI_PROC_NULL)

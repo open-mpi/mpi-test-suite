@@ -17,10 +17,6 @@
 #undef DEBUG
 #define DEBUG(x)
 
-/*
- * XXX
-static char * send_buffer = NULL;
- */
 
 int tst_p2p_many_to_one_iprobe_anysource_init (struct tst_env * env)
 {

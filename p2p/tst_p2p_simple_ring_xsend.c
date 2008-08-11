@@ -17,14 +17,6 @@
 #undef DEBUG
 #define DEBUG(x)
 
-/*
- * XXX
-static MPI_Datatype extra_type_send;
-static char * send_buffer = NULL;
-static char * check_buffer = NULL;
-static char * recv_buffer = NULL;
- */
-
 int tst_p2p_simple_ring_xsend_init (struct tst_env * env)
 {
   int comm_rank;

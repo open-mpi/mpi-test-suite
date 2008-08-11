@@ -3,7 +3,7 @@
  *
  * Functionality: 
  *      Generates as many copies of the communicator as threads exist
- *      using Mpi_Comm_dup. Then each thread executes MPI_Bcast on its
+ *      using MPI_Comm_dup. Then each thread executes MPI_Bcast on its
  *      copy of the communicator.
  *
  * Author: Christoph Niethammer
@@ -21,6 +21,8 @@
 #undef DEBUG
 #define DEBUG(x)
 
+static MPI_Comm * new_comms;
+
 int tst_threaded_comm_dup_init (struct tst_env * env)
 {
   int comm_rank;
@@ -28,6 +30,7 @@ int tst_threaded_comm_dup_init (struct tst_env * env)
   MPI_Comm comm;
   int num_threads;
   int thread_num;
+  int i;
 
   comm = tst_comm_getcomm (env->comm);
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
@@ -40,8 +43,17 @@ int tst_threaded_comm_dup_init (struct tst_env * env)
                  tst_global_rank, env->comm, env->type, env->values_num);
 
   env->send_buffer = tst_type_allocvalues (env->type, env->values_num);
-  if (thread_num == 0) 
-    tst_thread_signal_init (num_threads);
+  /* 
+   * initialise copies of communicators 
+   */
+  if (thread_num == 0) {
+    if (NULL == (new_comms = malloc (num_threads * sizeof (MPI_Comm)))) 
+      ERROR (errno, "malloc");
+    for (i = 0; i < num_threads; i++) 
+      MPI_CHECK (MPI_Comm_dup (comm, &new_comms[i]));
+    tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) initialised copies of communicators\n",
+	tst_global_rank);
+  }
 
   return 0;
 }
@@ -57,7 +69,6 @@ int tst_threaded_comm_dup_run (struct tst_env * env)
   int thread_num;
 
   int i;
-  MPI_Comm * new_comms;
 
   comm = tst_comm_getcomm (env->comm);
   type = tst_type_getdatatype (env->type);
@@ -67,20 +78,6 @@ int tst_threaded_comm_dup_run (struct tst_env * env)
   num_threads = tst_thread_num_threads();
   thread_num = tst_thread_get_num();
 
-  /* 
-   * initialise copies of communicators starting with thread 0
-   */
-  if (thread_num != 0)
-    tst_thread_signal_wait (thread_num);
-  if (NULL == (new_comms = malloc (num_threads * sizeof (MPI_Comm)))) 
-    ERROR (errno, "malloc");
-  for (i = 0; i < num_threads; i++) {
-    MPI_CHECK (MPI_Comm_dup (comm, &new_comms[i]));
-  }
-  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) initialised copies of communicators\n",
-                              tst_global_rank);
-  /* start initialisation of the next thread */
-  tst_thread_signal_send ((thread_num + 1) % num_threads);
 
   for (i = 0; i < comm_size; i++)
   {
@@ -113,13 +110,12 @@ int tst_threaded_comm_dup_run (struct tst_env * env)
     tst_type_setstandardarray (env->type, env->values_num, env->send_buffer, tag);
     tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) Going to Bcast with root:%d\n",
                               tst_global_rank, root);
+    //printf ("Before Bcast (Rank %d, Thread %d\n", tst_global_rank, thread_num);
     MPI_CHECK (MPI_Bcast (env->send_buffer, env->values_num, type, root, new_comms[thread_num]));
+    //printf ("After Bcast (Rank %d, Thread %d\n", tst_global_rank, thread_num);
     tst_test_checkstandardarray (env, env->send_buffer, tag);
   }
 
-  for (i = 0; i < num_threads; i++) 
-    MPI_CHECK (MPI_Comm_free (&new_comms[i]));
-  free (new_comms);
   return 0;
 }
 
@@ -130,7 +126,7 @@ int tst_threaded_comm_dup_cleanup (struct tst_env * env)
   thread_num = tst_thread_get_num ();
   tst_type_freevalues (env->type, env->send_buffer, env->values_num);
   if (thread_num == 0)
-    tst_thread_signal_cleanup ();
+    free (new_comms);
 
   return 0;
 }

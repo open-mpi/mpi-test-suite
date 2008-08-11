@@ -104,9 +104,9 @@ int tst_coll_scatterv_run (struct tst_env * env)
       tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) Going to Scatterv with root:%d\n",
                      tst_global_rank, root);
 
-      MPI_Scatterv (env->send_buffer, env->send_counts, env->send_displs, type,
+      MPI_CHECK (MPI_Scatterv (env->send_buffer, env->send_counts, env->send_displs, type,
                     env->recv_buffer, comm_rank, type,
-                    root, comm);
+                    root, comm));
 
       tst_test_checkstandardarray (env, env->recv_buffer, comm_rank);
     }

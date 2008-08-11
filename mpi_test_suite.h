@@ -1,14 +1,49 @@
+/*
+                             *******************
+******************************* C HEADER FILE *******************************
+**                           *******************                           **
+**                                                                         **
+** project   : MPI Testsuite                                               **
+** filename  : mpi_test_suite.h                                            **
+** version   : 1                                                           **
+** date      : June 03,2008                                                **
+**                                                                         **
+*****************************************************************************
+**                                                                         **
+** Copyright (c) 2008, HLRS                                                **
+** All rights reserved.                                                    **
+**                                                                         **
+*****************************************************************************
+ 
+VERSION HISTORY:
+----------------
+ 
+Version     : 1
+Date        : June 16, 2008  
+Revised by  : Niethammer, C.
+Description : Merged version.
+ 
+*/
 #ifndef __MPI_TESTSUITE_H__
 #define __MPI_TESTSUITE_H__
+
+/****************************************************************************/
+/**                                                                        **/
+/**                     MODULES USED                                       **/
+/**                                                                        **/
+/****************************************************************************/
 #include "config.h"
+
 #include <stdio.h>
+#include <errno.h>
+#include <unistd.h>
+
 #ifdef HAVE_STDLIB_H
 #  include <stdlib.h>
 #endif
 #ifdef HAVE_STRING_H
 #  include <string.h>
 #endif
-#include <errno.h>
 #ifdef HAVE_SYS_TYPES_H
 #  include <sys/types.h>
 #endif
@@ -16,9 +51,12 @@
 #include "mpi.h"
 #include "tst_output.h"
 
-/*
- * Global macros and defines
- */
+/****************************************************************************/
+/**                                                                        **/
+/**                     DEFINITIONS AND MACROS                             **/
+/**                                                                        **/
+/****************************************************************************/
+ 
 #define DEBUG(x) x
 
 #define WARNING(x) do { \
@@ -68,7 +106,18 @@
 
 #define TST_DESCRIPTION_LEN 48
 
+/*
+ * Global definitions for the io tests
+ */
+#define TST_FILE_NAME "tst_io_test_file"
+#define ATOM_MODE 0
+#define NO_ATOM_MODE 1
+#define TST_SUCESS 0
+#define TST_ERROR -1
 
+/*
+ * Definitions of the internal representation for the mpi communicators
+ */
 #define TST_MPI_COMM_SELF   1 /* Though MPI_COMM_SELF is an intra-communicator, specify it's own class*/
 #define TST_MPI_COMM_NULL   2
 #define TST_MPI_INTRA_COMM  4
@@ -76,12 +125,19 @@
 #define TST_MPI_CART_COMM  16 /* Same for these */
 #define TST_MPI_TOPO_COMM  32 /* Same for these */
 
+/*
+ * Definition of the internal representations for the test classes
+ */
 #define TST_CLASS_UNSPEC      0
 #define TST_CLASS_ENV         1
 #define TST_CLASS_P2P         2
 #define TST_CLASS_COLL        4
 #define TST_CLASS_ONE_SIDED   8
-#define TST_CLASS_THREADED   16
+#define TST_CLASS_DYNAMIC    16
+#define TST_CLASS_IO         32
+#define TST_CLASS_THREADED   64
+
+#define ROOT 0
 
 /*
  * The internal translation of the used datatypes
@@ -254,6 +310,12 @@
 #  error "No 8-Byte integer found"
 #endif
 
+/****************************************************************************/
+/**                                                                        **/
+/**                     TYPEDEFS AND STRUCTURES                            **/
+/**                                                                        **/
+/****************************************************************************/
+ 
 struct tst_env {
   int test;
   int values_num;
@@ -279,12 +341,14 @@ struct tst_env {
   int * recv_from;
   int * send_counts;
   int * send_displs;
+  char * read_buffer;
 };
 
 struct tst_mpi_float_int {
   float a;
   int b;
 };
+
 
 struct tst_mpi_double_int {
   double a;
@@ -335,9 +399,19 @@ struct tst_mpi_type_mix_array {
     double f[TST_MPI_TYPE_MIX_ARRAY_NUM];
 };
 
+/****************************************************************************/
+/**                                                                        **/
+/**                     EXPORTED VARIABLES                                 **/
+/**                                                                        **/
+/****************************************************************************/
+ 
+#ifndef _MPI_TEST_SUITE_C_SRC
+#endif
+
 extern int tst_global_rank;
 extern int tst_global_size;
 extern int tst_verbose;
+extern int tst_atomic;
 
 extern const char * tst_reports[];
 extern tst_report_types tst_report;
@@ -356,9 +430,11 @@ struct tst_thread_env_t; /* Just a forward declaration */
 
 #define TST_TESTS_NUM_FAILED_MAX 1000
 
-/*
- * Global function definitions
- */
+/****************************************************************************/
+/**                                                                        **/
+/**                     EXPORTED FUNCTIONS                                 **/
+/**                                                                        **/
+/****************************************************************************/
 extern int tst_comm_init (int * num_comms);
 extern int tst_comm_cleanup (void);
 extern MPI_Comm tst_comm_getcomm (int comm);
@@ -402,6 +478,10 @@ extern MPI_Datatype tst_type_getdatatype (int type);
 extern tst_uint64 tst_type_gettypeclass (int type);
 extern const char * tst_type_getdescription (int type);
 extern int tst_type_gettypesize (int type);
+/*
+ * XXX Niethammer: removed because it was declared static in tst_types.c and nowhere other used.
+ * extern int tst_type_gettypelb (int type);
+ * */
 extern void tst_type_hexdump (const char * text, const char * data, int num);
 extern int tst_type_setvalue (int type, char * buffer, int mode, long long direct_value);
 extern int tst_type_cmpvalue (int type, const char * buffer1, const char * buffer2);
@@ -416,6 +496,7 @@ extern int tst_type_select (const char * type_string,
 extern int tst_type_deselect (const char * type_string,
                             int * type_list, const int type_list_max, int * type_list_num);
 
+extern int tst_type_compare(const MPI_Datatype type1, const MPI_Datatype type2);
 extern int tst_hash_value (const struct tst_env * env);
 
 extern int tst_thread_init (int max_threads, struct tst_thread_env_t *** thread_env);
@@ -612,6 +693,238 @@ extern int tst_coll_scatterv_stride_init (struct tst_env * env);
 extern int tst_coll_scatterv_stride_run (struct tst_env * env);
 extern int tst_coll_scatterv_stride_cleanup (struct tst_env * env);
 
+extern int tst_coll_allreduce_max_init (struct tst_env * env);
+extern int tst_coll_allreduce_max_run (struct tst_env * env);
+extern int tst_coll_allreduce_max_cleanup (struct tst_env * env);
+
+extern int tst_coll_allreduce_min_init (struct tst_env * env);
+extern int tst_coll_allreduce_min_run (struct tst_env * env);
+extern int tst_coll_allreduce_min_cleanup (struct tst_env * env);
+
+extern int tst_coll_allreduce_sum_init (struct tst_env * env);
+extern int tst_coll_allreduce_sum_run (struct tst_env * env);
+extern int tst_coll_allreduce_sum_cleanup (struct tst_env * env);
+
+extern int tst_coll_allreduce_quadsum_init (struct tst_env * env);
+extern int tst_coll_allreduce_quadsum_run (struct tst_env * env);
+extern int tst_coll_allreduce_quadsum_cleanup (struct tst_env * env);
+
+extern int tst_coll_alltoall_init (struct tst_env * env);
+extern int tst_coll_alltoall_run (struct tst_env * env);
+extern int tst_coll_alltoall_cleanup (struct tst_env * env);
+
+extern int tst_establish_communication_init (struct tst_env * env);
+extern int tst_establish_communication_run (struct tst_env * env);
+extern int tst_establish_communication_cleanup (struct tst_env * env);
+
+extern int tst_comm_spawn_init (struct tst_env * env);
+extern int tst_comm_spawn_run (struct tst_env * env);
+extern int tst_comm_spawn_cleanup (struct tst_env * env);
+
+extern int tst_comm_spawn_multiple_init (struct tst_env * env);
+extern int tst_comm_spawn_multiple_run (struct tst_env * env);
+extern int tst_comm_spawn_multiple_cleanup (struct tst_env * env);
+
+extern int tst_get_with_fence_alltoall_init (struct tst_env * env);
+extern int tst_get_with_fence_alltoall_run (struct tst_env * env);
+extern int tst_get_with_fence_alltoall_cleanup (struct tst_env * env);
+
+extern int tst_put_with_fence_alltoall_init (struct tst_env * env);
+extern int tst_put_with_fence_alltoall_run (struct tst_env * env);
+extern int tst_put_with_fence_alltoall_cleanup (struct tst_env * env);
+
+extern int tst_accumulate_with_fence_sum_init (struct tst_env * env);
+extern int tst_accumulate_with_fence_sum_run (struct tst_env * env);
+extern int tst_accumulate_with_fence_sum_cleanup (struct tst_env * env);
+
+extern int tst_get_with_post_alltoall_init (struct tst_env * env);
+extern int tst_get_with_post_alltoall_run (struct tst_env * env);
+extern int tst_get_with_post_alltoall_cleanup (struct tst_env * env);
+
+extern int tst_put_with_post_alltoall_init (struct tst_env * env);
+extern int tst_put_with_post_alltoall_run (struct tst_env * env);
+extern int tst_put_with_post_alltoall_cleanup (struct tst_env * env);
+
+extern int tst_accumulate_with_post_min_init (struct tst_env * env);
+extern int tst_accumulate_with_post_min_run (struct tst_env * env);
+extern int tst_accumulate_with_post_min_cleanup (struct tst_env * env);
+
+extern int tst_get_with_lock_alltoall_init (struct tst_env * env);
+extern int tst_get_with_lock_alltoall_run (struct tst_env * env);
+extern int tst_get_with_lock_alltoall_cleanup (struct tst_env * env);
+
+extern int tst_put_with_lock_alltoall_init (struct tst_env * env);
+extern int tst_put_with_lock_alltoall_run (struct tst_env * env);
+extern int tst_put_with_lock_alltoall_cleanup (struct tst_env * env);
+
+extern int tst_accumulate_with_lock_max_init (struct tst_env * env);
+extern int tst_accumulate_with_lock_max_run (struct tst_env * env);
+extern int tst_accumulate_with_lock_max_cleanup (struct tst_env * env);
+
+extern int tst_file_alloc (int type, const int values_num, const int comm_size,
+                             char file_name[100], const MPI_Comm comm);
+extern int tst_file_check (int type, const int values_num, const int comm_size,
+                             char file_name[100], const MPI_Comm comm);
+extern int tst_file_read_at_init (struct tst_env * env);
+extern int tst_file_read_at_run (struct tst_env * env);
+extern int tst_file_read_at_cleanup (struct tst_env * env);
+
+extern int tst_file_write_at_init (struct tst_env * env);
+extern int tst_file_write_at_run (struct tst_env * env);
+extern int tst_file_write_at_cleanup (struct tst_env * env);
+
+extern int tst_file_iread_at_init (struct tst_env * env);
+extern int tst_file_iread_at_run (struct tst_env * env);
+extern int tst_file_iread_at_cleanup (struct tst_env * env);
+
+extern int tst_file_iwrite_at_init (struct tst_env * env);
+extern int tst_file_iwrite_at_run (struct tst_env * env);
+extern int tst_file_iwrite_at_cleanup (struct tst_env * env);
+
+extern int tst_file_read_at_all_init (struct tst_env * env);
+extern int tst_file_read_at_all_run (struct tst_env * env);
+extern int tst_file_read_at_all_cleanup (struct tst_env * env);
+
+extern int tst_file_write_at_all_init (struct tst_env * env);
+extern int tst_file_write_at_all_run (struct tst_env * env);
+extern int tst_file_write_at_all_cleanup (struct tst_env * env);
+
+extern int tst_file_read_at_all_begin_init (struct tst_env * env);
+extern int tst_file_read_at_all_begin_run (struct tst_env * env);
+extern int tst_file_read_at_all_begin_cleanup (struct tst_env * env);
+
+extern int tst_file_write_at_all_begin_init (struct tst_env * env);
+extern int tst_file_write_at_all_begin_run (struct tst_env * env);
+extern int tst_file_write_at_all_begin_cleanup (struct tst_env * env);
+
+extern int tst_file_read_init (struct tst_env * env);
+extern int tst_file_read_run (struct tst_env * env);
+extern int tst_file_read_cleanup (struct tst_env * env);
+
+extern int tst_file_write_init (struct tst_env * env);
+extern int tst_file_write_run (struct tst_env * env);
+extern int tst_file_write_cleanup (struct tst_env * env);
+
+extern int tst_file_iread_init (struct tst_env * env);
+extern int tst_file_iread_run (struct tst_env * env);
+extern int tst_file_iread_cleanup (struct tst_env * env);
+
+extern int tst_file_iwrite_init (struct tst_env * env);
+extern int tst_file_iwrite_run (struct tst_env * env);
+extern int tst_file_iwrite_cleanup (struct tst_env * env);
+
+extern int tst_file_read_all_init (struct tst_env * env);
+extern int tst_file_read_all_run (struct tst_env * env);
+extern int tst_file_read_all_cleanup (struct tst_env * env);
+
+extern int tst_file_write_all_init (struct tst_env * env);
+extern int tst_file_write_all_run (struct tst_env * env);
+extern int tst_file_write_all_cleanup (struct tst_env * env);
+
+extern int tst_file_read_all_begin_init (struct tst_env * env);
+extern int tst_file_read_all_begin_run (struct tst_env * env);
+extern int tst_file_read_all_begin_cleanup (struct tst_env * env);
+
+extern int tst_file_write_all_begin_init (struct tst_env * env);
+extern int tst_file_write_all_begin_run (struct tst_env * env);
+extern int tst_file_write_all_begin_cleanup (struct tst_env * env);
+
+extern int tst_file_read_shared_init (struct tst_env * env);
+extern int tst_file_read_shared_run (struct tst_env * env);
+extern int tst_file_read_shared_cleanup (struct tst_env * env);
+
+extern int tst_file_write_shared_init (struct tst_env * env);
+extern int tst_file_write_shared_run (struct tst_env * env);
+extern int tst_file_write_shared_cleanup (struct tst_env * env);
+
+extern int tst_file_iread_shared_init (struct tst_env * env);
+extern int tst_file_iread_shared_run (struct tst_env * env);
+extern int tst_file_iread_shared_cleanup (struct tst_env * env);
+
+extern int tst_file_iwrite_shared_init (struct tst_env * env);
+extern int tst_file_iwrite_shared_run (struct tst_env * env);
+extern int tst_file_iwrite_shared_cleanup (struct tst_env * env);
+
+extern int tst_file_read_ordered_init (struct tst_env * env);
+extern int tst_file_read_ordered_run (struct tst_env * env);
+extern int tst_file_read_ordered_cleanup (struct tst_env * env);
+
+extern int tst_file_write_ordered_init (struct tst_env * env);
+extern int tst_file_write_ordered_run (struct tst_env * env);
+extern int tst_file_write_ordered_cleanup (struct tst_env * env);
+
+extern int tst_file_read_ordered_begin_init (struct tst_env * env);
+extern int tst_file_read_ordered_begin_run (struct tst_env * env);
+extern int tst_file_read_ordered_begin_cleanup (struct tst_env * env);
+
+extern int tst_file_write_ordered_begin_init (struct tst_env * env);
+extern int tst_file_write_ordered_begin_run (struct tst_env * env);
+extern int tst_file_write_ordered_begin_cleanup (struct tst_env * env);
+
+extern int tst_file_read_darray_init (struct tst_env * env);
+extern int tst_file_read_darray_run (struct tst_env * env);
+extern int tst_file_read_darray_cleanup (struct tst_env * env);
+
+extern int tst_file_write_darray_init (struct tst_env * env);
+extern int tst_file_write_darray_run (struct tst_env * env);
+extern int tst_file_write_darray_cleanup (struct tst_env * env);
+
+extern int tst_file_read_subarray_init (struct tst_env * env);
+extern int tst_file_read_subarray_run (struct tst_env * env);
+extern int tst_file_read_subarray_cleanup (struct tst_env * env);
+
+extern int tst_file_write_subarray_init (struct tst_env * env);
+extern int tst_file_write_subarray_run (struct tst_env * env);
+extern int tst_file_write_subarray_cleanup (struct tst_env * env);
+
+extern int tst_file_io_with_hole_init (struct tst_env * env);
+extern int tst_file_io_with_hole_run (struct tst_env * env);
+extern int tst_file_io_with_hole_cleanup (struct tst_env * env);
+
+extern int tst_file_io_with_arrange_init (struct tst_env * env);
+extern int tst_file_io_with_arrange_run (struct tst_env * env);
+extern int tst_file_io_with_arrange_cleanup (struct tst_env * env);
+
+extern int tst_file_read_convert_init (struct tst_env * env);
+extern int tst_file_read_convert_run (struct tst_env * env);
+extern int tst_file_read_convert_cleanup (struct tst_env * env);
+
+extern int tst_file_io_atomic_init (struct tst_env * env);
+extern int tst_file_io_atomic_run (struct tst_env * env);
+extern int tst_file_io_atomic_cleanup (struct tst_env * env);
+
+extern int tst_file_io_sync_init (struct tst_env * env);
+extern int tst_file_io_sync_run (struct tst_env * env);
+extern int tst_file_io_sync_cleanup (struct tst_env * env);
+
+extern int tst_file_asyncio_atomic_init (struct tst_env * env);
+extern int tst_file_asyncio_atomic_run (struct tst_env * env);
+extern int tst_file_asyncio_atomic_cleanup (struct tst_env * env);
+
+extern int tst_file_append_mode_init (struct tst_env * env);
+extern int tst_file_append_mode_run (struct tst_env * env);
+extern int tst_file_append_mode_cleanup (struct tst_env * env);
+
+extern int tst_file_io_commself_init (struct tst_env * env);
+extern int tst_file_io_commself_run (struct tst_env * env);
+extern int tst_file_io_commself_cleanup (struct tst_env * env);
+
+extern int tst_file_sequential_mode_init (struct tst_env * env);
+extern int tst_file_sequential_mode_run (struct tst_env * env);
+extern int tst_file_sequential_mode_cleanup (struct tst_env * env);
+
+extern int tst_file_set_size_init (struct tst_env * env);
+extern int tst_file_set_size_run (struct tst_env * env);
+extern int tst_file_set_size_cleanup (struct tst_env * env);
+
+extern int tst_file_preallocate_init (struct tst_env * env);
+extern int tst_file_preallocate_run (struct tst_env * env);
+extern int tst_file_preallocate_cleanup (struct tst_env * env);
+
+extern int tst_file_io_with_hole2_init (struct tst_env * env);
+extern int tst_file_io_with_hole2_run (struct tst_env * env);
+extern int tst_file_io_with_hole2_cleanup (struct tst_env * env);
+
 extern int tst_coll_allreduce_init (struct tst_env * env);
 extern int tst_coll_allreduce_run (struct tst_env * env);
 extern int tst_coll_allreduce_cleanup (struct tst_env * env);
@@ -619,10 +932,6 @@ extern int tst_coll_allreduce_cleanup (struct tst_env * env);
 extern int tst_coll_allreduce_in_place_init (struct tst_env * env);
 extern int tst_coll_allreduce_in_place_run (struct tst_env * env);
 extern int tst_coll_allreduce_in_place_cleanup (struct tst_env * env);
-
-extern int tst_coll_alltoall_init (struct tst_env * env);
-extern int tst_coll_alltoall_run (struct tst_env * env);
-extern int tst_coll_alltoall_cleanup (struct tst_env * env);
 
 #ifdef HAVE_MPI2_ONE_SIDED
 extern int tst_one_sided_simple_ring_get_init (struct tst_env * env);

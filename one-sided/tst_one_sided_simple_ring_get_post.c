@@ -16,8 +16,7 @@
 
 #ifdef HAVE_MPI2_ONE_SIDED
 
-static char * send_buffer = NULL;
-static char * recv_buffer = NULL;
+/* XXX CN could maybe placed into env */
 static MPI_Aint send_buffer_size = 0;
 static MPI_Win send_win = MPI_WIN_NULL;
 static MPI_Group group_from = MPI_GROUP_NULL;
@@ -40,10 +39,10 @@ int tst_one_sided_simple_ring_get_post_init (struct tst_env * env)
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
   MPI_CHECK (MPI_Comm_size (comm, &comm_size));
 
-  send_buffer = tst_type_allocvalues (env->type, env->values_num);
-  tst_type_setstandardarray (env->type, env->values_num, send_buffer, comm_rank);
+  env->send_buffer = tst_type_allocvalues (env->type, env->values_num);
+  tst_type_setstandardarray (env->type, env->values_num, env->send_buffer, comm_rank);
 
-  recv_buffer = tst_type_allocvalues (env->type, env->values_num);
+  env->recv_buffer = tst_type_allocvalues (env->type, env->values_num);
   type_size = tst_type_gettypesize (env->type);
   tst_type_getstandardarray_size (env->type, env->values_num, &send_buffer_size);
 
@@ -70,7 +69,7 @@ int tst_one_sided_simple_ring_get_post_init (struct tst_env * env)
   /*
    * Create a window for the send and the receive buffer
    */
-  MPI_CHECK (MPI_Win_create (send_buffer, send_buffer_size, type_size,
+  MPI_CHECK (MPI_Win_create (env->send_buffer, send_buffer_size, type_size,
                              MPI_INFO_NULL, comm, &send_win));
 
   MPI_CHECK (MPI_Group_free (&comm_group));
@@ -109,7 +108,7 @@ int tst_one_sided_simple_ring_get_post_run (struct tst_env * env)
      * We first GET, then post our window
      */
     MPI_CHECK (MPI_Win_start (group_from, 0, send_win));
-    MPI_CHECK (MPI_Get (recv_buffer, env->values_num, type,
+    MPI_CHECK (MPI_Get (env->recv_buffer, env->values_num, type,
                         get_from, 0, env->values_num, type, send_win));
     MPI_CHECK (MPI_Win_complete (send_win));
 
@@ -123,12 +122,12 @@ int tst_one_sided_simple_ring_get_post_run (struct tst_env * env)
     MPI_CHECK (MPI_Win_wait (send_win));
 
     MPI_CHECK (MPI_Win_start (group_from, 0, send_win));
-    MPI_CHECK (MPI_Get (recv_buffer, env->values_num, type,
+    MPI_CHECK (MPI_Get (env->recv_buffer, env->values_num, type,
                         get_from, 0, env->values_num, type, send_win));
     MPI_CHECK (MPI_Win_complete (send_win));
   }
 
-  tst_test_checkstandardarray (env, recv_buffer, get_from);
+  tst_test_checkstandardarray (env, env->recv_buffer, get_from);
 
   return 0;
 }
@@ -143,8 +142,8 @@ int tst_one_sided_simple_ring_get_post_cleanup (struct tst_env * env)
 
   MPI_CHECK (MPI_Win_free (&send_win));
 
-  tst_type_freevalues (env->type, send_buffer, env->values_num);
-  tst_type_freevalues (env->type, recv_buffer, env->values_num);
+  tst_type_freevalues (env->type, env->send_buffer, env->values_num);
+  tst_type_freevalues (env->type, env->recv_buffer, env->values_num);
 
   return 0;
 }

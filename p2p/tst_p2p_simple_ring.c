@@ -112,7 +112,6 @@ int tst_p2p_simple_ring_run (struct tst_env * env)
         }
       tst_test_checkstandardarray (env, env->recv_buffer, recv_from);
     }
-
   return 0;
 }
 

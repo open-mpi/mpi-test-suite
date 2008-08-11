@@ -99,14 +99,19 @@ int tst_threaded_ring_run (struct tst_env * env)
   tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) comm_rank:%d comm_size:%d send_to:%d recv_from:%d\n",
                  tst_global_rank, comm_rank, comm_size, send_to, recv_from);
 
-  if (0 == thread_num) {
-    MPI_CHECK (MPI_Send (env->send_buffer, env->values_num, type, send_to, thread_tag_to, comm));
-    MPI_CHECK (MPI_Recv (env->recv_buffer, env->values_num, type, recv_from, thread_tag_from, comm, &status));
-  } else {
-    MPI_CHECK (MPI_Recv (env->recv_buffer, env->values_num, type, recv_from, thread_tag_from, comm, &status));
-    MPI_CHECK (MPI_Send (env->send_buffer, env->values_num, type, send_to, thread_tag_to, comm));
+  if (num_threads > 1) {
+    if (0 == thread_num) {
+      MPI_CHECK (MPI_Send (env->send_buffer, env->values_num, type, send_to, thread_tag_to, comm));
+      MPI_CHECK (MPI_Recv (env->recv_buffer, env->values_num, type, recv_from, thread_tag_from, comm, &status));
+    } else {
+      MPI_CHECK (MPI_Recv (env->recv_buffer, env->values_num, type, recv_from, thread_tag_from, comm, &status));
+      MPI_CHECK (MPI_Send (env->send_buffer, env->values_num, type, send_to, thread_tag_to, comm));
+    }
   }
-
+  else {
+    ERROR (EINVAL, "tst_threaded_ring makes no sense when run with less than 2 threads.\n");
+    return 0;
+  }
   if (status.MPI_SOURCE != recv_from ||
       (recv_from != MPI_PROC_NULL && status.MPI_TAG != thread_tag_from) ||
       (recv_from == MPI_PROC_NULL && status.MPI_TAG != MPI_ANY_TAG))

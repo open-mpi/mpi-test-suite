@@ -1,36 +1,101 @@
-#include "config.h"
+/*
+                             *******************
+******************************* C SOURCE FILE *******************************
+**                           *******************                           **
+**                                                                         **
+** project   : MPI Testsuite                                               **
+** filename  : mpi_test_suite.c                                            **
+** version   : 1                                                           **
+** date      : June 03,2008                                                **
+**                                                                         **
+*****************************************************************************
+**                                                                         **
+** Copyright (c) 2008, HLRS                                                **
+** All rights reserved.                                                    **
+**                                                                         **
+*****************************************************************************
+ 
+VERSION HISTORY:
+----------------
+ 
+Version     : 1
+Date        : June 03, 2008  
+Revised by  : Niethammer, C.
+Description : Merged version.
+ 
+*/
+ 
+#define _MPI_TEST_SUITE_C_SRC
+ 
+/****************************************************************************/
+/**                                                                        **/
+/**                     MODULES USED                                       **/
+/**                                                                        **/
+/****************************************************************************/
 #include <stdio.h>
+
+#include "config.h"
+
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif
+
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
 #endif
+
 #include "mpi.h"
 #include "mpi_test_suite.h"
-
 #include "tst_output.h"
 
+
+/****************************************************************************/
+/**                                                                        **/
+/**                     DEFINITIONS AND MACROS                             **/
+/**                                                                        **/
+/****************************************************************************/
 #undef DEBUG
 #define DEBUG(x)
 
 #define NUM_VALUES 1000
 
-/*
- * Global variables
- */
+/****************************************************************************/
+/**                                                                        **/
+/**                     TYPEDEFS AND STRUCTURES                            **/
+/**                                                                        **/
+/****************************************************************************/
+
+/****************************************************************************/
+/**                                                                        **/
+/**                     PROTOTYPES OF LOCAL FUNCTIONS                      **/
+/**                                                                        **/
+/****************************************************************************/
+
+
+/****************************************************************************/
+/**                                                                        **/
+/**                     GLOBAL VARIABLES                                   **/
+/**                                                                        **/
+/****************************************************************************/
 int tst_global_rank = 0;
 int tst_global_size = 0;
 int tst_verbose = 0;
+int tst_atomic = 0;
 tst_report_types tst_report = TST_REPORT_SUMMARY;
 tst_mode_types tst_mode = TST_MODE_RELAXED;
-
 /*
  * Declaration of output_relevant data
  * Do not remove or change the following without modifying tst_output.h!
  */
 tst_output_stream tst_output;
 
+
+/****************************************************************************/
+/**                                                                        **/
+/**                     EXPORTED VARIABLES                                 **/
+/**                                                                        **/
+/****************************************************************************/
+ 
 /*
  * This should correspond to the enum tst_report
  */
@@ -49,6 +114,12 @@ const char * tst_modes[] = {
 static int tst_tag_ub = 32766;
 
 
+/****************************************************************************/
+/**                                                                        **/
+/**                     LOCAL FUNCTIONS                                    **/
+/**                                                                        **/
+/****************************************************************************/
+ 
 /*
  * Global functions, which don't fit into another category.
  */
@@ -114,7 +185,10 @@ int main (int argc, char * argv[])
   int k;
   int l;
   int flag;
+  /* XXX CN The following declaratin hides the global variable wih the same name. 
+   * Is this wanted? */
   int tst_global_size;
+
   int num_comms;
   int num_types;
   int num_tests;
@@ -133,11 +207,6 @@ int main (int argc, char * argv[])
   int tst_thread_level_provided;
 
 
-  /*
-   * Unfortunately, this has to be called before the actual MPI_Init
-   */
-  tst_profiling_init (10000, 50);
-
 #ifdef HAVE_MPI2_THREADS
   struct tst_thread_env_t ** tst_thread_env;
 
@@ -145,28 +214,58 @@ int main (int argc, char * argv[])
 
   if (tst_thread_level_provided != MPI_THREAD_MULTIPLE)
     { 
+      /* XXX LOG CN Should be modified for logfie support. Maybe end Program? 
+       */
       printf ("Thread level support:%d unequal MPI_THREAD_MULTIPLE\n", tst_thread_level_provided);
       tst_thread_level_provided = MPI_THREAD_SINGLE;
     }
 
 #else
   tst_thread_level_provided = 0;   /* MPI_THREAD_SINGLE would not work, if not MPI-2, as not defined */
+  /* XXX CN Maybe num_threads could be declared here?
+   */
   num_threads = 0;                 /* silence the compiler */
   MPI_Init (&argc, &argv);
 #endif
+
   MPI_Comm_rank (MPI_COMM_WORLD, &tst_global_rank);
   MPI_Comm_size (MPI_COMM_WORLD, &tst_global_size);
 
-  if (NULL != getenv ("MPI_TEST_SUITE_SLEEP"))
+  /* XXX INC stdlib.h CN Needs stdlib.h so we should check in copnfigure script
+   */
+  {
+    char * start_delay_str;
+    /* XXX DOC CN Need to add MPI_TEST_SUITE_START_DELAY environment variabel to documentation
+     */
+    start_delay_str = getenv ("MPI_TEST_SUITE_START_DELAY");
+  if (NULL != start_delay_str)
     {
       char hostname[256];
-      gethostname (hostname, 256);
-      hostname[255] = '\0';
-      printf ("(Rank:%d) host:%s pid:%ld Going to sleep\n",
-              tst_global_rank, hostname, (long int)getpid());
-      sleep (30);
+      int delay;
+      /* XXX INC stdlib.h CN Needs stdlib.h so we should check in copnfigure script
+      */
+      delay = atoi(start_delay_str);
+      if (delay < 0) {
+	printf ("Warning: Delay time sould be greater than zero! Using no delay now.\n");
+      }
+      else {
+	/* XXX INC unistd.h CN Needs unistd.h so we should check in copnfigure script
+	*/
+	gethostname (hostname, 256);
+	hostname[255] = '\0';
+	/* XXX LOG CN Should be modified for logfie support. 
+	*/
+	printf ("(Rank:%d) host:%s pid:%ld Going to sleep for %d seconds\n",
+	    tst_global_rank, hostname, (long int)getpid(), delay);
+	/* XXX INC unistd.h CN Needs unistd.h so we should check in copnfigure script
+	*/
+	sleep (delay);
+      }
     }
+  }
 
+  /* XXX CN Maybe redesign the logfile implementation?
+   */
   tst_output_init ( DEBUG_LOG, TST_OUTPUT_RANK_MASTER, TST_REPORT_MAX, TST_OUTPUT_TYPE_LOGFILE, "tst.log");
 
 #ifndef HAVE_MPI2_THREADS
@@ -183,14 +282,28 @@ int main (int argc, char * argv[])
 
   tst_tag_ub = *val;
 
+  /* XXX CN This check sould be implemented better ... 
+   */
+  /* 
+   * Checking if the upper boundary for tag values is at least 32767 as required by MPI-1.1.
+   * (see MPI-1.1 section 7.1.1.1 Tag values)
+   */
+  if (tst_tag_ub < 32767)
+  {
+    printf ("Error: MPI_TAG_UB was below 32767.\n");
+  }
+
   tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "(Rank:%d) MPI_TAG_UB:%d\n",
                     tst_global_rank, tst_tag_ub);
 
+  /* XXX CN Maybe rename these functions to tst_get_num_comms/types/tests ?
+   */
   tst_comm_init (&num_comms);
   tst_type_init (&num_types);
-
+  /* XXX CN What was the following function good for ? */
   /* tst_reduce_fn_init (&num_reduce_fns); */
   tst_test_init (&num_tests);
+
 
   /*
    * Schedule every test to be run.
@@ -243,7 +356,7 @@ int main (int argc, char * argv[])
       };
       */
 
-      c = getopt (argc, argv, "t:c:d:n:r:x:j:lvh");
+      c = getopt (argc, argv, "t:c:d:n:r:x:j:lvah");
 
       if (c == -1)
         break;
@@ -444,6 +557,9 @@ int main (int argc, char * argv[])
         case 'v':
           tst_verbose = 1;
           break;
+        case 'a':
+          tst_atomic = 1;
+          break;
         case '?':
         case 'h':
           if (!tst_global_rank)
@@ -468,7 +584,6 @@ int main (int argc, char * argv[])
   tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "num_tests:%d num_comms:%d num_types:%d\n",
                      num_tests, num_comms, num_types);
 
-#if 1
   for (i = 0; i < num_tests; i++)
     for (j = 0; j < num_comms; j++)
       for (k = 0; k < num_types; k++)
@@ -522,71 +637,6 @@ int main (int argc, char * argv[])
               MPI_Barrier (MPI_COMM_WORLD);
           }
 
-#else
-
-            /*
-            * Before setting the mandatory first fields needed, reset.
-            * Every test should clean up after itself.
-            */
-
-            if (num_tests != 1 || num_comms != 2)
-              printf ("(Rank:%d) Error expected num_tests:%d to be 1 and num_comms:%d to be 2\n",
-                      tst_global_rank, num_tests, num_comms);
-
-
-            i = 0; /* test */
-            j = 0; /* communicator */
-            k = 0; /* type */
-            l = 0; /* values_num */
-            memset (&tst_env, 0, sizeof (tst_env));
-            tst_env.test        = tst_test_array[i];
-            tst_env.values_num  = tst_value_array[l];
-            tst_env.type        = tst_type_array[k];
-            tst_env.tag         = (i+j+k+l) % tst_tag_ub;
-            tst_env.comm        = tst_comm_array[j];
-
-            /*
-             * Assign the first test
-             */
-            tst_thread_assign_reset (tst_thread_env);
-            tst_thread_assign_one (&tst_env, 0, tst_thread_env);
-
-            if (tst_global_rank == 0 && tst_report > TST_REPORT_SUMMARY)
-              printf ("%s tests %s (%d/%d), comm %s (%d/%d), type %s (%d/%d) AND ",
-                      tst_test_getclass (tst_test_array[i]),
-                      tst_test_getdescription (tst_test_array[i]), tst_test_array[i+1], num_tests,
-                      tst_comm_getdescription (tst_comm_array[j]), tst_comm_array[j+1], num_comms,
-                      tst_type_getdescription (tst_type_array[k]), tst_type_array[k+1], num_types);
-
-            i = 0; /* test */
-            j = 1; /* communicator */
-            k = 0; /* type */
-            l = 0; /* values_num */
-            memset (&tst_env, 0, sizeof (tst_env));
-            tst_env.test        = tst_test_array[i];
-            tst_env.values_num  = tst_value_array[l];
-            tst_env.type        = tst_type_array[k];
-            tst_env.tag         = (i+j+k+l) % tst_tag_ub;
-            tst_env.comm        = tst_comm_array[j];
-
-            /*
-             * Assign the second test
-             */
-            tst_thread_assign_one (&tst_env, 1, tst_thread_env);
-
-            if (tst_global_rank == 0 && tst_report > TST_REPORT_SUMMARY)
-              printf (" on Thread 2: %s tests %s (%d/%d), comm %s (%d/%d), type %s (%d/%d)\n",
-                      tst_test_getclass (tst_test_array[i]),
-                      tst_test_getdescription (tst_test_array[i]), tst_test_array[i+1], num_tests,
-                      tst_comm_getdescription (tst_comm_array[j]), tst_comm_array[j+1], num_comms,
-                      tst_type_getdescription (tst_type_array[k]), tst_type_array[k+1], num_types);
-
-#ifdef HAVE_MPI2_THREADS
-            tst_thread_execute_init (&tst_env);
-            tst_thread_execute_run (&tst_env);
-            tst_thread_execute_cleanup (&tst_env);
-#endif /* HAVE_MPI2_THREADS */
-#endif /* 1 */
   if (tst_global_rank == 0)
     tst_test_print_failed ();
 
@@ -612,3 +662,9 @@ int main (int argc, char * argv[])
 
   return 0;
 }
+
+/****************************************************************************/
+/**                                                                        **/
+/**                               EOF                                      **/
+/**                                                                        **/
+/****************************************************************************/

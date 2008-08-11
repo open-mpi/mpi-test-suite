@@ -23,16 +23,6 @@
 #undef DEBUG
 #define DEBUG(x)
 
-/*
- * XXX
-static char ** send_buffer_array = NULL;
-static char ** recv_buffer_array = NULL;
-static MPI_Request * req_buffer = NULL;
-static MPI_Status * status_buffer = NULL;
-static char * mpi_buffer = NULL;
-static int mpi_buffer_size = 0;
- */
-
 int tst_p2p_alltoall_probe_anysource_init (struct tst_env * env)
 {
   int comm_rank;

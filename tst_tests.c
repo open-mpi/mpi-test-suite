@@ -1,3 +1,37 @@
+/*
+                             *******************
+******************************* C SOURCE FILE *******************************
+**                           *******************                           **
+**                                                                         **
+** project   : MPI Testsuitei                                              **
+** filename  : tst_tests.c                                                 **
+** version   : 1                                                           **
+** date      : June 03, 2008                                               **
+**                                                                         **
+*****************************************************************************
+**                                                                         **
+** Copyright (c) 2008, HLRS                                                **
+** All rights reserved.                                                    **
+**                                                                         **
+*****************************************************************************
+ 
+VERSION HISTORY:
+----------------
+ 
+Version     : 1
+Date        : June 03, 2008  
+Revised by  : Niethammer, C.
+Description : Merged version.
+ 
+*/
+ 
+#define _TST_TESTS_C_SRC
+ 
+/****************************************************************************/
+/**                                                                        **/
+/**                     MODULES USED                                       **/
+/**                                                                        **/
+/****************************************************************************/
 #include "config.h"
 #ifdef HAVE_STRING_H
 #  include <string.h>
@@ -22,7 +56,11 @@
 #define TST_TESTS_NUM (sizeof (tst_tests) / sizeof (tst_tests[0]) -1)
 #define TST_TEST_CLASS_NUM (sizeof (tst_test_class_strings) / sizeof (tst_test_class_strings[0]))
 
-/* This string has to be kept up-to-date with XXX in mpi_test_suite.h */
+/* 
+ * This string has to be kept up-to-date with the internal representations for 
+ * the test classes in mpi_test_suite.h 
+ * Also edit the internal check in tst_get_class below!
+ */
 static const char * const tst_test_class_strings [] =
   {
     "Unspecified",
@@ -30,6 +68,8 @@ static const char * const tst_test_class_strings [] =
     "P2P",
     "Collective",
     "One-sided",
+    "dynamic",
+    "IO",
     "Threaded"
   };
 
@@ -50,6 +90,7 @@ static struct tst_test tst_tests[] = {
   /*
    * Here come the ENV-tests
    */
+/* 0 */
   {TST_CLASS_ENV, "Status",
    TST_MPI_COMM_SELF,
    1,
@@ -58,6 +99,7 @@ static struct tst_test tst_tests[] = {
    TST_SYNC,
    &tst_env_status_check_init, &tst_env_status_check_run, &tst_env_status_check_cleanup},
 
+/* 1 */
   {TST_CLASS_ENV, "Request_Null",
    TST_MPI_COMM_SELF,
    1,
@@ -69,6 +111,7 @@ static struct tst_test tst_tests[] = {
   /*
    * Here come the P2P-tests
    */
+/* 2 */
   {TST_CLASS_P2P, "Ring",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
    1,
@@ -77,6 +120,7 @@ static struct tst_test tst_tests[] = {
    TST_SYNC,
    &tst_p2p_simple_ring_init, &tst_p2p_simple_ring_run, &tst_p2p_simple_ring_cleanup},
 
+/* 3 */
   {TST_CLASS_P2P, "Ring Send Bottom",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
    1,
@@ -85,6 +129,7 @@ static struct tst_test tst_tests[] = {
    TST_SYNC,
    &tst_p2p_simple_ring_bottom_init, &tst_p2p_simple_ring_bottom_run, &tst_p2p_simple_ring_bottom_cleanup},
 
+/* 4 */
   {TST_CLASS_P2P, "Ring Send Pack",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
    1,
@@ -93,6 +138,7 @@ static struct tst_test tst_tests[] = {
    TST_SYNC,
    &tst_p2p_simple_ring_pack_init, &tst_p2p_simple_ring_pack_run, &tst_p2p_simple_ring_pack_cleanup},
 
+/* 5 */
   {TST_CLASS_P2P, "Ring Isend",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
    1,
@@ -101,6 +147,7 @@ static struct tst_test tst_tests[] = {
    TST_SYNC,
    &tst_p2p_simple_ring_isend_init, &tst_p2p_simple_ring_isend_run, &tst_p2p_simple_ring_isend_cleanup},
 
+/* 6 */
   {TST_CLASS_P2P, "Ring Ibsend",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
    1,
@@ -109,6 +156,7 @@ static struct tst_test tst_tests[] = {
    TST_SYNC,
    &tst_p2p_simple_ring_ibsend_init, &tst_p2p_simple_ring_ibsend_run, &tst_p2p_simple_ring_ibsend_cleanup},
 
+/* 7 */
   {TST_CLASS_P2P, "Ring Irsend",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
    1,
@@ -117,6 +165,7 @@ static struct tst_test tst_tests[] = {
    TST_SYNC,
    &tst_p2p_simple_ring_irsend_init, &tst_p2p_simple_ring_irsend_run, &tst_p2p_simple_ring_irsend_cleanup},
 
+/* 8 */
   {TST_CLASS_P2P, "Ring Issend",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
    1,
@@ -125,6 +174,7 @@ static struct tst_test tst_tests[] = {
    TST_SYNC,
    &tst_p2p_simple_ring_issend_init, &tst_p2p_simple_ring_issend_run, &tst_p2p_simple_ring_issend_cleanup},
 
+/* 9 */
   {TST_CLASS_P2P, "Ring Bsend",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
    1,
@@ -133,6 +183,7 @@ static struct tst_test tst_tests[] = {
    TST_NONE,
    &tst_p2p_simple_ring_bsend_init, &tst_p2p_simple_ring_bsend_run, &tst_p2p_simple_ring_bsend_cleanup},
 
+/* 10 */
   {TST_CLASS_P2P, "Ring Rsend",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
    1,
@@ -142,6 +193,7 @@ static struct tst_test tst_tests[] = {
    &tst_p2p_simple_ring_rsend_init, &tst_p2p_simple_ring_rsend_run, &tst_p2p_simple_ring_rsend_cleanup},
 
 
+/* 11 */
   {TST_CLASS_P2P, "Ring Ssend",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
    1,
@@ -150,6 +202,7 @@ static struct tst_test tst_tests[] = {
    TST_NONE,
    &tst_p2p_simple_ring_ssend_init, &tst_p2p_simple_ring_ssend_run, &tst_p2p_simple_ring_ssend_cleanup},
 
+/* 12 */
   {TST_CLASS_P2P, "Ring Sendrecv",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
    1,
@@ -158,6 +211,7 @@ static struct tst_test tst_tests[] = {
    TST_NONE,
    &tst_p2p_simple_ring_sendrecv_init, &tst_p2p_simple_ring_sendrecv_run, &tst_p2p_simple_ring_sendrecv_cleanup},
 
+/* 13 */
   {TST_CLASS_P2P, "Ring same value",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
    1,
@@ -166,6 +220,7 @@ static struct tst_test tst_tests[] = {
    TST_SYNC,
    &tst_p2p_simple_ring_xsend_init, &tst_p2p_simple_ring_xsend_run, &tst_p2p_simple_ring_xsend_cleanup},
 
+/* 14 */
   {TST_CLASS_P2P, "Direct Partner Intercomm",
    TST_MPI_INTER_COMM,
    1,
@@ -176,6 +231,7 @@ static struct tst_test tst_tests[] = {
    &tst_p2p_direct_partner_intercomm_run,
    &tst_p2p_direct_partner_intercomm_cleanup},
 
+/* 15 */
   {TST_CLASS_P2P, "Many-to-one",
    TST_MPI_INTRA_COMM | TST_MPI_INTER_COMM,
    1,
@@ -184,6 +240,7 @@ static struct tst_test tst_tests[] = {
    TST_NONE,            /* No synchronization needed, done with hash */
    &tst_p2p_many_to_one_init, &tst_p2p_many_to_one_run, &tst_p2p_many_to_one_cleanup},
 
+/* 16 */
   {TST_CLASS_P2P, "Many-to-one with MPI_Probe (MPI_ANY_SOURCE)",
    TST_MPI_INTRA_COMM | TST_MPI_INTER_COMM,
    1,
@@ -192,6 +249,7 @@ static struct tst_test tst_tests[] = {
    TST_SYNC,            /* No synchronization needed, done with hash */
    &tst_p2p_many_to_one_probe_anysource_init, &tst_p2p_many_to_one_probe_anysource_run, &tst_p2p_many_to_one_probe_anysource_cleanup},
 
+/* 17 */
   {TST_CLASS_P2P, "Many-to-one with MPI_Iprobe (MPI_ANY_SOURCE)",
    TST_MPI_INTRA_COMM | TST_MPI_INTER_COMM,
    1,
@@ -399,6 +457,40 @@ static struct tst_test tst_tests[] = {
    &tst_coll_scatterv_stride_init, &tst_coll_scatterv_stride_run, &tst_coll_scatterv_stride_cleanup},
 
   /*
+   * The Allreduce call is not valid for MPI_MIN/MPI_MAX and
+   * the datatypes MPI_Char, MPI_UNSIGNED_CHAR and MPI_Byte and
+   * the struct datatypes
+   *
+   * XXX should allow TST_MPI_INTER_COMM depending on whether the underlying
+   * MPI supports it!
+   */
+  {TST_CLASS_COLL, "Allreduce_MAX",
+   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   (TST_MPI_STANDARD_C_TYPES | TST_MPI_STANDARD_FORTRAN_INT_TYPES | TST_MPI_STANDARD_FORTRAN_FLOAT_TYPES) &
+#ifdef HAVE_MPI2
+   /*
+    * MPI2 allows the usage of the MPI_SIGNED_CHAR and the MPI_UNSIGNED_CHAR types in reductions!
+    * However, MPI_CHAR with no actual knowledge on the signed-ness is of course still not allowed.
+    */
+   /*
+    * MPIch2 does not allow MPI_SIGNED_CHAR on collective Ops.
+    */
+#  ifdef HAVE_MPI_MPICH2
+   ~(TST_MPI_CHAR | TST_MPI_SIGNED_CHAR | TST_MPI_BYTE),
+#  else
+   ~(TST_MPI_CHAR | TST_MPI_BYTE),
+#  endif
+#else
+   ~(TST_MPI_CHAR | TST_MPI_SIGNED_CHAR | TST_MPI_UNSIGNED_CHAR | TST_MPI_BYTE),
+#endif
+
+   TST_MODE_RELAXED,
+   TST_NONE,            /* No synchronization needed */
+   &tst_coll_allreduce_max_init, &tst_coll_allreduce_max_run, &tst_coll_allreduce_max_cleanup},
+
+
+  /*
    * XXX should allow TST_MPI_INTER_COMM depending on whether the underlying
    * MPI supports it!
    */
@@ -426,6 +518,32 @@ static struct tst_test tst_tests[] = {
    TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
    &tst_coll_reduce_min_init, &tst_coll_reduce_min_run, &tst_coll_reduce_min_cleanup},
+
+
+ {TST_CLASS_COLL, "Allreduce_MIN",
+   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   (TST_MPI_STANDARD_C_TYPES | TST_MPI_STANDARD_FORTRAN_INT_TYPES | TST_MPI_STANDARD_FORTRAN_FLOAT_TYPES) &
+#ifdef HAVE_MPI2
+   /*
+    * MPI2 allows the usage of the MPI_SIGNED_CHAR and the MPI_UNSIGNED_CHAR types in reductions!
+    * However, MPI_CHAR with no actual knowledge on the signed-ness is of course still not allowed.
+    */
+   /*
+    * MPIch2 does not allow MPI_SIGNED_CHAR on collective Ops.
+    */
+#  ifdef HAVE_MPI_MPICH2
+   ~(TST_MPI_CHAR | TST_MPI_SIGNED_CHAR | TST_MPI_BYTE),
+#  else
+   ~(TST_MPI_CHAR | TST_MPI_BYTE),
+#  endif
+#else
+   ~(TST_MPI_CHAR | TST_MPI_SIGNED_CHAR | TST_MPI_UNSIGNED_CHAR | TST_MPI_BYTE),
+#endif
+
+   TST_MODE_RELAXED,
+   TST_NONE,            /* No synchronization needed */
+   &tst_coll_allreduce_min_init, &tst_coll_allreduce_min_run, &tst_coll_allreduce_min_cleanup},
 
   /*
    * XXX should allow TST_MPI_INTER_COMM depending on whether the underlying
@@ -456,6 +574,24 @@ static struct tst_test tst_tests[] = {
    TST_NONE,            /* No synchronization needed */
    &tst_coll_reduce_max_init, &tst_coll_reduce_max_run, &tst_coll_reduce_max_cleanup},
 
+
+ {TST_CLASS_COLL, "Allreduce_SUM",
+   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   (TST_MPI_STANDARD_C_FLOAT_TYPES) &
+   ~(TST_MPI_FLOAT | TST_MPI_LONG_DOUBLE),
+   TST_MODE_RELAXED,
+   TST_NONE,            /* No synchronization needed */
+   &tst_coll_allreduce_sum_init, &tst_coll_allreduce_sum_run, &tst_coll_allreduce_sum_cleanup},
+
+{TST_CLASS_COLL, "Allreduce_Quadsum",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   TST_MPI_LONG,
+   TST_MODE_RELAXED,
+   TST_NONE,            /* No synchronization needed */
+   &tst_coll_allreduce_quadsum_init, &tst_coll_allreduce_quadsum_run, &tst_coll_allreduce_quadsum_cleanup},
+
   /*
    * XXX should allow TST_MPI_INTER_COMM depending on whether the underlying
    * MPI supports it!
@@ -485,10 +621,121 @@ static struct tst_test tst_tests[] = {
    TST_NONE,            /* No synchronization needed */
    &tst_coll_reduce_in_place_min_init, &tst_coll_reduce_in_place_min_run, &tst_coll_reduce_in_place_min_cleanup},
 
+
   /*
    * XXX should allow TST_MPI_INTER_COMM depending on whether the underlying
    * MPI supports it!
    */
+  {TST_CLASS_COLL, "Alltoall",
+   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
+   TST_NONE,            /* No synchronization needed */
+   &tst_coll_alltoall_init, &tst_coll_alltoall_run, &tst_coll_alltoall_cleanup},
+
+  {TST_CLASS_DYNAMIC, "establish_communication_alltoall",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
+   /* XXX CN Need sync or not? */
+   TST_SYNC,            /* No synchronization needed */ 
+   &tst_establish_communication_init, &tst_establish_communication_run, &tst_establish_communication_cleanup },
+
+
+  {TST_CLASS_DYNAMIC, "comm_spawn",
+   TST_MPI_INTRA_COMM, /* | TST_MPI_INTER_COMM, */
+   1,
+   TST_MPI_INT,
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* No synchronization needed */
+   &tst_comm_spawn_init, &tst_comm_spawn_run, &tst_comm_spawn_cleanup },
+
+  {TST_CLASS_DYNAMIC, "comm_spawn_multiple",
+   TST_MPI_INTRA_COMM, /* | TST_MPI_INTER_COMM, */
+   1,
+   TST_MPI_INT,
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* No synchronization needed */
+   &tst_comm_spawn_multiple_init, &tst_comm_spawn_multiple_run, &tst_comm_spawn_multiple_cleanup },
+
+
+  {TST_CLASS_ONE_SIDED, "get_fence",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* No synchronization needed */
+   &tst_get_with_fence_alltoall_init, &tst_get_with_fence_alltoall_run, &tst_get_with_fence_alltoall_cleanup },
+
+  {TST_CLASS_ONE_SIDED, "put_fence",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* No synchronization needed */
+   &tst_put_with_fence_alltoall_init, &tst_put_with_fence_alltoall_run, &tst_put_with_fence_alltoall_cleanup },
+
+  {TST_CLASS_ONE_SIDED, "accumulate_fence",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   (TST_MPI_STANDARD_C_FLOAT_TYPES) &
+   ~(TST_MPI_FLOAT | TST_MPI_LONG_DOUBLE),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* No synchronization needed */
+   &tst_accumulate_with_fence_sum_init, &tst_accumulate_with_fence_sum_run, &tst_accumulate_with_fence_sum_cleanup },
+
+  {TST_CLASS_ONE_SIDED, "get_post",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* No synchronization needed */
+   &tst_get_with_post_alltoall_init, &tst_get_with_post_alltoall_run, &tst_get_with_post_alltoall_cleanup },
+
+  {TST_CLASS_ONE_SIDED, "put_post",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* No synchronization needed */
+   &tst_put_with_post_alltoall_init, &tst_put_with_post_alltoall_run, &tst_put_with_post_alltoall_cleanup },
+
+ {TST_CLASS_ONE_SIDED, "accumulate_post_min",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   (TST_MPI_STANDARD_C_TYPES | TST_MPI_STANDARD_FORTRAN_INT_TYPES | TST_MPI_STANDARD_FORTRAN_FLOAT_TYPES) &
+   ~(TST_MPI_CHAR | TST_MPI_UNSIGNED_CHAR | TST_MPI_BYTE),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* No synchronization needed */
+   &tst_accumulate_with_post_min_init, &tst_accumulate_with_post_min_run, &tst_accumulate_with_post_min_cleanup },
+
+  {TST_CLASS_ONE_SIDED, "get_lock",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* No synchronization needed */
+   &tst_get_with_lock_alltoall_init, &tst_get_with_lock_alltoall_run, &tst_get_with_lock_alltoall_cleanup },
+
+  {TST_CLASS_ONE_SIDED, "put_lock",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* No synchronization needed */
+   &tst_put_with_lock_alltoall_init, &tst_put_with_lock_alltoall_run, &tst_put_with_lock_alltoall_cleanup },
+
+  {TST_CLASS_ONE_SIDED, "accumulate_lock",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   (TST_MPI_STANDARD_C_TYPES | TST_MPI_STANDARD_FORTRAN_INT_TYPES | TST_MPI_STANDARD_FORTRAN_FLOAT_TYPES) &
+   ~(TST_MPI_CHAR | TST_MPI_UNSIGNED_CHAR | TST_MPI_BYTE),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* No synchronization needed */
+   &tst_accumulate_with_lock_max_init, &tst_accumulate_with_lock_max_run, &tst_accumulate_with_lock_max_cleanup },
+
   {TST_CLASS_COLL, "Reduce Max with MPI_IN_PLACE",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
    1,
@@ -515,13 +762,406 @@ static struct tst_test tst_tests[] = {
    &tst_coll_reduce_in_place_max_init, &tst_coll_reduce_in_place_max_run, &tst_coll_reduce_in_place_max_cleanup},
 
   /*
-   * The Allreduce call is not valid for MPI_MIN/MPI_MAX and
-   * the datatypes MPI_Char, MPI_UNSIGNED_CHAR and MPI_Byte and
-   * the struct datatypes
-   *
-   * XXX should allow TST_MPI_INTER_COMM depending on whether the underlying
-   * MPI supports it!
+   * Here come the io tests
    */
+  {TST_CLASS_IO, "read_at",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_read_at_init, &tst_file_read_at_run, &tst_file_read_at_cleanup },
+
+  {TST_CLASS_IO, "write_at",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_write_at_init, &tst_file_write_at_run, &tst_file_write_at_cleanup },
+
+  {TST_CLASS_IO, "read_at_all",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_read_at_all_init, &tst_file_read_at_all_run, &tst_file_read_at_all_cleanup },
+
+ {TST_CLASS_IO, "write_at_all",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_write_at_all_init, &tst_file_write_at_all_run, &tst_file_write_at_all_cleanup },
+
+ {TST_CLASS_IO, "iread_at",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_iread_at_init, &tst_file_iread_at_run, &tst_file_iread_at_cleanup },
+
+  {TST_CLASS_IO, "iwrite_at",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_iwrite_at_init, &tst_file_iwrite_at_run, &tst_file_iwrite_at_cleanup },
+
+  {TST_CLASS_IO, "read_at_all_begin",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_read_at_all_begin_init, &tst_file_read_at_all_begin_run, &tst_file_read_at_all_begin_cleanup },
+
+{TST_CLASS_IO, "write_at_all_begin",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_write_at_all_begin_init, &tst_file_write_at_all_begin_run, &tst_file_write_at_all_begin_cleanup },
+
+ {TST_CLASS_IO, "read",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_read_init, &tst_file_read_run, &tst_file_read_cleanup },
+
+  {TST_CLASS_IO, "write",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_write_init, &tst_file_write_run, &tst_file_write_cleanup },
+
+{TST_CLASS_IO, "read_all",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_read_all_init, &tst_file_read_all_run, &tst_file_read_all_cleanup },
+
+  {TST_CLASS_IO, "write_all",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_write_all_init, &tst_file_write_all_run, &tst_file_write_all_cleanup },
+
+{TST_CLASS_IO, "iread",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_iread_init, &tst_file_iread_run, &tst_file_iread_cleanup },
+
+  {TST_CLASS_IO, "iwrite",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_iwrite_init, &tst_file_iwrite_run, &tst_file_iwrite_cleanup },
+
+{TST_CLASS_IO, "read_all_begin",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_read_all_begin_init, &tst_file_read_all_begin_run, &tst_file_read_all_begin_cleanup },
+
+  {TST_CLASS_IO, "write_all_begin",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_write_all_begin_init, &tst_file_write_all_begin_run, &tst_file_write_all_begin_cleanup },
+
+{TST_CLASS_IO, "read_shared",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_read_shared_init, &tst_file_read_shared_run, &tst_file_read_shared_cleanup },
+
+  {TST_CLASS_IO, "write_shared",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_write_shared_init, &tst_file_write_shared_run, &tst_file_write_shared_cleanup },
+
+{TST_CLASS_IO, "read_ordered",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_read_ordered_init, &tst_file_read_ordered_run, &tst_file_read_ordered_cleanup },
+
+  {TST_CLASS_IO, "write_ordered",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_write_ordered_init, &tst_file_write_ordered_run, &tst_file_write_ordered_cleanup },
+
+{TST_CLASS_IO, "iread_shared",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_iread_shared_init, &tst_file_iread_shared_run, &tst_file_iread_shared_cleanup },
+
+  {TST_CLASS_IO, "iwrite_shared",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+    /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_iwrite_shared_init, &tst_file_iwrite_shared_run, &tst_file_iwrite_shared_cleanup },
+
+{TST_CLASS_IO, "read_ordered_begin",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_read_ordered_begin_init, &tst_file_read_ordered_begin_run, &tst_file_read_ordered_begin_cleanup },
+
+  {TST_CLASS_IO, "write_ordered_begin",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_write_ordered_begin_init, &tst_file_write_ordered_begin_run, &tst_file_write_ordered_begin_cleanup },
+
+  {TST_CLASS_IO, "read_darray",
+  TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+  1,
+     /*TST_MPI_STANDARD_C_TYPES,*/
+  TST_MPI_ALL_C_TYPES&
+  ~(TST_MPI_TYPE_MIX_LB_UB),
+  TST_MODE_RELAXED,
+  TST_SYNC,            /* Needs sync due to bcast of filename in init */
+  &tst_file_read_darray_init, &tst_file_read_darray_run, &tst_file_read_darray_cleanup },
+
+ {TST_CLASS_IO, "write_darray",
+  TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+  1,
+     /*TST_MPI_STANDARD_C_TYPES,*/
+  TST_MPI_ALL_C_TYPES&
+  ~(TST_MPI_TYPE_MIX_LB_UB),
+  TST_MODE_RELAXED,
+  TST_SYNC,            /* Needs sync due to bcast of filename in init */
+  &tst_file_write_darray_init, &tst_file_write_darray_run, &tst_file_write_darray_cleanup },
+
+  {TST_CLASS_IO, "read_subarray",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_read_subarray_init, &tst_file_read_subarray_run, &tst_file_read_subarray_cleanup },
+
+  {TST_CLASS_IO, "write_subarray",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_write_subarray_init, &tst_file_write_subarray_run, &tst_file_write_subarray_cleanup },
+
+  {TST_CLASS_IO, "io_with_hole",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_io_with_hole_init, &tst_file_io_with_hole_run, &tst_file_io_with_hole_cleanup },
+
+  {TST_CLASS_IO, "io_with_arrange",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_io_with_arrange_init, &tst_file_io_with_arrange_run, &tst_file_io_with_arrange_cleanup },
+
+  {TST_CLASS_IO, "read_convert",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_read_convert_init, &tst_file_read_convert_run, &tst_file_read_convert_cleanup },
+
+  {TST_CLASS_IO, "io_atomic",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_io_atomic_init, &tst_file_io_atomic_run, &tst_file_io_atomic_cleanup },
+
+  {TST_CLASS_IO, "io_sync",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_io_sync_init, &tst_file_io_sync_run, &tst_file_io_sync_cleanup },
+
+  {TST_CLASS_IO, "asyncio_atomic",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_asyncio_atomic_init, &tst_file_asyncio_atomic_run, &tst_file_asyncio_atomic_cleanup },
+
+  {TST_CLASS_IO, "append_mode",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_append_mode_init, &tst_file_append_mode_run, &tst_file_append_mode_cleanup },
+
+  {TST_CLASS_IO, "io_commself",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_io_commself_init, &tst_file_io_commself_run, &tst_file_io_commself_cleanup },
+
+  {TST_CLASS_IO, "sequential_mode",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_sequential_mode_init, &tst_file_sequential_mode_run, &tst_file_sequential_mode_cleanup },
+
+  {TST_CLASS_IO, "set_size",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_set_size_init, &tst_file_set_size_run, &tst_file_set_size_cleanup },
+
+ {TST_CLASS_IO, "preallocate",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_preallocate_init, &tst_file_preallocate_run, &tst_file_preallocate_cleanup },
+
+ {TST_CLASS_IO, "io_with_hole2",
+   TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
+   1,
+   /*TST_MPI_STANDARD_C_TYPES,*/
+   TST_MPI_ALL_C_TYPES&
+   ~(TST_MPI_TYPE_MIX_LB_UB),
+   TST_MODE_RELAXED,
+   TST_SYNC,            /* Needs sync due to bcast of filename in init */
+   &tst_file_io_with_hole2_init, &tst_file_io_with_hole2_run, &tst_file_io_with_hole2_cleanup },
+
   {TST_CLASS_COLL, "Allreduce MIN/MAX",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
    1,
@@ -542,7 +1182,6 @@ static struct tst_test tst_tests[] = {
 #else
    ~(TST_MPI_CHAR | TST_MPI_SIGNED_CHAR | TST_MPI_UNSIGNED_CHAR | TST_MPI_BYTE),
 #endif
-
    TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
    &tst_coll_allreduce_init, &tst_coll_allreduce_run, &tst_coll_allreduce_cleanup},
@@ -572,7 +1211,6 @@ static struct tst_test tst_tests[] = {
 #else
    ~(TST_MPI_CHAR | TST_MPI_SIGNED_CHAR | TST_MPI_UNSIGNED_CHAR | TST_MPI_BYTE),
 #endif
-
    TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
    &tst_coll_allreduce_in_place_init, &tst_coll_allreduce_in_place_run, &tst_coll_allreduce_in_place_cleanup},
@@ -652,7 +1290,7 @@ static struct tst_test tst_tests[] = {
    &tst_threaded_ring_bsend_init, &tst_threaded_ring_bsend_run, &tst_threaded_ring_bsend_cleanup},
 
   {TST_CLASS_THREADED, "Threaded ring persistent",
-   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   TST_MPI_COMM_SELF |  TST_MPI_INTRA_COMM,
    1,
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
@@ -702,14 +1340,18 @@ const char * tst_test_getclass (int i)
 {
   CHECK_ARG (i, NULL);
 
+  /* XXX CN Can this internal check be implemented another way, because it can easily be forgetten when adding a new calss ...
+   */
   INTERNAL_CHECK
     (
      if (tst_tests[i].class != TST_CLASS_ENV &&
          tst_tests[i].class != TST_CLASS_P2P &&
-         tst_tests[i].class != TST_CLASS_THREADED &&
          tst_tests[i].class != TST_CLASS_COLL &&
-         tst_tests[i].class != TST_CLASS_ONE_SIDED)
-     ERROR (EINVAL, "Class of test is unknown");
+         tst_tests[i].class != TST_CLASS_ONE_SIDED &&
+         tst_tests[i].class != TST_CLASS_DYNAMIC &&
+         tst_tests[i].class != TST_CLASS_IO &&
+         tst_tests[i].class != TST_CLASS_THREADED)
+       ERROR (EINVAL, "Class of test is unknown");
      );
   /*
   printf ("tst_test_getclass: i:%d class:%d ffs():%d string:%s\n",
@@ -809,6 +1451,8 @@ int tst_test_check_sync (struct tst_env * env)
 void tst_test_list (void)
 {
   int i;
+
+  printf ("Num Tests : %d\n", TST_TESTS_NUM);
   for (i = 0; i < TST_TESTS_NUM; i++)
     printf ("%s test:%d %s\n",
             tst_test_getclass (i), i, tst_tests[i].description);
