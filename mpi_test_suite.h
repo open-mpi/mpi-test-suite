@@ -645,6 +645,10 @@ extern int tst_p2p_many_to_one_isend_cancel_init (struct tst_env * env);
 extern int tst_p2p_many_to_one_isend_cancel_run (struct tst_env * env);
 extern int tst_p2p_many_to_one_isend_cancel_cleanup (struct tst_env * env);
 
+extern int tst_p2p_simple_ring_persistent_init (struct tst_env * env);
+extern int tst_p2p_simple_ring_persistent_run (struct tst_env * env);
+extern int tst_p2p_simple_ring_persistent_cleanup (struct tst_env * env);
+
 extern int tst_coll_bcast_init (struct tst_env * env);
 extern int tst_coll_bcast_run (struct tst_env * env);
 extern int tst_coll_bcast_cleanup (struct tst_env * env);

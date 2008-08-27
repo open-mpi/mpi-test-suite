@@ -24,25 +24,27 @@
 
 int tst_threaded_ring_persistent_init (struct tst_env * env)
 {
-  int comm_rank;
   MPI_Comm comm;
   MPI_Datatype type;
+  int comm_size;
+  int comm_rank;
   int thread_num;
   int num_threads;
-  int comm_size;
   int send_to;
   int recv_from;
   int thread_tag_to;
   int thread_tag_from;
   
   tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
-                 tst_global_rank, env->comm, env->type, env->values_num);
+                     tst_global_rank, env->comm, env->type, env->values_num);
 
   env->send_buffer = tst_type_allocvalues (env->type, env->values_num);
   env->recv_buffer = tst_type_allocvalues (env->type, env->values_num);
+
   comm = tst_comm_getcomm (env->comm);
-  MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
   type = tst_type_getdatatype (env->type);
+  MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
+  MPI_CHECK (MPI_Comm_size (comm, &comm_size));
   thread_num  = tst_thread_get_num ();
   num_threads = tst_thread_num_threads ();
   
@@ -51,14 +53,13 @@ int tst_threaded_ring_persistent_init (struct tst_env * env)
    */
   tst_type_setstandardarray (env->type, env->values_num, env->send_buffer, comm_rank);
 
-  if ( (env->req_buffer = (MPI_Request *) malloc (sizeof (MPI_Request) * 2)) == NULL )
+  if ( NULL == (env->req_buffer = (MPI_Request *) malloc (2 * sizeof (MPI_Request))))
     ERROR (errno, "malloc");
-  if ( (env->status_buffer = malloc (sizeof (MPI_Status) * 2)) == NULL )
+  if ( NULL == (env->status_buffer = (MPI_Status *) malloc (2 * sizeof (MPI_Status))))
     ERROR (errno, "malloc");
-
 
   /*
-   * Now initialise communication
+   * Now initialize communication
    */
   if (tst_comm_getcommclass (env->comm) & TST_MPI_COMM_SELF)
     {
@@ -69,9 +70,6 @@ int tst_threaded_ring_persistent_init (struct tst_env * env)
     }
   else if (tst_comm_getcommclass (env->comm) & TST_MPI_INTRA_COMM)
     {
-      MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
-      MPI_CHECK (MPI_Comm_size (comm, &comm_size));
-
       send_to = (comm_rank + 1) % comm_size;
       recv_from = (comm_rank + comm_size - 1) % comm_size;
     }
@@ -109,7 +107,6 @@ int tst_threaded_ring_persistent_run (struct tst_env * env)
 
   int thread_tag;
 
-  
   comm = tst_comm_getcomm (env->comm);
   type = tst_type_getdatatype (env->type);
   thread_tag = env->tag + tst_thread_get_num ();
@@ -131,12 +128,12 @@ int tst_threaded_ring_persistent_run (struct tst_env * env)
     }
   else
     ERROR (EINVAL, "tst_threaded_ring_persistent cannot run with this kind of communicator");
-  /*
-   * Now start communikation and wait until communication ends
-   */
 
   tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "Before start:\tRequest 0: %p\tRequest 1: %p, MPI_REQUEST_NULL: %p\n", env->req_buffer[0], env->req_buffer[1], MPI_REQUEST_NULL);
 
+  /*
+   * Now start communication and wait until communication ends
+   */
 #if STARTALL
   MPI_CHECK (MPI_Startall (2, env->req_buffer));
 #else
@@ -164,10 +161,10 @@ int tst_threaded_ring_persistent_run (struct tst_env * env)
 
   if (env->status_buffer[1].MPI_SOURCE != recv_from)
     {
-     tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "source was %d instead %d\n",
-                        env->status_buffer[1].MPI_SOURCE, recv_from);
-     printf ("source was %d instead %d (MPI_ANY_SOURCE: %d)\n",
-                        env->status_buffer[1].MPI_SOURCE, recv_from, MPI_ANY_SOURCE);
+      tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "source was %d instead %d\n",
+                         env->status_buffer[1].MPI_SOURCE, recv_from);
+      printf ("source was %d instead %d (MPI_ANY_SOURCE: %d)\n",
+              env->status_buffer[1].MPI_SOURCE, recv_from, MPI_ANY_SOURCE);
       ERROR (EINVAL, "Error in status");
     }
   if (recv_from != MPI_PROC_NULL)
@@ -198,11 +195,6 @@ int tst_threaded_ring_persistent_run (struct tst_env * env)
 
 int tst_threaded_ring_persistent_cleanup (struct tst_env * env)
 {
-  int i;
-  
-  for (i = 0; i < 2; i++)
-    MPI_CHECK (MPI_Request_free (&(env->req_buffer[i])));
-  
   tst_type_freevalues (env->type, env->send_buffer, env->values_num);
   tst_type_freevalues (env->type, env->recv_buffer, env->values_num);
 

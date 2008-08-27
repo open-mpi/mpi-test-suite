@@ -220,6 +220,16 @@ static struct tst_test tst_tests[] = {
    TST_SYNC,
    &tst_p2p_simple_ring_xsend_init, &tst_p2p_simple_ring_xsend_run, &tst_p2p_simple_ring_xsend_cleanup},
 
+/* 13 XXX */
+  {TST_CLASS_P2P, "Ring Persistent",
+   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   1,
+   TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
+   TST_SYNC,
+   &tst_p2p_simple_ring_persistent_init, &tst_p2p_simple_ring_persistent_run, &tst_p2p_simple_ring_persistent_cleanup},
+
+
 /* 14 */
   {TST_CLASS_P2P, "Direct Partner Intercomm",
    TST_MPI_INTER_COMM,
