@@ -145,6 +145,7 @@ OBJ =	coll/tst_coll_allgather.o \
 	p2p/tst_p2p_simple_ring_shift.o \
 	p2p/tst_p2p_simple_ring_ssend.o \
 	p2p/tst_p2p_simple_ring_xsend.o \
+	p2p/tst_p2p_simple_ring_persistent.o\
 	threaded/tst_threaded_comm_dup.o \
 	threaded/tst_threaded_ring.o \
 	threaded/tst_threaded_ring_bsend.o \
