@@ -1,37 +1,4 @@
-/*
-                             *******************
-******************************* C SOURCE FILE *******************************
-**                           *******************                           **
-**                                                                         **
-** project   : MPI Testsuitei                                              **
-** filename  : tst_tests.c                                                 **
-** version   : 1                                                           **
-** date      : June 03, 2008                                               **
-**                                                                         **
-*****************************************************************************
-**                                                                         **
-** Copyright (c) 2008, HLRS                                                **
-** All rights reserved.                                                    **
-**                                                                         **
-*****************************************************************************
- 
-VERSION HISTORY:
-----------------
- 
-Version     : 1
-Date        : June 03, 2008  
-Revised by  : Niethammer, C.
-Description : Merged version.
- 
-*/
- 
-#define _TST_TESTS_C_SRC
- 
-/****************************************************************************/
-/**                                                                        **/
-/**                     MODULES USED                                       **/
-/**                                                                        **/
-/****************************************************************************/
+
 #include "config.h"
 #ifdef HAVE_STRING_H
 #  include <string.h>
@@ -56,9 +23,9 @@ Description : Merged version.
 #define TST_TESTS_NUM (sizeof (tst_tests) / sizeof (tst_tests[0]) -1)
 #define TST_TEST_CLASS_NUM (sizeof (tst_test_class_strings) / sizeof (tst_test_class_strings[0]))
 
-/* 
- * This string has to be kept up-to-date with the internal representations for 
- * the test classes in mpi_test_suite.h 
+/*
+ * This string has to be kept up-to-date with the internal representations for
+ * the test classes in mpi_test_suite.h
  * Also edit the internal check in tst_get_class below!
  */
 static const char * const tst_test_class_strings [] =
@@ -68,7 +35,7 @@ static const char * const tst_test_class_strings [] =
     "P2P",
     "Collective",
     "One-sided",
-    "dynamic",
+    "Dynamic",
     "IO",
     "Threaded"
   };
@@ -650,7 +617,7 @@ static struct tst_test tst_tests[] = {
    TST_MPI_ALL_C_TYPES,
    TST_MODE_RELAXED,
    /* XXX CN Need sync or not? */
-   TST_SYNC,            /* No synchronization needed */ 
+   TST_SYNC,            /* No synchronization needed */
    &tst_establish_communication_init, &tst_establish_communication_run, &tst_establish_communication_cleanup },
 
 
@@ -670,7 +637,7 @@ static struct tst_test tst_tests[] = {
    TST_SYNC,            /* No synchronization needed */
    &tst_comm_spawn_multiple_init, &tst_comm_spawn_multiple_run, &tst_comm_spawn_multiple_cleanup },
 
-
+#ifdef HAVE_MPI2_ONE_SIDED
   {TST_CLASS_ONE_SIDED, "get_fence",
    TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
    1,
@@ -712,7 +679,7 @@ static struct tst_test tst_tests[] = {
    TST_SYNC,            /* No synchronization needed */
    &tst_put_with_post_alltoall_init, &tst_put_with_post_alltoall_run, &tst_put_with_post_alltoall_cleanup },
 
- {TST_CLASS_ONE_SIDED, "accumulate_post_min",
+  {TST_CLASS_ONE_SIDED, "accumulate_post_min",
    TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
    1,
    (TST_MPI_STANDARD_C_TYPES | TST_MPI_STANDARD_FORTRAN_INT_TYPES | TST_MPI_STANDARD_FORTRAN_FLOAT_TYPES) &
@@ -745,6 +712,7 @@ static struct tst_test tst_tests[] = {
    TST_MODE_RELAXED,
    TST_SYNC,            /* No synchronization needed */
    &tst_accumulate_with_lock_max_init, &tst_accumulate_with_lock_max_run, &tst_accumulate_with_lock_max_cleanup },
+#endif /* HAVE_MPI2_ONE_SIDED */
 
   {TST_CLASS_COLL, "Reduce Max with MPI_IN_PLACE",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
@@ -1257,7 +1225,7 @@ static struct tst_test tst_tests[] = {
    &tst_one_sided_simple_ring_get_init, &tst_one_sided_simple_ring_get_run, &tst_one_sided_simple_ring_get_cleanup},
 
    /*
-    * MPICH2-1.0.3 hangs in this test on the 
+    * MPICH2-1.0.3 hangs in this test on the
     *  Odd/Even split MPI_COMM_WORLD (ONLY on *this* one, all other intra-comms work)
     * OpenMPI-v9189 also has problems
     */
@@ -1689,8 +1657,10 @@ int tst_test_recordfailure (const struct tst_env * env)
 int tst_test_print_failed (void)
 {
   int i;
-  printf ("Number of failed tests:%d summary of failed tests:\n",
-          tst_tests_failed_num);
+  printf ("Number of failed tests:%d%s",
+          tst_tests_failed_num,
+          (tst_tests_failed_num > 0) ? " summary of failed tests:\n" : "\n");
+
   for (i = 0; i < tst_tests_failed_num; i++)
     {
       const int test = tst_tests_failed[i].test;
@@ -1714,4 +1684,14 @@ int tst_test_checkstandardarray (const struct tst_env * env, char * buffer, int 
   if (0 != ret)
     tst_test_recordfailure (env);
   return ret;
+}
+
+int tst_test_is_empty_status (MPI_Status * status)
+{
+    if (status->MPI_SOURCE == MPI_ANY_SOURCE &&
+        status->MPI_TAG == MPI_ANY_TAG &&
+        status->MPI_ERROR == MPI_SUCCESS)
+      return 1;
+    else
+      return 0;
 }

@@ -976,7 +976,7 @@ int tst_type_setvalue (int type, char * buffer, int type_set, long long direct_v
   memset (buffer, DEFAULT_INIT_BYTE, tst_type_gettypesize (type));
 
   /* Workaround a small problem. In many tests we want to set
-   * a float or a double or a long double to 0. This is all 
+   * a float or a double or a long double to 0. This is all
    * well and good, but if I was to set it by value,
    * then we go and check if (for floats) 0 < FLT_MIN.
    * This is true, since FLT_MIN is usually something like
@@ -987,7 +987,7 @@ int tst_type_setvalue (int type, char * buffer, int type_set, long long direct_v
    * or TST_MPI_LONG_DOUBLE to 0, use TST_TYPE_SET_ZERO
    * instead of TST_TYPE_SET_VALUE */
   if(TST_TYPE_SET_VALUE == type_set && 0 == direct_value &&
-     (TST_MPI_FLOAT == types[type].type_class 
+     (TST_MPI_FLOAT == types[type].type_class
       || TST_MPI_DOUBLE == types[type].type_class
 #if defined(HAVE_LONG_DOUBLE) && defined (LDBL_MAX)
       || TST_MPI_LONG_DOUBLE == types[type].type_class
@@ -1210,12 +1210,12 @@ void tst_type_list (void)
     {
       if (types[i].description[0] == '\0')
         break;
-      printf ("Type:%d %s\n",
+      printf ("Datatype:%d %s\n",
               i, types[i].description);
     }
 
   for (i = 0; i < TST_TYPES_CLASS_NUM; i++)
-    printf ("Type-Class:%d %s\n",
+    printf ("Datatype-Class:%d %s\n",
             i, tst_types_class_strings[i].class_string);
 }
 

@@ -21,15 +21,6 @@
 
 #define ROOT 0
 
-/*
- * XXX
-static char * send_buffer = NULL;
-static char ** recv_buffer_array = NULL;
-static MPI_Request * req_buffer = NULL;
-static MPI_Status * status_buffer = NULL;
-static int * cancelled = NULL;
- */
-
 int tst_p2p_many_to_one_isend_cancel_init (struct tst_env * env)
 {
   int comm_rank;
@@ -119,7 +110,7 @@ int tst_p2p_many_to_one_isend_cancel_run (struct tst_env * env)
 
   /*
   ** Even for intercommunicator, only process zero within
-  ** (any intra/inter-com<municator) MPI_COMM_WORLD will receive data!
+  ** (any intra/inter-communicator) MPI_COMM_WORLD will receive data!
   */
 
   if (ROOT == comm_rank)
@@ -183,7 +174,7 @@ int tst_p2p_many_to_one_isend_cancel_run (struct tst_env * env)
               MPI_CHECK (MPI_Cancel (&env->req_buffer[rank]));
               if (MPI_REQUEST_NULL == env->req_buffer[rank])
                 ERROR (EINVAL, "req_buffer[rank] == MPI_REQUEST_NULL");
-/* #define HAVE_MPI_LAM */
+// #define HAVE_MPI_LAM
 #ifdef HAVE_MPI_LAM
               /*
                * LAM hangs without this MPI_Request_free, as it doesn't finish the MPI_Waitall of cancelled requests

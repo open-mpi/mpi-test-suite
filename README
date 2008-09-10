@@ -185,11 +185,7 @@ In order to integrate a new test, the programmer should
    };
    describes with 
      class:            Which kind of test is being run
-<<<<<<< HEAD:README
-                       (one of TST_CLASS_ENV, TST_CLASS_P2P, TST_CLASS_COLL),
-=======
                        (one of TST_CLASS_ENV, TST_CLASS_P2P, TST_CLASS_COLL, TST_CLASS_THREADED),
->>>>>>> thread:README
      description:      A short notion of what is being done,
      run_with_comm:    An OR-ed list of which communicators may be used within the test
                        (several of TST_MPI_COMM_SELF, TST_MPI_COMM_NULL, TST_MPI_INTRA_COMM,

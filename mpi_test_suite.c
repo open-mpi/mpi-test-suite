@@ -1,37 +1,3 @@
-/*
-                             *******************
-******************************* C SOURCE FILE *******************************
-**                           *******************                           **
-**                                                                         **
-** project   : MPI Testsuite                                               **
-** filename  : mpi_test_suite.c                                            **
-** version   : 1                                                           **
-** date      : June 03,2008                                                **
-**                                                                         **
-*****************************************************************************
-**                                                                         **
-** Copyright (c) 2008, HLRS                                                **
-** All rights reserved.                                                    **
-**                                                                         **
-*****************************************************************************
- 
-VERSION HISTORY:
-----------------
- 
-Version     : 1
-Date        : June 03, 2008  
-Revised by  : Niethammer, C.
-Description : Merged version.
- 
-*/
- 
-#define _MPI_TEST_SUITE_C_SRC
- 
-/****************************************************************************/
-/**                                                                        **/
-/**                     MODULES USED                                       **/
-/**                                                                        **/
-/****************************************************************************/
 #include <stdio.h>
 
 #include "config.h"
@@ -81,7 +47,7 @@ int tst_global_rank = 0;
 int tst_global_size = 0;
 int tst_verbose = 0;
 int tst_atomic = 0;
-tst_report_types tst_report = TST_REPORT_SUMMARY;
+tst_report_types tst_report = TST_REPORT_RUN;
 tst_mode_types tst_mode = TST_MODE_RELAXED;
 /*
  * Declaration of output_relevant data
@@ -95,7 +61,7 @@ tst_output_stream tst_output;
 /**                     EXPORTED VARIABLES                                 **/
 /**                                                                        **/
 /****************************************************************************/
- 
+
 /*
  * This should correspond to the enum tst_report
  */
@@ -120,7 +86,7 @@ static int tst_tag_ub = 32767;
 /**                     LOCAL FUNCTIONS                                    **/
 /**                                                                        **/
 /****************************************************************************/
- 
+
 /*
  * Global functions, which don't fit into another category.
  */
@@ -186,15 +152,14 @@ int main (int argc, char * argv[])
   int k;
   int l;
   int flag;
-  /* XXX CN The following declaratin hides the global variable wih the same name. 
-   * Is this wanted? */
-  int tst_global_size;
 
   int num_comms;
   int num_types;
   int num_tests;
   int num_values = 1;
+#ifdef HAVE_MPI2_THREADS
   int num_threads = 0;
+#endif
   struct tst_env tst_env;
   int * tst_test_array;
   int tst_test_array_max;
@@ -206,6 +171,7 @@ int main (int argc, char * argv[])
   int tst_value_array_max = 32;
   int * val;
   int tst_thread_level_provided;
+  double time_start, time_stop;
 
 
 #ifdef HAVE_MPI2_THREADS
@@ -214,8 +180,9 @@ int main (int argc, char * argv[])
   MPI_Init_thread (&argc, &argv, MPI_THREAD_MULTIPLE, &tst_thread_level_provided);
 
   if (tst_thread_level_provided != MPI_THREAD_MULTIPLE)
-    { 
-      /* XXX LOG CN Should be modified for logfie support. Maybe end Program? 
+    {
+      /*
+       * XXX LOG CN Should be modified for logfile support. Maybe end Program?
        */
       printf ("Thread level support:%d unequal MPI_THREAD_MULTIPLE\n", tst_thread_level_provided);
       tst_thread_level_provided = MPI_THREAD_SINGLE;
@@ -223,11 +190,10 @@ int main (int argc, char * argv[])
 
 #else
   tst_thread_level_provided = 0;   /* MPI_THREAD_SINGLE would not work, if not MPI-2, as not defined */
-  /* XXX CN Maybe num_threads could be declared here?
-   */
-  num_threads = 0;                 /* silence the compiler */
   MPI_Init (&argc, &argv);
 #endif
+
+  time_start = MPI_Wtime ();
 
   MPI_Comm_rank (MPI_COMM_WORLD, &tst_global_rank);
   MPI_Comm_size (MPI_COMM_WORLD, &tst_global_size);
@@ -254,7 +220,7 @@ int main (int argc, char * argv[])
 	*/
 	gethostname (hostname, 256);
 	hostname[255] = '\0';
-	/* XXX LOG CN Should be modified for logfie support. 
+	/* XXX LOG CN Should be modified for logfie support.
 	*/
 	printf ("(Rank:%d) host:%s pid:%ld Going to sleep for %d seconds\n",
 	    tst_global_rank, hostname, (long int)getpid(), delay);
@@ -265,9 +231,10 @@ int main (int argc, char * argv[])
     }
   }
 
-  /* XXX CN Maybe redesign the logfile implementation?
+  /*
+   * XXX CN Maybe redesign the logfile implementation?
    */
-  tst_output_init ( DEBUG_LOG, TST_OUTPUT_RANK_MASTER, TST_REPORT_MAX, TST_OUTPUT_TYPE_LOGFILE, "tst.log");
+  tst_output_init (DEBUG_LOG, TST_OUTPUT_RANK_SELF, TST_REPORT_MAX, TST_OUTPUT_TYPE_LOGFILE, "tst.log");
 
 #ifndef HAVE_MPI2_THREADS
   tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "Testsuite was compiled without MPI2_THREADS");
@@ -283,9 +250,9 @@ int main (int argc, char * argv[])
 
   tst_tag_ub = *val;
 
-  /* XXX CN This check sould be implemented better ... 
+  /* XXX CN This check sould be implemented better ...
    */
-  /* 
+  /*
    * Checking if the upper boundary for tag values is at least 32767 as required by MPI-1.1.
    * (see MPI-1.1 section 7.1.1.1 Tag values)
    */
@@ -658,6 +625,10 @@ int main (int argc, char * argv[])
                      tst_global_rank);
 
   tst_output_close (DEBUG_LOG);
+
+  time_stop = MPI_Wtime ();
+  tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "(Rank:%d) Overall time taken:%f\n",
+                     tst_global_rank, time_stop - time_start);
 
   MPI_Finalize ();
 

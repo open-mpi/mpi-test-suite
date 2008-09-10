@@ -5,7 +5,7 @@ dnl various Fortran naming conventions -- this can't be done within second arg t
 dnl
 dnl Dependancies: AC_PROG_F77
 dnl
-AC_DEFUN(AC_CHECK_FORTRAN_NAME_CONVENTION,[
+AC_DEFUN([AC_CHECK_FORTRAN_NAME_CONVENTION],[
   AC_REQUIRE([AC_PROG_GREP])
   AC_MSG_CHECKING(for Fortran naming convention)
   AC_LANG_PUSH([Fortran 77])
@@ -63,7 +63,7 @@ dnl Check for the Fortran MPI-Compiler
 dnl
 dnl Dependancies: AC_PROG_F77
 dnl
-AC_DEFUN(AC_PROG_MPIF, [
+AC_DEFUN([AC_PROG_MPIF], [
   AC_CACHE_CHECK([for the MPI Fortran compiler], [ac_cv_prog_mpif],
   [
     dnl This gets hard -- we are looking for a F77 compiler, which supports MPI!
@@ -108,7 +108,7 @@ dnl Check for the C MPI-Compiler
 dnl
 dnl Dependancies: AC_PROG_CC
 dnl
-AC_DEFUN(AC_PROG_MPICC, [
+AC_DEFUN([AC_PROG_MPICC], [
   AC_CACHE_CHECK([for the MPI C compiler], [ac_cv_prog_mpicc],
   [
     ac_cv_prog_mpicc=""
@@ -144,7 +144,7 @@ dnl                        to   'C' as comment, if we don't have it, used in For
 dnl
 dnl Dependancies: AC_PROG_MPIF
 dnl
-AC_DEFUN(AC_CHECK_FORTRAN_MPI_DATATYPE, [
+AC_DEFUN([AC_CHECK_FORTRAN_MPI_DATATYPE], [
   AC_CACHE_CHECK([whether MPI has (opt.) Fortran [$1]], [ac_cv_have_mpi_fortran_[$1]],
   [
     AC_LANG_PUSH([Fortran 77])
@@ -198,7 +198,7 @@ dnl                           'C' as comment, if we don't have it, used in Fortr
 dnl
 dnl Dependancies: AC_PROG_MPIC
 dnl
-AC_DEFUN(AC_CHECK_C_MPI_DATATYPE,
+AC_DEFUN([AC_CHECK_C_MPI_DATATYPE],
   [
   AC_CACHE_CHECK([whether MPI has (opt.) C [$1]], [ac_cv_have_mpi_c_[$1]],
   [
@@ -244,7 +244,7 @@ dnl
 dnl This check for support is really lousy,
 dnl just check, whether the test-case compiles.
 dnl
-AC_DEFUN(AC_CHECK_MPI2_ONE_SIDED,
+AC_DEFUN([AC_CHECK_MPI2_ONE_SIDED],
   [
   AC_CACHE_CHECK([whether MPI supports one-sided communication], [ac_cv_have_mpi2_one_sided],
   [
@@ -276,7 +276,7 @@ dnl
 dnl This check for support is really lousy,
 dnl just check, whether the test-case compiles.
 dnl
-AC_DEFUN(AC_CHECK_MPI2_DYNAMIC_PROCESSES,
+AC_DEFUN([AC_CHECK_MPI2_DYNAMIC_PROCESSES],
   [
   AC_CACHE_CHECK([whether MPI supports dynamic process management], [ac_cv_have_mpi2_dynamic_processes],
   [
@@ -333,7 +333,7 @@ dnl
 dnl This check for support is really lousy,
 dnl just check, whether the test-case compiles.
 dnl
-AC_DEFUN(AC_CHECK_MPI2_THREADS,
+AC_DEFUN([AC_CHECK_MPI2_THREADS],
   [
   if test -x $mpi_dir/bin/ompi_info ; then
     AC_CACHE_CHECK([whether Open MPI supports threads], [ac_cv_have_mpi2_threads], [
@@ -375,7 +375,7 @@ dnl of the datatype in question.
 dnl
 dnl Dependancies: AC_PROG_CC, AC_PROG_F77, AC_CHECK_FORTRAN_NAME_CONVENTION
 dnl
-AC_DEFUN(AC_CHECK_SIZEOF_FORTRAN, [
+AC_DEFUN([AC_CHECK_SIZEOF_FORTRAN], [
   AC_CACHE_CHECK([size of Fortran [$1]], [ac_cv_sizeof_fortran_[]translit($1, [A-Z *], [a-z_p])],[
     AC_LANG_SAVE()
     AC_LANG([Fortran 77])
@@ -443,7 +443,7 @@ dnl
 dnl This test checks, whether the Fortran MPI types are provided through
 dnl including "mpi.h" as well.
 dnl
-AC_DEFUN(AC_CHECK_FORTRAN_MPI_TYPES_IN_C,[
+AC_DEFUN([AC_CHECK_FORTRAN_MPI_TYPES_IN_C],[
   AC_MSG_CHECKING(for Fortran MPI types in C)
   AC_LANG_SAVE()
   ac_ext=c
@@ -478,7 +478,7 @@ dnl
 dnl PAC_STRUCT_GET_SIZE(Name of variable, first variable, second variable, cache_name)
 dnl Second version adapted to caching
 dnl
-AC_DEFUN(AC_CHECK_SIZEOF_MPI_STRUCT,
+AC_DEFUN([AC_CHECK_SIZEOF_MPI_STRUCT],
   [
   AC_CACHE_CHECK([size of reduction function variables $1],
                  [ac_cv_sizeof_struct_[]translit($1, [A-Z *], [a-z_p])],
@@ -514,7 +514,7 @@ dnl printing the MPI_VERSION and MPI_SUBVERSION as specified by the MPI-standard
 dnl
 dnl Depedancies: setting of $mpi_inc_dir, $mpi_lib_dir, $lib_mpi
 dnl
-AC_DEFUN(AC_CHECK_MPI_VERSION,
+AC_DEFUN([AC_CHECK_MPI_VERSION],
 [
   AC_CACHE_CHECK([for version of MPI implementation], [ac_cv_mpi_version],
   [

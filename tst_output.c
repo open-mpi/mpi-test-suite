@@ -21,14 +21,14 @@ Todo:
 /**                     MODULES USED                                       **/
 /**                                                                        **/
 /****************************************************************************/
-
 #include <stdio.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#endif
 #include <stdarg.h>
-#include <mpi.h>
-
-#include "tst_output.h"
+#include "mpi.h"
 #include "mpi_test_suite.h"
+#include "tst_output.h"
 
 /****************************************************************************/
 /**                                                                        **/
@@ -36,12 +36,12 @@ Todo:
 /**                                                                        **/
 /****************************************************************************/
 
-/* Functions to parse output for LaTeX/HTML files 
+/* Functions to parse output for LaTeX/HTML files
  *
  * Parameters:
  *      char * src[]    source
  *      char * dest[]   destination
- * 
+ *
  * Results:
  *      Sucess:         Value unequal 0
  *      Fail:           0
@@ -51,7 +51,7 @@ int tst_output_parse_html (char * src[], char * dest[]);
 int tst_output_parse_latex (char * src[], char * dest[]) ;
 */
 
-/* Function to replace substrings in a string 
+/* Function to replace substrings in a string
  *
  * Parameters:
  *      char * search   string to search for
@@ -62,7 +62,7 @@ int tst_output_parse_latex (char * src[], char * dest[]) ;
  * Results:
  *      Success:        number of replacements
  */
-int str_replace (char * search, char * replace, char * string, char * result[]);
+static int tst_output_str_replace (char * search, char * replace, char * string, char * result[]);
 
 
 /* Function to mask special chars for latex in a string
@@ -74,7 +74,7 @@ int str_replace (char * search, char * replace, char * string, char * result[]);
  *      Success:        Number of replacements
  *      Fail:           -1
  */
-int latex_special_chars (char * string, char * result[]);
+static int tst_output_latex_special_chars(char * string, char * result[]);
 
 
 /****************************************************************************/
@@ -96,19 +96,16 @@ extern int tst_thread_running (void);
 /**                                                                        **/
 /****************************************************************************/
 
-int tst_set_output_level (tst_output_stream * output, tst_report_types level)
+int tst_output_set_level (tst_output_stream * output, tst_report_types level)
 {
 #ifdef HAVE_MPI2_THREADS
-  {
-    if (tst_thread_running ()) {
-      if (tst_thread_get_num () != 0) {
-        return 0;
-      }
+  if (tst_thread_running () && tst_thread_get_num () != 0)
+    {
+      return 0;
     }
-  }
 #endif
   output->level = level;
-  return (output->level == level);
+  return level;
 }
 
 
@@ -260,7 +257,7 @@ int tst_output_printf (tst_output_stream * output,
   }
 #endif
 
-  // XXX CN should be removed 
+  // XXX CN should be removed
   //printf ("Open: %d\nOutput Rank: %d\nglobal rank: %d\nerror Level: %d\nLog Level: %d\n" , output->isopen, output->rank , tst_output_global_rank , error_level ,output->level) ;
   if ((output->isopen == 1) && (output->rank == tst_output_global_rank) && (error_level <= output->level)) {
     va_start(arglist, format);
@@ -268,19 +265,19 @@ int tst_output_printf (tst_output_stream * output,
       case TST_OUTPUT_TYPE_HTML: {
         char * msg;
         char * tmpstrptr;
-        
+
         msg = malloc (sizeof(char) * 2048);
         count = vsnprintf (msg, 2047, format, arglist);
         /* Output was truncated */
         if (count >= 2047)
           return -1;
-        str_replace ("rank", "<B>rank</B>$", msg, &tmpstrptr);
+        tst_output_str_replace ("rank", "<B>rank</B>$", msg, &tmpstrptr);
         free (msg);
-        str_replace ("Rank", "<B>Rank</B>", tmpstrptr, &msg);
+        tst_output_str_replace ("Rank", "<B>Rank</B>", tmpstrptr, &msg);
         free (tmpstrptr);
-        str_replace ("ERROR", "<B style=\"color:red;\">ERROR</B>", msg, &tmpstrptr);
+        tst_output_str_replace ("ERROR", "<B style=\"color:red;\">ERROR</B>", msg, &tmpstrptr);
         free (msg);
-        str_replace ("Error", "<B style=\"color:red;\">Error</B>", tmpstrptr, &msg);
+        tst_output_str_replace ("Error", "<B style=\"color:red;\">Error</B>", tmpstrptr, &msg);
         free (tmpstrptr);
         count = fprintf (output->streamptr, "<P>\n%s</P>\n", msg);
         fflush (output->streamptr);
@@ -289,22 +286,22 @@ int tst_output_printf (tst_output_stream * output,
       case TST_OUTPUT_TYPE_LATEX: {
         char * msg;
         char * tmpstrptr;
-        
+
         msg = malloc (sizeof(char) * 2048);
         count = vsnprintf (msg, 2047, format, arglist);
         /* Output was truncated */
         if (count >= 2047)
           return -1;
-        latex_special_chars (msg, &tmpstrptr);
-        str_replace ("<", "$<$", tmpstrptr, &msg);
+        tst_output_latex_special_chars(msg, &tmpstrptr);
+        tst_output_str_replace ("<", "$<$", tmpstrptr, &msg);
         free (tmpstrptr);
-        str_replace (">", "$>$", msg, &tmpstrptr);
+        tst_output_str_replace (">", "$>$", msg, &tmpstrptr);
         free (msg);
-        str_replace ("Rank", "\\textbf{Rank}", tmpstrptr, &msg);
+        tst_output_str_replace ("Rank", "\\textbf{Rank}", tmpstrptr, &msg);
         free (tmpstrptr);
-        str_replace ("ERROR", "\\textbf{ERROR}", msg, &tmpstrptr);
+        tst_output_str_replace ("ERROR", "\\textbf{ERROR}", msg, &tmpstrptr);
         free (msg);
-        str_replace ("Error", "\\textbf{Error}", tmpstrptr, &msg);
+        tst_output_str_replace ("Error", "\\textbf{Error}", tmpstrptr, &msg);
         free (tmpstrptr);
 
         count = fprintf (output->streamptr, "%s", msg);
@@ -332,7 +329,7 @@ int tst_output_printf (tst_output_stream * output,
 /**                                                                        **/
 /****************************************************************************/
 
-int latex_special_chars (char * string, char * result[])
+int tst_output_latex_special_chars(char * string, char * result[])
 {
   int count = 0;
   int newlength = 0;
@@ -390,7 +387,7 @@ int latex_special_chars (char * string, char * result[])
   return count;
 }
 
-int str_replace (char * search, char * replace, char * string, char * result[])
+int tst_output_str_replace (char * search, char * replace, char * string, char * result[])
 {
   int count = 0, replace_count = 0;
   int oldlength = 0;
@@ -403,17 +400,17 @@ int str_replace (char * search, char * replace, char * string, char * result[])
   oldlength = strlen (string);
   searchlength = strlen (search);
 
-  /* 
-   * Calculate number of neccessary replacements 
+  /*
+   * Calculate number of neccessary replacements
    */
   for (strptr = string; strptr; strptr++)
   {
     strptr = strstr (strptr, search);
     if (strptr == NULL)
       break;
-    count++; 
+    count++;
   }
-  /* 
+  /*
    * Calculate new neccessary stinglength and allocate the neccessary memory
    */
   newlength = oldlength + count * (strlen(replace) - strlen(search));
@@ -438,11 +435,11 @@ int str_replace (char * search, char * replace, char * string, char * result[])
     /* Append replace string and move forward in the string */
     strcat (*result, replace);
     strptr += searchlength;
-    replace_count++; 
+    replace_count++;
   }
 
   /*
-   * Safty check 
+   * Safty check
    */
   if (count != replace_count) {
     fprintf (stderr, "Error: count (%d) != replace_count (%d)!\n", count, replace_count);

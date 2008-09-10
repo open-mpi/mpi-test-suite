@@ -262,7 +262,7 @@ inline int tst_thread_get_num (void)
 	DEBUG (printf ("Found :-) Return %d\n", i));
 	return i;
      }
-     else 
+     else
 	DEBUG (printf ("Not equal\n"));
   }
   ERROR (EINVAL, "Thread ID could not be determined");
@@ -442,7 +442,7 @@ int tst_thread_signal_cleanup (void)
 }
 
 /*
- * wait until signal with tag occures from another tread 
+ * wait until signal with tag occures from another tread
  * tag can be an integer between 0 and tst_thread_signals_max
  */
 int tst_thread_signal_wait (int tag)
@@ -467,7 +467,7 @@ int tst_thread_signal_wait (int tag)
   return 0;
 }
 
-/* 
+/*
  * send tag to threads waiting in tst_thread_signal_wait tag
  * tag can be an integer between 0 and tst_thread_signals_max
  */
@@ -484,7 +484,7 @@ int tst_thread_signal_send (int tag)
 }
 
 /*
- * allocate num global requests 
+ * allocate num global requests
  */
 MPI_Request * tst_thread_alloc_global_requests (int num)
 {
@@ -518,7 +518,7 @@ int tst_thread_free_global_requests (void)
  */
 void * tst_thread_global_buffer_init (int size)
 {
-  if (NULL == (tst_global_buffer = malloc(size))) 
+  if (NULL == (tst_global_buffer = malloc(size)))
     ERROR (errno,"malloc");
   tst_global_buffer_size = size;
   return tst_global_buffer;

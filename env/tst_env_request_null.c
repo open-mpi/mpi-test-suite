@@ -25,16 +25,6 @@ static int tst_test_reset_statuses (int count, MPI_Status * statuses)
   return 0;
 }
 
-static int tst_test_empty_status (MPI_Status * status)
-{
-  if (status->MPI_SOURCE == MPI_ANY_SOURCE &&
-      status->MPI_TAG == MPI_ANY_TAG)
-    return 1;
-  else
-    return 0;
-}
-
-
 int tst_env_request_null_init (struct tst_env * env)
 {
   tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",

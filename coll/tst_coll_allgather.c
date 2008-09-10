@@ -9,6 +9,7 @@
  *
  * Date: Aug 8th 2003
  */
+
 #include "mpi.h"
 #include "mpi_test_suite.h"
 #include "tst_output.h"
@@ -43,7 +44,7 @@ int tst_coll_allgather_run (struct tst_env * env)
 
   comm = tst_comm_getcomm (env->comm);
   type = tst_type_getdatatype (env->type);
-  
+
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
   MPI_CHECK (MPI_Comm_size (comm, &comm_size));
 
@@ -53,7 +54,7 @@ int tst_coll_allgather_run (struct tst_env * env)
   tst_type_setstandardarray (env->type, env->values_num, env->send_buffer, comm_rank);
 
   tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) Going to Allgather\n", tst_global_rank);
-  MPI_CHECK (MPI_Allgather (env->send_buffer, env->values_num, type, 
+  MPI_CHECK (MPI_Allgather (env->send_buffer, env->values_num, type,
                             env->recv_buffer, env->values_num, type,
                             comm));
 

@@ -20,14 +20,8 @@
 
 #include "config.h"
 
-#ifdef HAVE_STDIO_H
-#  include <stdio.h>
-#endif
-#ifdef HAVE_STDARG_H
-#  include <stdarg.h>
-#endif
-
-
+#include <stdio.h>
+#include <stdarg.h>
 
 /****************************************************************************/
 /**                                                                        **/
@@ -35,13 +29,13 @@
 /**                                                                        **/
 /****************************************************************************/
 
-#define DEBUG_REPORT_TYPE     TST_REPORT_MAX
-#define DEBUG_LOG_TYPE        TST_OUTPUT_TYPE_LOGFILE
-#define DEBUG_LOG_FILENAME    "tst.log"
-#define DEBUG_LOG             (&tst_output)
+#define DEBUG_REPORT_TYPE       TST_REPORT_MAX
+#define DEBUG_LOG_TYPE          TST_OUTPUT_TYPE_LOGFILE
+#define DEBUG_LOG_FILENAME      "tst.log"
+#define DEBUG_LOG               (&tst_output)
 
 #define TST_OUTPUT_RANK_MASTER	0
-#define TST_OUTPUT_RANK_SELF	(tst_global_rank)
+#define TST_OUTPUT_RANK_SELF    (tst_global_rank)
 
 /****************************************************************************/
 /**                                                                        **/
@@ -69,9 +63,9 @@ typedef enum {
 
 typedef struct {
   FILE * streamptr;		/* Pointer on the stream */
-  tst_output_types type;		
+  tst_output_types type;
   char filename[256];		/* Filename if stream writes to file */
-  tst_report_types level;		
+  tst_report_types level;
   int rank;			/* Thread responsible for output */
   int isopen;			/* 1 if open */
 } tst_output_stream;
@@ -98,19 +92,19 @@ extern tst_output_stream tst_output;
  * Parameters:
  * 	tst_report_types level	Level describing the amount of information
  * 				Can be one of the following
- * 				
- * 	  TST_REPORT_SUMMARY, 	No output, except for failed tests at the end 
- * 				of the run 
- * 	  TST_REPORT_RUN,	Output every test that runs, plus the previous 
- * 	  TST_REPORT_FULL,	Full output, including the hexdump of wrong 
- * 				memory 
+ *
+ * 	  TST_REPORT_SUMMARY, 	No output, except for failed tests at the end
+ * 				of the run
+ * 	  TST_REPORT_RUN,	Output every test that runs, plus the previous
+ * 	  TST_REPORT_FULL,	Full output, including the hexdump of wrong
+ * 				memory
  * 	  TST_REPORT_MAX
- * 
+ *
  * Results:
  * 	Success:		Vaule unequal 0
  *	Fail:			0
  */
-int tst_set_output_level (tst_output_stream * output, tst_report_types level);
+int tst_output_set_level (tst_output_stream * output, tst_report_types level);
 
 
 /*
@@ -119,14 +113,14 @@ int tst_set_output_level (tst_output_stream * output, tst_report_types level);
  * Parameters:
  * 	tst_output_stream * output	Pointer on the ouput structure holding
  * 					the information
- * 	int rank		Rank of thread responsible for the 
+ * 	int rank		Rank of thread responsible for the
  * 				output. TST_OUTPUT_RANK_MASTER
  * 	tst_report_types level	Output level up to which the output will be
  * 				performed
  * 	tst_output_types type	Output type of the stream
- * 	 ...			Filename if the output will be written to a 
- * 	 			file 
- * 					
+ * 	 ...			Filename if the output will be written to a
+ * 	 			file
+ *
  * Success:		output type of the opened output
  * Fail:		TST_OUTPUT_TYPE_NONE
  */
@@ -145,7 +139,7 @@ int tst_output_close (tst_output_stream * output);
 
 /*
  * Replacement for printf / fprintf. Prints the string format with the given
- * replacements ... (like printf) if the error level is included in the 
+ * replacements ... (like printf) if the error level is included in the
  * output level of the output_stream.
  *
  * Parameters:
@@ -155,11 +149,11 @@ int tst_output_close (tst_output_stream * output);
  * 	...				Parameters for replace in format
  *
  * Results:
- * 
+ *
  * Success:	Number of written characters.
  * Fail:	0
  */
-int tst_output_printf (tst_output_stream * output, 
+int tst_output_printf (tst_output_stream * output,
     tst_report_types error_level, char * format, ...);
 
 #endif

@@ -140,6 +140,7 @@ OBJ =	coll/tst_coll_allgather.o \
 	p2p/tst_p2p_simple_ring_isend.o \
 	p2p/tst_p2p_simple_ring_issend.o \
 	p2p/tst_p2p_simple_ring_pack.o \
+	p2p/tst_p2p_simple_ring_persistent.o \
 	p2p/tst_p2p_simple_ring_rsend.o \
 	p2p/tst_p2p_simple_ring_sendrecv.o \
 	p2p/tst_p2p_simple_ring_shift.o \

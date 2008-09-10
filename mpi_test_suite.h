@@ -1,37 +1,6 @@
-/*
-                             *******************
-******************************* C HEADER FILE *******************************
-**                           *******************                           **
-**                                                                         **
-** project   : MPI Testsuite                                               **
-** filename  : mpi_test_suite.h                                            **
-** version   : 1                                                           **
-** date      : June 03,2008                                                **
-**                                                                         **
-*****************************************************************************
-**                                                                         **
-** Copyright (c) 2008, HLRS                                                **
-** All rights reserved.                                                    **
-**                                                                         **
-*****************************************************************************
- 
-VERSION HISTORY:
-----------------
- 
-Version     : 1
-Date        : June 16, 2008  
-Revised by  : Niethammer, C.
-Description : Merged version.
- 
-*/
 #ifndef __MPI_TESTSUITE_H__
 #define __MPI_TESTSUITE_H__
 
-/****************************************************************************/
-/**                                                                        **/
-/**                     MODULES USED                                       **/
-/**                                                                        **/
-/****************************************************************************/
 #include "config.h"
 
 #include <stdio.h>
@@ -56,7 +25,7 @@ Description : Merged version.
 /**                     DEFINITIONS AND MACROS                             **/
 /**                                                                        **/
 /****************************************************************************/
- 
+
 #define DEBUG(x) x
 
 #define WARNING(x) do { \
@@ -315,7 +284,7 @@ Description : Merged version.
 /**                     TYPEDEFS AND STRUCTURES                            **/
 /**                                                                        **/
 /****************************************************************************/
- 
+
 struct tst_env {
   int test;
   int values_num;
@@ -404,7 +373,7 @@ struct tst_mpi_type_mix_array {
 /**                     EXPORTED VARIABLES                                 **/
 /**                                                                        **/
 /****************************************************************************/
- 
+
 #ifndef _MPI_TEST_SUITE_C_SRC
 #endif
 
@@ -469,6 +438,7 @@ extern int tst_test_deselect (const char * test_string,
 extern int tst_test_checkstandardarray (const struct tst_env * env,
                                         char * buffer,
                                         int comm_rank);
+extern int tst_test_is_empty_status (MPI_Status * status);
 extern int tst_test_recordfailure (const struct tst_env * env);
 extern int tst_test_print_failed (void);
 

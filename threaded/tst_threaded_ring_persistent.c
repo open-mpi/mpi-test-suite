@@ -82,7 +82,7 @@ int tst_threaded_ring_persistent_init (struct tst_env * env)
    * The tags are the sum of the constant env->tag and a threadspecific number.
    */
   thread_tag_to = env->tag + (thread_num + 1) % num_threads;
-  thread_tag_from = env->tag + thread_num;
+  thread_tag_from = env->tag + (thread_num + num_threads - 1) % num_threads;
 
 
   tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "Adresses of allocated requests:\tRequest 0: %p\tRequest 1: %p, MPI_REQUEST_NULL: %p\n", &(env->req_buffer[0]), &(env->req_buffer[1]), MPI_REQUEST_NULL);
