@@ -39,13 +39,13 @@
 
 
 #define ERROR(e,s) do {                                           \
-    int __error = (e);                                            \
+    int __local_error = (e);                                            \
     fprintf (stderr, "(%s:%d) ERROR: %s; %s(%d)\n",               \
-             __FILE__, __LINE__, (s), strerror(__error), __error);\
+             __FILE__, __LINE__, (s), strerror(__local_error), __local_error);\
     tst_output_printf (DEBUG_LOG, TST_REPORT_SUMMARY, "(%s:%d) ERROR: %s; %s(%d)\n", \
-             __FILE__, __LINE__, (s), strerror(__error), __error);\
+             __FILE__, __LINE__, (s), strerror(__local_error), __local_error);\
     tst_output_close (DEBUG_LOG);                                 \
-    exit (__error);                                               \
+    exit (__local_error);                                               \
   } while(0)
 
 
