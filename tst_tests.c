@@ -20,8 +20,8 @@
 /*
  * Do not count the last test with UNSPEC-Class
  */
-#define TST_TESTS_NUM (sizeof (tst_tests) / sizeof (tst_tests[0]) -1)
-#define TST_TEST_CLASS_NUM (sizeof (tst_test_class_strings) / sizeof (tst_test_class_strings[0]))
+#define TST_TESTS_NUM (int)(sizeof (tst_tests) / sizeof (tst_tests[0]) -1)
+#define TST_TEST_CLASS_NUM (int)(sizeof (tst_test_class_strings) / sizeof (tst_test_class_strings[0]))
 
 /*
  * This string has to be kept up-to-date with the internal representations for
@@ -1652,6 +1652,11 @@ int tst_test_recordfailure (const struct tst_env * env)
         ERROR (EINVAL, "Maximum Error limit reached");
     }
   return 0;
+}
+
+int tst_test_get_failed_num (void)
+{
+  return tst_tests_failed_num;
 }
 
 int tst_test_print_failed (void)

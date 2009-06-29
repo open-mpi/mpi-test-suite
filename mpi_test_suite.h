@@ -441,6 +441,8 @@ extern int tst_test_checkstandardarray (const struct tst_env * env,
 extern int tst_test_is_empty_status (MPI_Status * status);
 extern int tst_test_recordfailure (const struct tst_env * env);
 extern int tst_test_print_failed (void);
+extern int tst_test_get_failed_num (void);
+
 
 extern int tst_type_init (int * num_types);
 extern int tst_type_cleanup (void);

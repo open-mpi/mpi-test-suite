@@ -365,6 +365,14 @@ int main (int argc, char * argv[])
                     strncpy (tmp_str, &(str[1]), TST_DESCRIPTION_LEN);
                     tst_test_deselect (tmp_str, tst_test_array, tst_test_array_max, &num_tests);
                   }
+                else if ('0' <= str[0] && '9' >= str[0])
+                  {
+                    int tmp_test = atoi (str);
+                    if (0 > tmp_test || tst_test_array_max <= tmp_test)
+                      ERROR (EINVAL, "Specified test number out of range");
+
+                    tst_test_array[num_tests++] = tmp_test;
+                  }
                 else
                   tst_test_select (str, tst_test_array, tst_test_array_max, &num_tests);
                 str = strtok (NULL, ",");
@@ -413,6 +421,14 @@ int main (int argc, char * argv[])
                     strncpy (tmp_str, &(str[1]), TST_DESCRIPTION_LEN);
                     tst_comm_deselect (tmp_str, tst_comm_array, tst_comm_array_max, &num_comms);
                   }
+                else if ('0' <= str[0] && '9' >= str[0])
+                  {
+                    int tmp_test_comm = atoi (str);
+                    if (0 > tmp_test_comm || tst_comm_array_max <= tmp_test_comm)
+                      ERROR (EINVAL, "Specified communicator number out of range");
+
+                    tst_comm_array[num_comms++] = tmp_test_comm;
+                  }
                 else
                   tst_comm_select (str, tst_comm_array, tst_comm_array_max, &num_comms);
                 str = strtok (NULL, ",");
@@ -451,6 +467,14 @@ int main (int argc, char * argv[])
 
                     strncpy (tmp_str, &(str[1]), TST_DESCRIPTION_LEN);
                     tst_type_deselect (tmp_str, tst_type_array, tst_type_array_max, &num_types);
+                  }
+                else if ('0' <= str[0] && '9' >= str[0])
+                  {
+                    int tmp_test_type = atoi (str);
+                    if (0 > tmp_test_type || tst_type_array_max <= tmp_test_type)
+                      ERROR (EINVAL, "Specified type number out of range");
+                  
+                    tst_type_array[num_types++] = tmp_test_type;
                   }
                 else
                   tst_type_select (str, tst_type_array, tst_type_array_max, &num_types);
@@ -632,7 +656,7 @@ int main (int argc, char * argv[])
 
   MPI_Finalize ();
 
-  return 0;
+  return (tst_test_get_failed_num () ? -1 : 0);
 }
 
 /****************************************************************************/
