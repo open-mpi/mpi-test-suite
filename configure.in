@@ -1,3 +1,5 @@
+dnl Copyright (c) 2009 Cisco Systems, Inc.  All rights reserved.
+
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT
 AC_PREREQ(2.59)
@@ -20,12 +22,10 @@ AC_ARG_ENABLE(mpi2,
   [test "$enableval" = "yes" && ENABLE_MPI2=yes], ENABLE_MPI2=no)
 
 AC_ARG_ENABLE(mpi2-dynamic,
-  AS_HELP_STRING([--enable-mpi2-dynamic], [build checks for MPI2 dynamic process management [[default=no]]]),
-  [test "$enableval" = yes && ENABLE_MPI2_DYNAMIC=yes], ENABLE_MPI2_DYNAMIC=no)
+  AS_HELP_STRING([--enable-mpi2-dynamic], [build checks for MPI2 dynamic process management [[default=no]]]))
 
-AC_ARG_ENABLE(mpi2-onside,
-  AS_HELP_STRING([--enable-mpi2-onside], [build checks for MPI2 onesided Communication [[default=no]]]),
-  [test "$enableval" = yes && ENABLE_MPI2_ONESIDE=yes], ENABLE_MPI2_ONESIDE=no)
+AC_ARG_ENABLE(mpi2-oneside,
+  AS_HELP_STRING([--enable-mpi2-oneside], [build checks for MPI2 onesided Communication [[default=no]]]))
 
 AC_ARG_ENABLE(mpi2-io,
   AS_HELP_STRING([--enable-mpi2-io], [build checks for MPI2 dynamic process management [[default=no]]]),
@@ -118,21 +118,21 @@ dnl XXX USE AS_HELP_STRING()
 AC_MSG_CHECKING([for the MPI directory])
 AC_ARG_WITH(mpi_dir,
   AS_HELP_STRING([--with-mpi-dir=MPI_DIR], [give the path for MPI [/usr/local/mpich]]),
-  mpi_dir="$withval", mpi_dir="/usr/local/mpich")
+  mpi_dir="$withval", mpi_dir="")
 AC_MSG_RESULT([$mpi_dir])
 AC_SUBST([mpi_dir])
 
 AC_MSG_CHECKING([for the MPI library directory])
 AC_ARG_WITH(mpi_lib_dir,
   AS_HELP_STRING([--with-mpi-lib-dir=dir], [give the path for MPI-libraries [MPI_DIR/lib]]),
-  mpi_lib_dir="$withval", mpi_lib_dir="$mpi_dir/lib")
+  mpi_lib_dir="$withval", mpi_lib_dir="")
 AC_MSG_RESULT([$mpi_lib_dir])
 AC_SUBST([mpi_lib_dir])
 
 AC_MSG_CHECKING([for the MPI include directory])
 AC_ARG_WITH(mpi_inc_dir,
   AS_HELP_STRING([--with-mpi-inc-dir=dir], [give the path for MPI-include-files [MPI_DIR/include]]),
-  mpi_inc_dir="$withval", mpi_inc_dir="$mpi_dir/include")
+  mpi_inc_dir="$withval", mpi_inc_dir="")
 AC_MSG_RESULT([$mpi_inc_dir])
 AC_SUBST([mpi_inc_dir])
 
@@ -171,6 +171,12 @@ if test -x "$mpi_dir/bin/mpirun" ; then
   mpirun_cmd="mpirun"
 elif test -x "$mpi_dir/bin/mprun" ; then
   mpirun_cmd="mprun"
+else
+  # Try "which mpirun".  If that returns an error, then it's not found.
+  mpirun_cmd=`which mpirun`
+  if test "$?" != "0"; then
+    mpirun_cmd=
+  fi
 fi
 AC_MSG_RESULT([$mpirun_cmd])
 AC_SUBST(mpirun_cmd)
@@ -181,6 +187,7 @@ dnl Test, whether the name of the MPI library is libmpi.a, libmpi.so or libmpich
 dnl Determine whether to use signal-based MPI-library on AIX
 AC_MSG_CHECKING([for the MPI library])
 libmpi=""
+msg=
 case "$host" in
   *-ibm-aix*)                dnl IBM machines
     dnl If we are using signal-based MPI, check for traditional MPI-libraries
@@ -192,13 +199,13 @@ case "$host" in
       elif test -f "$mpi_lib_dir/libmpich.a" ; then
         lib_mpi="mpich"
       else
-        AC_MSG_ERROR([neither libmpi nor libmpich found; check path for MPI package first...])
+        msg="neither libmpi nor libmpich found; check path for MPI package first..."
       fi
     else
       if test -f "$mpi_lib_dir/libmpi_r.a" ; then
          lib_mpi="mpi_r"
       else
-         AC_MSG_ERROR([libmpi_r not found; check path for MPI package...])
+         msg="libmpi_r not found; check path for MPI package..."
       fi
     fi
   ;;
@@ -210,14 +217,14 @@ case "$host" in
     elif test -f "$mpi_lib_dir/libmpi_ss.so" ; then
       lib_mpi="mpich"
     else
-      AC_MSG_ERROR([neither libmpi nor libmpi_ss found; check path for MPI package first...])
+      msg="neither libmpi nor libmpi_ss found; check path for MPI package first..."
     fi
   ;;
   *-apple-*)                 dnl MAC OS 10.*
     if test -f "$mpi_lib_dir/libmpi.dylib" ; then
       lib_mpi="mpi"
     else
-      AC_MSG_ERROR([neither libmpi nor libmpi_ss found; check path for MPI package first...])
+      msg="neither libmpi nor libmpi_ss found; check path for MPI package first..."
     fi
   ;;
   *)                         dnl All other machines
@@ -228,11 +235,24 @@ case "$host" in
     elif test -f "$mpi_lib_dir/libmpich.a" ; then
       lib_mpi="mpich"
     else
-      AC_MSG_ERROR([neither libmpi nor libmpich found; check path for MPI package first...])
+      msg="neither libmpi nor libmpich found; check path for MPI package first..."
     fi
   ;;
 esac
-AC_MSG_RESULT([found $lib_mpi])
+happy=0
+if test x"$msg" = "x"; then
+   AC_LINK_IFELSE(AC_LANG_PROGRAM([[
+AC_INCLUDES_DEFAULT]],
+[[MPI_Init(NULL, NULL);]]), 
+                  [msg="found" happy=1])
+else
+   happy=1
+   msg="found $lib_mpi"
+fi
+AC_MSG_RESULT([$msg])
+if test "$happy" = "0"; then
+   AC_MSG_ERROR([Cannot continue])
+fi
 AC_SUBST(lib_mpi)
 
 
@@ -242,8 +262,16 @@ AC_PROG_MPICC
 AC_MSG_CHECKING([for compilation of an MPI program])
 old_CFLAGS=${CFLAGS}
 old_LIBS=${LIBS}
-CFLAGS="-I$mpi_inc_dir"
-LIBS="-L$mpi_lib_dir -l$lib_mpi $SYS_LDFLAGS"
+if test "x$mpi_inc_dir" != "x"; then
+   CFLAGS="-I$mpi_inc_dir"
+fi
+if test "x$mpi_lib_dir" != "x"; then
+   LIBS="-L$mpi_lib_dir"
+fi
+if test "x$lib_mpi" != "x"; then
+   LIBS="$LIBS -l$lib_mpi"
+fi
+LIBS="$LIBS $SYS_LDFLAGS"
 dnl Only test for MPI_Finalize; MPI_Init takes argc, argv,
 dnl which configure-main doesn't provide
 AC_COMPILE_IFELSE(AC_LANG_PROGRAM([

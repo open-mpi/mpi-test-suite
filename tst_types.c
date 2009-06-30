@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2009 Cisco Systems, Inc.  All rights reserved.
+ */
+
 #include "config.h"
 #ifdef HAVE_VALUES_H
 #  include <values.h>
@@ -53,7 +57,6 @@
  * Local static Functions
  */
 static int tst_type_gettypelb (int type);
-static int tst_type_gettypemax_log (int type);
 static int tst_type_search (const int search_test, const int * test_list, const int test_list_num);
 
 /*
@@ -547,71 +550,6 @@ void tst_type_hexdump (const char * text, const char * data, int num)
    printf("\n");
 }
 
-
-static int tst_type_gettypemax_log (int type)
-{
-  CHECK_ARG (type, -1);
-
-  switch (types[type].type_class)
-    {
-      case TST_MPI_CHAR: return 1;
-      case TST_MPI_UNSIGNED_CHAR: return 1;
-#ifdef HAVE_MPI2
-      case TST_MPI_SIGNED_CHAR: return 1;
-#endif
-      case TST_MPI_BYTE: return 1;
-      case TST_MPI_SHORT: return SIZEOF_SHORT;
-      case TST_MPI_UNSIGNED_SHORT: return SIZEOF_SHORT;
-      case TST_MPI_INT: return SIZEOF_INT;
-      case TST_MPI_UNSIGNED: return SIZEOF_INT;
-      case TST_MPI_LONG: return SIZEOF_LONG;
-      case TST_MPI_UNSIGNED_LONG: return SIZEOF_LONG;
-      case TST_MPI_FLOAT: return SIZEOF_FLOAT;
-      case TST_MPI_DOUBLE: return SIZEOF_DOUBLE;
-#if defined(HAVE_LONG_DOUBLE) && defined (LDBL_MAX)
-      case TST_MPI_LONG_DOUBLE: return SIZEOF_LONG_DOUBLE;
-#endif
-#if defined(HAVE_C_MPI_LONG_LONG_INT)
-      case TST_MPI_LONG_LONG: return SIZEOF_LONG_LONG;
-#endif /* HAVE_C_MPI_LONG_LONG_INT */
-      case TST_MPI_PACKED: return 1;
-        /*
-          case TST_MPI_LB: return 0;
-          case TST_MPI_UB: return 0;
-        */
-      case TST_MPI_FLOAT_INT: return SIZEOF_STRUCT_MPI_FLOAT_INT;
-      case TST_MPI_DOUBLE_INT: return SIZEOF_STRUCT_MPI_DOUBLE_INT;
-      case TST_MPI_LONG_INT: return SIZEOF_STRUCT_MPI_LONG_INT;
-      case TST_MPI_SHORT_INT: return SIZEOF_STRUCT_MPI_SHORT_INT;
-      case TST_MPI_2INT: return SIZEOF_STRUCT_MPI_2INT;
-#if defined(HAVE_LONG_DOUBLE) && defined (LDBL_MAX)
-      case TST_MPI_LONG_DOUBLE_INT: return SIZEOF_STRUCT_MPI_LONG_DOUBLE_INT;
-#endif
-      case TST_MPI_INT_CONTI: return (7*sizeof(int));
-      case TST_MPI_INT_VECTOR: return (7*sizeof(int));
-      case TST_MPI_INT_HVECTOR: return (7*sizeof(int));
-      case TST_MPI_INT_INDEXED: return (7*sizeof(int));
-      case TST_MPI_INT_HINDEXED: return (7*sizeof(int));
-      case TST_MPI_INT_STRUCT: return (7*sizeof(int));
-      case TST_MPI_TYPE_MIX: return sizeof(struct tst_mpi_type_mix);
-      case TST_MPI_TYPE_MIX_ARRAY: return sizeof(struct tst_mpi_type_mix_array);
-      case TST_MPI_TYPE_MIX_LB_UB: return SIZEOF_TYPE_MIX_LB_UB;
-/*
-      case TST_MPI_COMPLEX: return SIZEOF_FORTRAN_COMPLEX;
-      case TST_MPI_DOUBLE_COMPLEX: return SIZEOF_FORTRAN_DOUBLE_COMPLEX;
-      case TST_MPI_LOGICAL: return SIZEOF_FORTRAN_LOGICAL;
-      case TST_MPI_REAL: return SIZEOF_FORTRAN_REAL;
-      case TST_MPI_DOUBLE_PRECISION: return SIZEOF_FORTRAN_DOUBLE_PRECISION;
-      case TST_MPI_INTEGER: return SIZEOF_FORTRAN_INTEGER;
-      case TST_MPI_2INTEGER: return SIZEOF_FORTRAN_2INTEGER;
-      case TST_MPI_2COMPLEX: return SIZEOF_FORTRAN_2COMPLEX;
-      case TST_MPI_2DOUBLE_COMPLEX: return SIZEOF_FORTRAN_2DOUBLE_COMPEX;
-      case TST_MPI_2REAL: return SIZEOF_FORTRAN_2REAL;
-      case TST_MPI_2DOUBLE_PRECISION: return SIZEOF_FORTRAN_2DOUBLE_PRECISION;
-*/
-      default: return -1;
-    }
-}
 
 char * tst_type_allocvalues (const int type, const int values_num)
 {

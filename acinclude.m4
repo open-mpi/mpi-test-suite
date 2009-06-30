@@ -1,3 +1,5 @@
+dnl Copyright (c) 2009 Cisco Systems, Inc.  All rights reserved.
+
 dnl
 dnl Get the format of Fortran names.
 dnl May not be converted to AC_CACHE_CHECK, since we need the AC_DEFINE for the
@@ -246,6 +248,7 @@ dnl just check, whether the test-case compiles.
 dnl
 AC_DEFUN([AC_CHECK_MPI2_ONE_SIDED],
   [
+  AS_IF([test "$enable_mpi2_oneside" = "no"], [ac_cv_have_mpi2_one_sided=no])
   AC_CACHE_CHECK([whether MPI supports one-sided communication], [ac_cv_have_mpi2_one_sided],
   [
     AC_LANG_SAVE()
@@ -278,6 +281,7 @@ dnl just check, whether the test-case compiles.
 dnl
 AC_DEFUN([AC_CHECK_MPI2_DYNAMIC_PROCESSES],
   [
+  AS_IF([test "$enable_mpi2_dynamic" = "no"], [ac_cv_have_mpi2_one_dynamic_processes=no])
   AC_CACHE_CHECK([whether MPI supports dynamic process management], [ac_cv_have_mpi2_dynamic_processes],
   [
     AC_LANG_SAVE()
@@ -305,6 +309,7 @@ dnl
 dnl Check for MPI2's io 
 dnl
 AC_DEFUN([AC_CHECK_MPI2_IO],[
+  AS_IF([test "$enable_mpi2_io" = "no"], [ac_cv_have_mpi2_io=no])
   AC_CACHE_CHECK([whether MPI supports MPI2 io], [ac_cv_have_mpi2_io],
   [
     AC_LANG_SAVE()

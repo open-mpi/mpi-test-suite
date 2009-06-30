@@ -6,6 +6,7 @@
  * Author: Rainer Keller und Sheng Feng
  *
  * Date: Jan 3rd 2007
+ * Copyright (c) 2009 Cisco Systems, Inc.  All rights reserved.
  */
 #include "config.h"
 
@@ -16,11 +17,13 @@
 #define DEBUG(x)
 #define TST_ATOM_TRUE 1
 
+#ifdef HAVE_MPI2_IO
 static char * read_buffer = NULL;
 static char * write_buffer = NULL;
 static MPI_Datatype filetype;
 static char datarep[MPI_MAX_DATAREP_STRING];
 static char file_name[100];
+#endif
 
 int tst_file_io_with_hole_init (struct tst_env * env)
 {
@@ -221,7 +224,7 @@ int tst_file_io_with_hole_cleanup (struct tst_env * env)
   tst_type_freevalues (env->type, read_buffer, env->values_num);
   tst_type_freevalues (env->type, write_buffer, env->values_num);
   MPI_Type_free(&filetype);
-  return 0;
 #endif
+  return 0;
 }
 

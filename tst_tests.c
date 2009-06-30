@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) 2009 Cisco Systems, Inc.  All rights reserved.
+ */
 
 #include "config.h"
 #ifdef HAVE_STRING_H
@@ -611,6 +614,7 @@ static struct tst_test tst_tests[] = {
    TST_NONE,            /* No synchronization needed */
    &tst_coll_alltoall_init, &tst_coll_alltoall_run, &tst_coll_alltoall_cleanup},
 
+#if HAVE_MPI2_DYNAMIC
   {TST_CLASS_DYNAMIC, "establish_communication_alltoall",
    TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
    1,
@@ -636,6 +640,7 @@ static struct tst_test tst_tests[] = {
    TST_MODE_RELAXED,
    TST_SYNC,            /* No synchronization needed */
    &tst_comm_spawn_multiple_init, &tst_comm_spawn_multiple_run, &tst_comm_spawn_multiple_cleanup },
+#endif /* HAVE_MPI2_DYNAMIC */
 
 #ifdef HAVE_MPI2_ONE_SIDED
   {TST_CLASS_ONE_SIDED, "get_fence",
@@ -739,6 +744,7 @@ static struct tst_test tst_tests[] = {
    TST_NONE,            /* No synchronization needed */
    &tst_coll_reduce_in_place_max_init, &tst_coll_reduce_in_place_max_run, &tst_coll_reduce_in_place_max_cleanup},
 
+#ifdef HAVE_MPI2_IO
   /*
    * Here come the io tests
    */
@@ -1149,6 +1155,7 @@ static struct tst_test tst_tests[] = {
    TST_MODE_RELAXED,
    TST_SYNC,            /* Needs sync due to bcast of filename in init */
    &tst_file_io_with_hole2_init, &tst_file_io_with_hole2_run, &tst_file_io_with_hole2_cleanup },
+#endif /* HAVE_MPI2_ONE_SIDED */
 
   {TST_CLASS_COLL, "Allreduce MIN/MAX",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
@@ -1439,8 +1446,8 @@ int tst_test_check_sync (struct tst_env * env)
 void tst_test_list (void)
 {
   int i;
-
-  printf ("Num Tests : %d\n", TST_TESTS_NUM);
+  
+  printf ("Num Tests : %ld\n", TST_TESTS_NUM);
   for (i = 0; i < TST_TESTS_NUM; i++)
     printf ("%s test:%d %s\n",
             tst_test_getclass (i), i, tst_tests[i].description);

@@ -6,6 +6,7 @@
  * Author: Christoph Niethammer
  *
  * Date: Aug 11rd 2008
+ * Copyright (c) 2009 Cisco Systems, Inc.  All rights reserved.
  */
 #include "config.h"
 
@@ -16,7 +17,9 @@
 #define DEBUG(x)
 
 
+#ifdef HAVE_MPI2_IO
 static char file_name[100];
+#endif
 
 int tst_file_simple_init (struct tst_env * env)
 {

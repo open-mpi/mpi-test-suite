@@ -8,6 +8,7 @@
  * Author: Rainer Keller und Sheng Feng
  *
  * Date: Jan 3rd 2007
+ * Copyright (c) 2009 Cisco Systems, Inc.  All rights reserved.
  */
 #include "config.h"
 
@@ -18,8 +19,10 @@
 #define DEBUG(x)
 #define TST_ATOM_TRUE 1
 
+#ifdef HAVE_MPI2_IO
 static char * write_buffer = NULL;
 static char file_name[100];
+#endif
 
 int tst_file_write_all_init (struct tst_env * env)
 {

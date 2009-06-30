@@ -10,6 +10,7 @@
  * Author: Rainer Keller
  *
  * Date: Oct 14th 2003
+ * Copyright (c) 2009 Cisco Systems, Inc.  All rights reserved.
  */
 
 //#include "config.h"
@@ -30,7 +31,6 @@ int tst_put_with_fence_alltoall_init (struct tst_env * env)
   int comm_rank;
   int comm_size;
   int i;
-  int type_size;
   
   DEBUG (printf ("(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
                  tst_global_rank, env->comm, env->type, env->values_num));
@@ -69,7 +69,6 @@ int tst_put_with_fence_alltoall_run (struct tst_env * env)
   int type_size;
   int comm_rank;
   int rank;
-  int recv_count;
   MPI_Comm comm;
   MPI_Datatype type;
   

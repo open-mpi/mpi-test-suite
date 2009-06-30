@@ -10,6 +10,7 @@
  * Author: Rainer Keller
  *
  * Date: Oct 14th 2003
+ * Copyright (c) 2009 Cisco Systems, Inc.  All rights reserved.
  */
 
 #include "config.h"
