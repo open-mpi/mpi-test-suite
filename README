@@ -1,4 +1,22 @@
-           Documentation for the MPI-Testsuite (beta ,-])
+Copyright (c) 2003-2009 High Performance Computing Center Stuttgart,
+                        University of Stuttgart.  All rights reserved.
+Copyright (c) 2005-2009 The University of Tennessee and The University
+                        of Tennessee Research Foundation.  All rights
+                        reserved.
+Copyright (c) 2007      The Trustees of Indiana University and Indiana
+                        University Research and Technology
+                        Corporation.  All rights reserved.
+Copyright (c) 2009      Cisco Systems, Inc.  All rights reserved.
+
+$COPYRIGHT$
+
+Additional copyrights may follow
+
+$HEADER$
+
+===========================================================================
+
+           Documentation (beta ,-]) for the MPI-Testsuite 
            ----------------------------------------------
 
 Overview
@@ -14,10 +32,11 @@ Overview
 
 Introduction
 ------------
-The MPI-test-Suite is in contrast to other test-suite tailored for
-the use with PACX-MPI.
+This MPI-testsuite was initially developped for the use with PACX-MPI and
+has been extended within the Open MPI project.
 
 The main focus is on:
+  - High degree of code coverage through combinations of tests.
   - Easy maintainability,
   - Easy integration of new tests,
   - Rich underlying functionality for flexible tests
@@ -48,64 +67,94 @@ datatypes and preset comunicators. Each test specifies, which kind of
 datatypes, e.g. struct-datatypes and comms, e.g. MPI_COMM_SELF,
 intra-comms and alike it may run.
 
+
 Per default, ALL tests will be run with ALL combinations of datatypes
-and ALL generated communicators!
+and ALL generated communicators! Only failed tests are shown afterwards.
 
 
 Through command-line switches, the user may influence and reduce the
-number of tests with the following commands:
+number of tests with the following commands, first the showing the help:
 
-mpirun -np XX ./mpi_test_suite -h  shows the help:
+>>> mpirun -np XX ./mpi_test_suite -h
 
-  Usage: mpi_test_suite [-t test] [-c comm] [-d datatype] [-n num_values] [-v] [-l]
-  test:   one (or more) tests or test-classes and
-  comm:   one (or more) communicator or communicator-classes
-  datatype:       one (or more) datatype or datatype-classes
-  num_values:     how many elements to communicate (default:10000)
+Usage: mpi_test_suite [-h] [-v] [-l] [-t test] [-c comm] [-d datatype]
+       [-n num_values] [-r report] [-x execution_mode] [-j num_threads]
+test:           one (or more) tests or test-classes (see -l) and
+comm:           one (or more) communicator or communicator-classes (see -l)
+datatype:       one (or more) datatype or datatype-classes (see -l)
+num_values:     one (or more) numbers of values to communicate (default:1000)
+report:         level of detail for tests being run, see -l (default:SUMMARY)
+execution_mode: level of correctness testing, tests to run and internal tests, see -l (default:RELAXED)
+num_threads:    number of threads to execute the tests (default:no threads)
 
-  All multiple test/comm/datatype-declarations must be separated by commas
-  With the option -l/--list all available tests, communicators and datatypes
-  and corresponding classes are listed
+All multiple test/comm/datatype-names must be comma-separated.
+Names are not case-sensisitve, due to spaces in names, proper quoting should be used.
 
-  The option -v, verbose mode is turned on
-  The option -h shows this help.
+-h:             Show this help
+-v:             Turn on verbose mode for debugging output
+-l/--list:      List all available tests, communicators, datatypes and
+                corresponding classes.
 
-The command:
 
-   mpirun -np 1 ./mpi_test_suite -l  
 
-lists all available tests/test-classes, comms/comm-classes and
+The following lists all available tests/test-classes, comms/comm-classes and
 type/type-classes is listed.
-Showing the individual tests, comms and types would be too long, however,
-currently the following classes are setup:
+Showing all the individual tests, comms and types would be too long, however,
+all of the tests, comms and types are grouped in classes, all of which are
+listed with (first the class, followed by number, then a free distinct name):
 
-Test-Class:0 Environment
-Test-Class:1 P2P
-Test-Class:2 Collective
+>>> mpirun -np 1 ./mpi_test_suite -l
+Num Tests : 100                                                                                                
+Environment test:0 Status                                                                                      
+Environment test:1 Request_Null                                                                                
+P2P test:2 Ring                                                                                                
+...
+P2P test:27 Alltoall with topo comm                                                                            
+Collective test:28 Bcast                                                                                       
+...
+Collective test:46 Alltoall                                                                                    
+One-sided test:47 get_fence                                                                                    
+...
+One-sided test:58 Ring with Put                                                                                
+IO test:59 file simple                                                                                         
+...
+IO test:99 io_with_hole2                                                                                       
+Test-Class:0 Unspecified                                                                                       
+Test-Class:1 Environment                                                                                       
+Test-Class:2 P2P                                                                                               
+Test-Class:3 Collective                                                                                        
+Test-Class:4 One-sided                                                                                         
+Test-Class:5 Dynamic                                                                                           
+Test-Class:6 IO                                                                                                
+Test-Class:7 Threaded                                                                                          
+Communicator:0 MPI_COMM_WORLD                                                                                  
+...
+Communicator:12 Intracomm merged of the Halved Intercomm
 Communicator-Class:0 COMM_SELF
 Communicator-Class:1 COMM_NULL
 Communicator-Class:2 INTRA_COMM
 Communicator-Class:3 INTER_COMM
 Communicator-Class:4 CART_COMM
 Communicator-Class:5 TOPO_COMM
-Type-Class:0 STANDARD_C_INT_TYPES
-Type-Class:1 STANDARD_C_FLOAT_TYPES
-Type-Class:2 STANDARD_C_TYPES
-Type-Class:3 STRUCT_C_TYPES
-Type-Class:4 ALL_C_TYPES
-Type-Class:5 STANDARD_FORTRAN_INT_TYPES
-Type-Class:6 STANDARD_FORTRAN_FLOAT_TYPES
-Type-Class:7 STANDARD_FORTRAN_COMPLEX_TYPES
-Type-Class:8 STANDARD_FORTRAN_TYPES
-Type-Class:9 STRUCT_FORTRAN_TYPES
-Type-Class:10 ALL_FORTRAN_TYPES
-
-
+Datatype:0 MPI_CHAR
+...
+Datatype:30 function MPI_Type_dup() n/a
+Datatype-Class:0 STANDARD_C_INT_TYPES
+Datatype-Class:1 STANDARD_C_FLOAT_TYPES
+Datatype-Class:2 STANDARD_C_TYPES
+Datatype-Class:3 STRUCT_C_TYPES
+Datatype-Class:4 ALL_C_TYPES
+Report:0 Summary
+Report:1 Run
+Report:2 Full
+Test mode:0 disabled
+Test mode:1 strict
+Test mode:2 relaxed
 
 
 For example, the command
 
-  mpirun -np 32 ./mpi_test_suite -t "Ring\ Bsend",Collective -c COMM_SELF,INTER_COMM -d MPI_CHAR
+>>> mpirun -np 32 ./mpi_test_suite -t "Ring\ Bsend,Collective" -c COMM_SELF,INTER_COMM -d MPI_CHAR
 
 will run the test called "Ring Bsend" and ALL test-cases belonging to
 test-class Collective with the communicator MPI_COMM_SELF and
