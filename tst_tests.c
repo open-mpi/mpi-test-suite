@@ -1508,7 +1508,7 @@ void tst_test_list (void)
 {
   int i;
 
-  printf ("Num Tests : %ld\n", TST_TESTS_NUM);
+  printf ("Num Tests : %d\n", TST_TESTS_NUM);
   for (i = 0; i < TST_TESTS_NUM; i++)
     printf ("%s test:%d %s\n",
             tst_test_getclass (i), i, tst_tests[i].description);
