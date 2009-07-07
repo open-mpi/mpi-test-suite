@@ -42,7 +42,6 @@
 #define MAX_TYPES 128                   /* One of the largest type_maaings is for MPI_TYPE_MIX_ARRAY */
 #define TYPES_NUM_REPEAT   7
 #define OVERHEAD 8
-#define DEFAULT_INIT_BYTE 0xa5
 
 #define CHECK_ARG(i,ret) do {           \
     if ((i) < 0 || (i) > TST_TYPES_NUM) \

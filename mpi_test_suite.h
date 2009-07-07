@@ -27,6 +27,7 @@
 /****************************************************************************/
 
 #define DEBUG(x) x
+#define DEFAULT_INIT_BYTE 0xa5
 
 #define WARNING(x) do { \
   if (!tst_global_rank) \

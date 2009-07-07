@@ -19,7 +19,7 @@
 static int tst_test_reset_statuses (int count, MPI_Status * statuses)
 {
   int i;
-  memset (statuses, 0xFF, sizeof (MPI_Status) * count);
+  memset (statuses, DEFAULT_INIT_BYTE, sizeof (MPI_Status) * count);
   for (i = 0; i < count; i++)
     statuses[i].MPI_ERROR = 4711;
   return 0;
@@ -34,7 +34,7 @@ int tst_env_request_null_init (struct tst_env * env)
 
 int tst_env_request_null_run (struct tst_env * env)
 {
-  MPI_Request requests[2];
+  MPI_Request requests[2] = {MPI_REQUEST_NULL, MPI_REQUEST_NULL};
   MPI_Status statuses[2];
   int flags[2];
   int cancelled[2];
@@ -56,9 +56,11 @@ int tst_env_request_null_run (struct tst_env * env)
    * Only the MULTIPLE COMPLETION calls may change the MPI_ERROR field
    * however, it is not said, that they should change in case of
    * inactive Requests. So, we check MPI_ERROR for the two sensible
-   * values either MPI_SUCCESS or 4711, and the rest for empty status
-   * (not cancelled, zero count, zero elements, MPI_TAG == MPI_ANY_TAG
-   * and MPI_SOURCE == MPI_ANY_SOURCE.
+   * values either MPI_SUCCESS or 4711, and according to the MPI standard
+   * with empty status (MPI-2.1, p52, l35):
+   *   aka not cancelled, zero count, zero elements,
+   *   MPI_TAG == MPI_ANY_TAG and
+   *   MPI_SOURCE == MPI_ANY_SOURCE.
    */
 
 #define LOCAL_CHECK(func_string,var,op,expected) \
@@ -73,6 +75,8 @@ int tst_env_request_null_run (struct tst_env * env)
    * Check MPI_Wait
    */
   tst_test_reset_statuses (1, statuses);
+  requests[0] = MPI_REQUEST_NULL;
+  requests[1] = MPI_REQUEST_NULL;
   MPI_CHECK (MPI_Wait (&requests[0], &statuses[0]));
 
   MPI_CHECK (MPI_Test_cancelled (&statuses[0], &cancelled[0]));
