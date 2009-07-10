@@ -44,7 +44,7 @@ int tst_p2p_direct_partner_intercomm_run (struct tst_env * env)
   int comm_size;
   int comm_rank;
   int send_to;
-  int recv_from;
+  int recv_from = MPI_PROC_NULL;
   int remote_size;
   int recv_count;
   MPI_Comm comm;
@@ -89,7 +89,8 @@ int tst_p2p_direct_partner_intercomm_run (struct tst_env * env)
       (recv_from != MPI_PROC_NULL && status.MPI_TAG != env->tag) ||
       (recv_from == MPI_PROC_NULL && status.MPI_TAG != MPI_ANY_TAG))
     ERROR (EINVAL, "Error in status");
-  if (tst_mode == TST_MODE_STRICT)
+  if (tst_mode == TST_MODE_STRICT &&
+      MPI_PROC_NULL != recv_from )
     {
        MPI_CHECK(MPI_Get_count(&status, type, &recv_count));
        if(recv_count != env->values_num)
