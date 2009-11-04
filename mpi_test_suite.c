@@ -346,7 +346,7 @@ int main (int argc, char * argv[])
               {
                 /*
                  * In case we find the magic word all, we reset the list as above.
-                 * In case we find a '!', deselect the test (test-class)
+                 * In case we find a '^', deselect the test (test-class)
                  */
                 /* Need to Check how to test for 'All' but not getting in the way of sthing like 'Alltoall with' */
                 if (!strncasecmp ("All", str, strlen("All")) &&
@@ -356,7 +356,7 @@ int main (int argc, char * argv[])
                       tst_test_array[i] = i;
                     num_tests = tst_test_array_max;
                   }
-                else if ('!' == str[0])
+                else if ('^' == str[0])
                   {
                     char tmp_str[TST_DESCRIPTION_LEN+1];
 
@@ -404,7 +404,7 @@ int main (int argc, char * argv[])
               {
                 /*
                  * In case we find the magic word all, we reset the list as above.
-                 * In case we find a '!', deselect the communicator (communicators of a comm-class)
+                 * In case we find a '^', deselect the communicator (communicators of a comm-class)
                  */
                 if (!strncasecmp ("All", str, strlen("All")))
                   {
@@ -412,7 +412,7 @@ int main (int argc, char * argv[])
                       tst_comm_array[i] = i;
                     num_comms = tst_comm_array_max;
                   }
-                else if ('!' == str[0])
+                else if ('^' == str[0])
                   {
                     char tmp_str[TST_DESCRIPTION_LEN+1];
 
@@ -451,7 +451,7 @@ int main (int argc, char * argv[])
               {
                 /*
                  * In case we find the magic word all, we reset the list as above.
-                 * In case we find a '!', deselect the type (types of a type-class)
+                 * In case we find a '^', deselect the type (types of a type-class)
                  */
                 if (!strncasecmp ("All", str, strlen("All")))
                   {
@@ -459,7 +459,7 @@ int main (int argc, char * argv[])
                       tst_type_array[i] = i;
                     num_types = tst_type_array_max;
                   }
-                else if ('!' == str[0])
+                else if ('^' == str[0])
                   {
                     char tmp_str[TST_DESCRIPTION_LEN+1];
 
