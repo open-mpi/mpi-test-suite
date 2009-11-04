@@ -1,4 +1,2 @@
 #!/bin/sh
-
-aclocal
-autoconf
+autoreconf -vif
