@@ -34,11 +34,13 @@ AC_ARG_ENABLE(mpi2-io,
 
 dnl Check for programs (we currently use C and Fortran).
 dnl yacc/bison and lex/flex are needed for parsing of .hostfile and .netfile
+CFLAGS_save=$CFLAGS
 AC_GNU_SOURCE
 AC_PROG_CPP
 AC_PROG_CC
 AC_PROG_MAKE_SET
 AC_PROG_LN_S
+CFLAGS="$CFLAGS_SAVE -g"
 
 FORTRAN_TARGET=""
 FORTRAN_OBJ_FILES=""
