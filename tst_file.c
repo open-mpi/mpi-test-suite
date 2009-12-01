@@ -15,6 +15,7 @@
 int tst_file_alloc (int type, const int values_num, const int comm_size,
                     char file_name[100], const MPI_Comm comm)
 {
+#if HAVE_MPI2_IO
   MPI_File file;
   MPI_Datatype datatype;
   int i, comm_rank;
@@ -43,7 +44,7 @@ int tst_file_alloc (int type, const int values_num, const int comm_size,
     }
   MPI_File_close(&file);
 
-
+#endif
 
   return 0;
 }
@@ -51,6 +52,7 @@ int tst_file_alloc (int type, const int values_num, const int comm_size,
 int tst_file_check (int type, const int values_num, const int comm_size,
                     char file_name[100], const MPI_Comm comm)
 {
+#if HAVE_MPI2_IO
   MPI_File file;
   MPI_Datatype datatype;
   int i, comm_rank;
@@ -80,6 +82,7 @@ int tst_file_check (int type, const int values_num, const int comm_size,
       tst_type_freevalues (type, cmp_buffer, values_num);
     }
   MPI_File_close(&file);
+#endif
 
   return 0;
 }
