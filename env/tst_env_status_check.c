@@ -126,6 +126,35 @@ int tst_env_status_check_run (struct tst_env * env)
   LOCAL_CHECK ("MPI_Irecv / MPI_Test", get_elements, !=, 0);
 
 
+  /*
+   * Do the same with MPI_Irecv + MPI_Testall, expecting to have request pass that through the status
+   */
+  memset (&status, DEFAULT_INIT_BYTE, sizeof (status));
+  status.MPI_ERROR = 4711;
+
+  MPI_CHECK (MPI_Irecv (NULL, 0, MPI_CHAR, MPI_PROC_NULL, 4711, comm, &request));
+
+  MPI_CHECK (MPI_Testall (1, &request, &flag, &status));
+  MPI_CHECK (MPI_Test_cancelled (&status, &cancelled));
+  MPI_CHECK (MPI_Get_count (&status, MPI_CHAR, &get_count));
+  MPI_CHECK (MPI_Get_elements (&status, MPI_CHAR, &get_elements));
+
+  /*
+   * If interpreting MPI-1.2, sec. 3.2.5, p. 22 (changing status.MPI_ERROR for single-completion
+   * wait/test calls) in the same sense for MPI_Recv, status.MPI_ERROR should not be changed,
+   *
+   * Nevertheless, we are not that anal.
+   */
+  LOCAL_CHECK ("MPI_Irecv / MPI_Testall", flag, !=, 1);
+  LOCAL_CHECK ("MPI_Irecv / MPI_Testall", (status.MPI_ERROR != MPI_SUCCESS) && status.MPI_ERROR, !=, 4711);
+  LOCAL_CHECK ("MPI_Irecv / MPI_Testall", status.MPI_SOURCE, !=, MPI_PROC_NULL);
+  LOCAL_CHECK ("MPI_Irecv / MPI_Testall", status.MPI_TAG, !=, MPI_ANY_TAG);
+
+  LOCAL_CHECK ("MPI_Irecv / MPI_Testall", cancelled, !=, 0);
+  LOCAL_CHECK ("MPI_Irecv / MPI_Testall", get_count, !=, 0);
+  LOCAL_CHECK ("MPI_Irecv / MPI_Testall", get_elements, !=, 0);
+
+
   /********************* Persistent communication (MPI_PROC_NULL) **********************************/
   /********************* As these are never started, expect an empty status *******************************/
   /*
@@ -177,6 +206,29 @@ int tst_env_status_check_run (struct tst_env * env)
   LOCAL_CHECK ("MPI_Send_init / MPI_Test", get_elements, !=, 0);
 
 
+  /*
+   * Do the same for MPI_Send_init using MPI_Test:
+   */
+  memset (&status, DEFAULT_INIT_BYTE, sizeof (status));
+  status.MPI_ERROR = 4711;
+
+  MPI_CHECK (MPI_Send_init (&flag, 1, MPI_INT, MPI_PROC_NULL, 4711, comm, &request));
+
+  MPI_CHECK (MPI_Testall (1, &request, &flag, &status));
+  MPI_CHECK (MPI_Test_cancelled (&status, &cancelled));
+  MPI_CHECK (MPI_Get_count (&status, MPI_CHAR, &get_count));
+  MPI_CHECK (MPI_Get_elements (&status, MPI_CHAR, &get_elements));
+
+  LOCAL_CHECK ("MPI_Send_init / MPI_Testall", flag, !=, 1);
+  LOCAL_CHECK ("MPI_Send_init / MPI_Testall", (status.MPI_ERROR != MPI_SUCCESS) && status.MPI_ERROR, !=, 4711);
+  LOCAL_CHECK ("MPI_Send_init / MPI_Testall", status.MPI_SOURCE, !=, MPI_ANY_SOURCE);
+  LOCAL_CHECK ("MPI_Send_init / MPI_Testall", status.MPI_TAG, !=, MPI_ANY_TAG);
+
+  LOCAL_CHECK ("MPI_Send_init / MPI_Testall", cancelled, !=, 0);
+  LOCAL_CHECK ("MPI_Send_init / MPI_Testall", get_count, !=, 0);
+  LOCAL_CHECK ("MPI_Send_init / MPI_Testall", get_elements, !=, 0);
+
+
 
   /*
    * Do the same for MPI_Recv_init using MPI_Request_get_status:
@@ -225,6 +277,29 @@ int tst_env_status_check_run (struct tst_env * env)
   LOCAL_CHECK ("MPI_Recv_init / MPI_Test", cancelled, !=, 0);
   LOCAL_CHECK ("MPI_Recv_init / MPI_Test", get_count, !=, 0);
   LOCAL_CHECK ("MPI_Recv_init / MPI_Test", get_elements, !=, 0);
+
+
+  /*
+   * Do the same for MPI_Recv_init using MPI_Test:
+   */
+  memset (&status, DEFAULT_INIT_BYTE, sizeof (status));
+  status.MPI_ERROR = 4711;
+
+  MPI_CHECK (MPI_Recv_init (&flag, 1, MPI_INT, MPI_PROC_NULL, 4711, comm, &request));
+
+  MPI_CHECK (MPI_Testall (1, &request, &flag, &status));
+  MPI_CHECK (MPI_Test_cancelled (&status, &cancelled));
+  MPI_CHECK (MPI_Get_count (&status, MPI_CHAR, &get_count));
+  MPI_CHECK (MPI_Get_elements (&status, MPI_CHAR, &get_elements));
+
+  LOCAL_CHECK ("MPI_Recv_init / MPI_Testall", flag, !=, 1);
+  LOCAL_CHECK ("MPI_Recv_init / MPI_Testall", (status.MPI_ERROR != MPI_SUCCESS) && status.MPI_ERROR, !=, 4711);
+  LOCAL_CHECK ("MPI_Recv_init / MPI_Testall", status.MPI_SOURCE, !=, MPI_ANY_SOURCE);
+  LOCAL_CHECK ("MPI_Recv_init / MPI_Testall", status.MPI_TAG, !=, MPI_ANY_TAG);
+
+  LOCAL_CHECK ("MPI_Recv_init / MPI_Testall", cancelled, !=, 0);
+  LOCAL_CHECK ("MPI_Recv_init / MPI_Testall", get_count, !=, 0);
+  LOCAL_CHECK ("MPI_Recv_init / MPI_Testall", get_elements, !=, 0);
 
 
 
