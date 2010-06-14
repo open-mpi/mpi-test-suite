@@ -13,6 +13,7 @@
 #include "mpi.h"
 #include "mpi_test_suite.h"
 #include "tst_output.h"
+#include "compile_info.h"
 
 
 /****************************************************************************/
@@ -216,16 +217,12 @@ int main (int argc, char * argv[])
 	printf ("Warning: Delay time sould be greater than zero! Using no delay now.\n");
       }
       else {
-	/* XXX INC unistd.h CN Needs unistd.h so we should check in copnfigure script
-	*/
 	gethostname (hostname, 256);
 	hostname[255] = '\0';
 	/* XXX LOG CN Should be modified for logfie support.
 	*/
 	printf ("(Rank:%d) host:%s pid:%ld Going to sleep for %d seconds\n",
 	    tst_global_rank, hostname, (long int)getpid(), delay);
-	/* XXX INC unistd.h CN Needs unistd.h so we should check in copnfigure script
-	*/
 	sleep (delay);
       }
     }
@@ -235,6 +232,18 @@ int main (int argc, char * argv[])
    * XXX CN Maybe redesign the logfile implementation?
    */
   tst_output_init (DEBUG_LOG, TST_OUTPUT_RANK_SELF, TST_REPORT_MAX, TST_OUTPUT_TYPE_LOGFILE, "tst.log");
+
+  char *info_str = (char *) calloc( MAX_INFO_STRING_LENGTH, sizeof(char) );
+  get_compiler_info( &info_str );
+  tst_output_printf (DEBUG_LOG, TST_REPORT_RUN, "Compiler used was %s\n", info_str );
+  get_mpi_info( &info_str );
+  tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "MPI version used was %s\n", info_str );
+  get_compile_time( &info_str );
+  tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "Compiled at %s\n", info_str );
+  get_timestamp( &info_str );
+  tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "Started at %s\n", info_str );
+
+
 
 #ifndef HAVE_MPI2_THREADS
   tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "Testsuite was compiled without MPI2_THREADS");
