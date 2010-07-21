@@ -48,11 +48,10 @@ int tst_coll_allreduce_quadsum_run (struct tst_env * env)
   tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) comm_size:%d comm_rank:%d Going to Allreduce\n",
                      tst_global_rank, comm_size, comm_rank);
 
-  MPI_Op_create (myop_quadsum, 0, &myop);
+  MPI_CHECK (MPI_Op_create (myop_quadsum, 0, &myop));
   MPI_CHECK (MPI_Allreduce (env->send_buffer, env->recv_buffer, env->values_num, type, myop, comm));
 
   {
-    int comm_size;
     long sum;
     const int type_size = tst_type_gettypesize (env->type);
     int errors = 0;
@@ -60,7 +59,6 @@ int tst_coll_allreduce_quadsum_run (struct tst_env * env)
     char * cmp_value;
     int i,j;
 
-    MPI_Comm_size(comm, &comm_size);
     cmp_value = tst_type_allocvalues (env->type, 1);
 
     for (i = 2; i < env->values_num; i++)
