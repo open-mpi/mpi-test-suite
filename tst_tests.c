@@ -686,6 +686,7 @@ static struct tst_test tst_tests[] = {
    &tst_coll_allreduce_sum_init, &tst_coll_allreduce_sum_run, &tst_coll_allreduce_sum_cleanup},
 
 
+#if 0 /* quadsum operation is not associative so the test is wrong. */
   {TST_CLASS_COLL, "Allreduce Quadsum",
    TST_MPI_INTRA_COMM /* | TST_MPI_INTER_COMM */,
    1,
@@ -693,7 +694,7 @@ static struct tst_test tst_tests[] = {
    TST_MODE_RELAXED,
    TST_NONE,            /* No synchronization needed */
    &tst_coll_allreduce_quadsum_init, &tst_coll_allreduce_quadsum_run, &tst_coll_allreduce_quadsum_cleanup},
-
+#endif
 
   /*
    * XXX should allow TST_MPI_INTER_COMM depending on whether the underlying
