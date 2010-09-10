@@ -146,7 +146,6 @@ int tst_accumulate_with_fence_sum_run (struct tst_env * env)
 
 int tst_accumulate_with_fence_sum_cleanup (struct tst_env * env)
 {
-  MPI_Comm comm;
 
   tst_type_freevalues (env->type, send_buffer, env->values_num);
   tst_type_freevalues (env->type, recv_buffer, env->values_num);
