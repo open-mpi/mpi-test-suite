@@ -259,9 +259,6 @@ AC_SUBST(lib_mpi)
 
 
 
-AC_PROG_MPICC
-
-AC_MSG_CHECKING([for compilation of an MPI program])
 old_CFLAGS=${CFLAGS}
 old_LIBS=${LIBS}
 if test "x$mpi_inc_dir" != "x"; then
@@ -274,6 +271,9 @@ if test "x$lib_mpi" != "x"; then
    LIBS="$LIBS -l$lib_mpi"
 fi
 LIBS="$LIBS $SYS_LDFLAGS"
+AC_PROG_MPICC
+
+AC_MSG_CHECKING([for compilation of an MPI program])
 dnl Only test for MPI_Finalize; MPI_Init takes argc, argv,
 dnl which configure-main doesn't provide
 AC_COMPILE_IFELSE(AC_LANG_PROGRAM([

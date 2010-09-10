@@ -128,8 +128,8 @@ AC_DEFUN([AC_PROG_MPICC], [
       dnl This is our last resort -- do it by hand
       dnl This might mean, that the test-program will not run on the cpu, configure runs on!
       ac_cv_prog_mpicc="$CC"
-      ac_cv_mpicc_compile="$CC $CFLAGS -I${mpi_inc_dir} -c conftest.$ac_ext -L${mpi_lib_dir} -l${lib_mpi} >&AS_MESSAGE_LOG_FD"
-      ac_cv_mpicc_link="$CC $CFLAGS -I${mpi_inc_dir} -o conftest$ac_exeext conftest.$ac_ext -L${mpi_lib_dir} -l${lib_mpi} $LDFLAGS $SYS_LDFLAGS >&AS_MESSAGE_LOG_FD"
+      ac_cv_mpicc_compile="$CC $CFLAGS -c conftest.$ac_ext >&AS_MESSAGE_LOG_FD"
+      ac_cv_mpicc_link="$CC $CFLAGS $LIBS -o conftest$ac_exeext conftest.$ac_ext $LDFLAGS $SYS_LDFLAGS >&AS_MESSAGE_LOG_FD"
     fi
   ])
 ])
