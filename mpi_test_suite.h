@@ -511,6 +511,10 @@ extern int tst_env_request_null_init (struct tst_env * env);
 extern int tst_env_request_null_run (struct tst_env * env);
 extern int tst_env_request_null_cleanup (struct tst_env * env);
 
+extern int tst_env_type_dup_init (struct tst_env * env);
+extern int tst_env_type_dup_run (struct tst_env * env);
+extern int tst_env_type_dup_cleanup (struct tst_env * env);
+
 /*
  * Following all p2p-functions
  */
