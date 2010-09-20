@@ -72,7 +72,20 @@ int tst_coll_scan_sum_run (struct tst_env * env)
   MPI_CHECK (MPI_Scan (env->send_buffer, env->recv_buffer, env->values_num, type,
                        MPI_SUM, comm));
 
-  for (i = 0; i < env->values_num; i++)
+  char type_max_value[type_size];
+  tst_type_setvalue (env->type, type_max_value, TST_TYPE_SET_MAX, 0);
+
+  for (i = 0; i < env->values_num; i++) 
+  {
+    /*
+	 * TODO: Search a better solution ...
+	 * As tst_type_setvalue sets values larger than the datatypes max
+	 * value to its max value we have a problem with scan sum. So skip
+	 * all the values which cannot be handled correctly.
+	 */
+    if ( 0 == tst_type_cmpvalue(env->type, &env->check_buffer[i*type_size], type_max_value) ) {
+      break;
+    }
     if (0 != tst_type_cmpvalue(env->type,
                                &env->recv_buffer[i*type_size], &env->check_buffer[i*type_size]))
       {
@@ -84,6 +97,7 @@ int tst_coll_scan_sum_run (struct tst_env * env)
           }
         errors++;
       }
+  }
   if (errors)
     tst_test_recordfailure (env);
 
