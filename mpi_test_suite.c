@@ -359,7 +359,7 @@ int main (int argc, char * argv[])
                  */
                 /* Need to Check how to test for 'All' but not getting in the way of sthing like 'Alltoall with' */
                 if (!strncasecmp ("All", str, strlen("All")) &&
-                    (str[strlen("All")+1]==','))
+                    (str[strlen("All")]=='\0'))
                   {
                     for (i = 0; i < tst_test_array_max; i++)
                       tst_test_array[i] = i;
@@ -576,6 +576,12 @@ int main (int argc, char * argv[])
     }
 
 #ifdef HAVE_MPI2_THREADS
+  if (num_threads <= 0)
+    {
+      printf ("Number of threads wrong:%d\n",
+              num_threads);
+      usage ();
+    }
   tst_thread_init (num_threads, &tst_thread_env);
 #endif
 
