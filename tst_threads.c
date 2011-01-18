@@ -256,6 +256,9 @@ inline int tst_thread_get_num (void)
   pthread_t self = pthread_self();
   DEBUG (printf ("Searching for thread_id %p\n", self));
 
+  if (NULL == tst_thread_tid_array) {
+      return 0;
+  }
   for (i = 0; i <= num_threads; i++) {
      DEBUG (printf ("Comparing with thread_id %p ....", tst_thread_tid_array[i]));
      if ( pthread_equal (tst_thread_tid_array[i], self) ) {
