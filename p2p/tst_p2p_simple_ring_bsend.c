@@ -40,7 +40,7 @@ int tst_p2p_simple_ring_bsend_init (struct tst_env * env)
 #ifdef HAVE_MPI2_THREADS
   num_threads = tst_thread_num_threads ();
 #endif
-  env->mpi_buffer_size = num_threads * (tst_type_gettypesize (env->type) * env->values_num + MPI_BUFFER_OVERHEAD);
+  env->mpi_buffer_size = num_threads * (tst_type_gettypesize (env->type) * env->values_num + MPI_BSEND_OVERHEAD);
   if ( NULL == (env->mpi_buffer = malloc (env->mpi_buffer_size)) )
     ERROR (errno, "malloc");
 #ifdef HAVE_MPI2_THREADS

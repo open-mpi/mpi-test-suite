@@ -54,7 +54,7 @@ int tst_p2p_simple_ring_ibsend_init (struct tst_env * env)
 
   tst_type_setstandardarray (env->type, env->values_num, env->send_buffer, comm_rank);
 
-  env->mpi_buffer_size = num_threads * (tst_type_gettypesize (env->type) * env->values_num + MPI_BUFFER_OVERHEAD);
+  env->mpi_buffer_size = num_threads * (tst_type_gettypesize (env->type) * env->values_num + MPI_BSEND_OVERHEAD);
   if ((env->mpi_buffer = malloc (env->mpi_buffer_size)) == NULL)
     ERROR (errno, "malloc");
 

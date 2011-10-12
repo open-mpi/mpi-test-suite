@@ -69,11 +69,6 @@
 #  error "No 8-Byte integer found"
 #endif
 
-/*
- * This probably should be found out another way...
- */
-#define MPI_BUFFER_OVERHEAD 1024
-
 #define TST_DESCRIPTION_LEN 48
 
 /*

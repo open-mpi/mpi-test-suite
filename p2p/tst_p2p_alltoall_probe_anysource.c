@@ -72,7 +72,7 @@ int tst_p2p_alltoall_probe_anysource_init (struct tst_env * env)
       memset (&(env->status_buffer[i]), 0, sizeof (MPI_Status));
     }
 
-  env->mpi_buffer_size = num_threads * (tst_type_gettypesize (env->type) * env->values_num * (comm_size - 1) + MPI_BUFFER_OVERHEAD);
+  env->mpi_buffer_size = num_threads * (tst_type_gettypesize (env->type) * env->values_num * (comm_size - 1) + comm_size * MPI_BSEND_OVERHEAD);
   if ((env->mpi_buffer = malloc (env->mpi_buffer_size)) == NULL)
     ERROR (errno, "malloc");
 #ifdef HAVE_MPI2_THREADS
