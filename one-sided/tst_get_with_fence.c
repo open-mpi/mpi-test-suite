@@ -48,12 +48,12 @@ int tst_get_with_fence_alltoall_init (struct tst_env * env)
                              env->send_buffer, comm_rank);
 
 
-  if ((env->recv_buffer = malloc (sizeof (char *) * comm_size)) == NULL)
+  if ((env->recv_buffer_array = malloc (sizeof (char *) * comm_size)) == NULL)
     ERROR (errno, "malloc");
 
   for (i=0; i < comm_size; i++)
     {
-      env->recv_buffer[i] = tst_type_allocvalues (env->type, env->values_num);
+      env->recv_buffer_array[i] = tst_type_allocvalues (env->type, env->values_num);
     }
 
   return 0;
@@ -90,7 +90,7 @@ int tst_get_with_fence_alltoall_run (struct tst_env * env)
   MPI_CHECK(MPI_Win_fence(0, window));
   for(i=0; i<comm_size; i++)
     {
-	MPI_Get(env->recv_buffer[i], env->values_num, type, i,0,env->values_num,type,
+	MPI_Get(env->recv_buffer_array[i], env->values_num, type, i,0,env->values_num,type,
 		window);
     }
   MPI_CHECK(MPI_Win_fence(0, window));
@@ -100,7 +100,7 @@ int tst_get_with_fence_alltoall_run (struct tst_env * env)
   for (rank = 0; rank < comm_size; rank++)
     {
      
-      tst_test_checkstandardarray (env, env->recv_buffer[rank],  rank );
+      tst_test_checkstandardarray (env, env->recv_buffer_array[rank],  rank );
     }
   return 0;
 }
@@ -120,7 +120,7 @@ int tst_get_with_fence_alltoall_cleanup (struct tst_env * env)
     MPI_CHECK (MPI_Comm_size (comm, &comm_size));
 
   for (i = 0; i < comm_size; i++)
-    tst_type_freevalues (env->type, env->recv_buffer[i], env->values_num);
+    tst_type_freevalues (env->type, env->recv_buffer_array[i], env->values_num);
 
   free (env->recv_buffer);
 
