@@ -1646,7 +1646,7 @@ int tst_test_deselect (const char * test_string, int * test_list, const int test
                * Search for this test in the test_list --
                * if it belongs to this class and is already included, deselect
                */
-              if (((ret = tst_test_search (j, test_list, *test_list_num)) != -1) &&
+              if (((ret = tst_test_search (j, test_list, test_list_max)) != -1) &&
                   tst_tests[j].class & (1 << tst_class))
                 {
                   DEBUG (printf ("test_string:%s test j:%d (1 << tst_class):%d with class:%d matches for deselect, test_list_num:%d\n",
