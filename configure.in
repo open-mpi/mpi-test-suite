@@ -243,9 +243,9 @@ case "$host" in
 esac
 happy=0
 if test x"$msg" = "x"; then
-   AC_LINK_IFELSE(AC_LANG_PROGRAM([[
+   AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 AC_INCLUDES_DEFAULT]],
-[[MPI_Init(NULL, NULL);]]), 
+[[MPI_Init(NULL, NULL);]])], 
                   [msg="found" happy=1])
 else
    happy=1
@@ -276,11 +276,11 @@ AC_PROG_MPICC
 AC_MSG_CHECKING([for compilation of an MPI program])
 dnl Only test for MPI_Finalize; MPI_Init takes argc, argv,
 dnl which configure-main doesn't provide
-AC_COMPILE_IFELSE(AC_LANG_PROGRAM([
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
 #include "mpi.h"
   ], [
   MPI_Finalize();
-  ]), [
+  ])], [
   AC_MSG_RESULT([found])
   AC_DEFINE(HAVE_MPI, 1, Define if program for MPI could be compiled and linked)],
   [AC_MSG_ERROR(MPI not found; check paths for MPI package first...)])
