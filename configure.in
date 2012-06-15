@@ -243,8 +243,8 @@ case "$host" in
 esac
 happy=0
 if test x"$msg" = "x"; then
-   AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-AC_INCLUDES_DEFAULT]],
+   AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <mpi.h>
+]],
 [[MPI_Init(NULL, NULL);]])], 
                   [msg="found" happy=1])
 else
