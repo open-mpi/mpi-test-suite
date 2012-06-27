@@ -46,9 +46,27 @@ FORTRAN_TARGET=""
 FORTRAN_OBJ_FILES=""
 FORTRAN_OBJ_FILES_MPI2=""
 if test "x$ENABLE_PACX_FORTRAN" = "xyes" ; then
+  AC_PROG_F77
+
+  # Check if we really have mpif.h support
+  AC_MSG_CHECKING([if we have mpif.h support])
+  AC_LANG_PUSH([Fortran 77])
+  AC_LINK_IFELSE([AC_LANG_SOURCE[!
+        program test_mpi
+        include 'mpif.h'
+        implicit none
+        integer ierr
+        call MPI_Init(ierr)
+        call MPI_Finalize(ierr)
+        end program]], [HAVE_MPIFH=yes], 
+                       [ENABLE_PACX_FORTRAN=no HAVE_MPIFH=no])
+  AC_MSG_RESULT([$HAVE_MPIFH])
+  AC_LANG_POP([Fortran 77])
+fi
+
+if test "x$ENABLE_PACX_FORTRAN" = x"yes" ; then
   AC_DEFINE([FORTRAN], 1, [Define if support for Fortran is requested])
 
-  AC_PROG_F77
   AC_F77_LIBRARY_LDFLAGS
 
   dnl On Nec SX5, above doesn't work out, therefore, we have to add this manually
