@@ -86,6 +86,14 @@ static struct tst_test tst_tests[] = {
    TST_SYNC,
    &tst_env_type_dup_init, &tst_env_type_dup_run, &tst_env_type_dup_cleanup},
 
+  {TST_CLASS_ENV, "Get_version",
+   TST_MPI_COMM_SELF,
+   1,
+   TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
+   TST_SYNC,
+   &tst_env_get_version_init, &tst_env_get_version_run, &tst_env_get_version_cleanup},
+
 
   /*
    * Here come the P2P-tests
