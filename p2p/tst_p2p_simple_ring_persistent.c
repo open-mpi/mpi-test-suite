@@ -124,15 +124,20 @@ int tst_p2p_simple_ring_persistent_run (struct tst_env * env)
       (recv_from != MPI_PROC_NULL && statuses[1].MPI_TAG != env->tag) ||
       (recv_from == MPI_PROC_NULL && statuses[1].MPI_TAG != MPI_ANY_TAG))
     {
-      if (statuses[1].MPI_SOURCE != recv_from)
-        printf ("statuses[1].MPI_SOURCE:%d instead of %d (MPI_ANY_SOURCE:%d MPI_PROC_NULL:%d)\n",
-                statuses[1].MPI_SOURCE, recv_from, MPI_ANY_SOURCE, MPI_PROC_NULL);
+      if (statuses[1].MPI_SOURCE == MPI_ANY_SOURCE && statuses[1].MPI_TAG == MPI_ANY_TAG) {
+        tst_output_printf(DEBUG_LOG, TST_REPORT_MAX, "empty status detected\n");
+      }
+      else {
+        if (statuses[1].MPI_SOURCE != recv_from)
+          printf ("statuses[1].MPI_SOURCE:%d instead of %d (MPI_ANY_SOURCE:%d MPI_PROC_NULL:%d)\n",
+                  statuses[1].MPI_SOURCE, recv_from, MPI_ANY_SOURCE, MPI_PROC_NULL);
 
-      if (recv_from == MPI_PROC_NULL && statuses[1].MPI_TAG != MPI_ANY_TAG)
-        printf ("MPI_PROC_NULL: statuses[1].tag:%d instead of MPI_ANY_TAG:%d\n",
-                statuses[1].MPI_TAG, MPI_ANY_TAG);
+        if (recv_from == MPI_PROC_NULL && statuses[1].MPI_TAG != MPI_ANY_TAG)
+          printf ("MPI_PROC_NULL: statuses[1].tag:%d instead of MPI_ANY_TAG:%d\n",
+                  statuses[1].MPI_TAG, MPI_ANY_TAG);
 
-      ERROR (EINVAL, "Error in statuses");
+        ERROR (EINVAL, "Error in statuses");
+      }
     }
 
   if (recv_from != MPI_PROC_NULL)
