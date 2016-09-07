@@ -54,11 +54,9 @@ int tst_file_simple_run (struct tst_env * env)
 #ifdef HAVE_MPI2_IO
   int comm_rank;
   MPI_Comm comm;
-  MPI_Datatype type;
   MPI_File file;
 
   comm = tst_comm_getcomm (env->comm);
-  type = tst_type_getdatatype (env ->type);
   MPI_CHECK(MPI_Comm_rank(comm, &comm_rank));
 
   MPI_CHECK (MPI_File_open(comm, file_name, MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &file));

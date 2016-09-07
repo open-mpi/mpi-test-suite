@@ -65,7 +65,6 @@ int tst_threaded_comm_dup_run (struct tst_env * env)
   MPI_Comm comm;
   MPI_Datatype type;
 
-  int num_threads;
   int thread_num;
 
   int i;
@@ -75,7 +74,6 @@ int tst_threaded_comm_dup_run (struct tst_env * env)
   MPI_CHECK (MPI_Comm_size (comm, &comm_size));
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
 
-  num_threads = tst_thread_num_threads();
   thread_num = tst_thread_get_num();
 
 

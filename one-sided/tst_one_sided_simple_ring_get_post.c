@@ -83,12 +83,10 @@ int tst_one_sided_simple_ring_get_post_run (struct tst_env * env)
   int comm_size;
   MPI_Comm comm;
   MPI_Datatype type;
-  int type_size;
   int get_from;
 
   comm = tst_comm_getcomm (env->comm);
   type = tst_type_getdatatype (env->type);
-  type_size = tst_type_gettypesize (env->type);
 
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
   MPI_CHECK (MPI_Comm_size (comm, &comm_size));

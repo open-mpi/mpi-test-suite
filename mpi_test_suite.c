@@ -159,9 +159,6 @@ int main (int argc, char * argv[])
   int num_types;
   int num_tests;
   int num_values = 1;
-#ifdef HAVE_MPI2_THREADS
-  int num_threads = 0;
-#endif
   struct tst_env tst_env;
   int * tst_test_array;
   int tst_test_array_max;
@@ -172,8 +169,11 @@ int main (int argc, char * argv[])
   int tst_value_array[32] = {NUM_VALUES, 0, };
   int tst_value_array_max = 32;
   int * val;
-  int tst_thread_level_provided;
   double time_start, time_stop;
+#ifdef HAVE_MPI2_THREADS
+  int num_threads = 0;
+  int tst_thread_level_provided;
+#endif
 
 
 #ifdef HAVE_MPI2_THREADS
@@ -191,7 +191,6 @@ int main (int argc, char * argv[])
     }
 
 #else
-  tst_thread_level_provided = 0;   /* MPI_THREAD_SINGLE would not work, if not MPI-2, as not defined */
   MPI_Init (&argc, &argv);
 #endif
 
