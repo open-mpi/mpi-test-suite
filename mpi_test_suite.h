@@ -261,19 +261,6 @@
 #define TST_NONE 0
 #define TST_SYNC 1
 
-/*
- * Global structures and variables
- */
-
-#if SIZEOF_INT == 8
-#  define tst_int64 int
-#elif SIZEOF_LONG == 8
-#  define tst_int64 long
-#elif SIZEOF_LONG_LONG == 8
-#  define tst_int64 long long
-#else
-#  error "No 8-Byte integer found"
-#endif
 
 /****************************************************************************/
 /**                                                                        **/
