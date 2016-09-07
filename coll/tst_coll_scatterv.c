@@ -67,7 +67,6 @@ int tst_coll_scatterv_run (struct tst_env * env)
   int root;
   MPI_Comm comm;
   MPI_Datatype type;
-  MPI_Aint stride;
 
   comm = tst_comm_getcomm (env->comm);
   type = tst_type_getdatatype (env->type);
@@ -75,10 +74,6 @@ int tst_coll_scatterv_run (struct tst_env * env)
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
   MPI_CHECK (MPI_Comm_size (comm, &comm_size));
 
-  MPI_CHECK (MPI_Type_extent (type, &stride));
-
-  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) comm_size:%d comm_rank:%d extent:%d type_size:%d\n",
-                 tst_global_rank, comm_size, comm_rank, stride, type_size);
 
   for (root=0; root < comm_size; root++)
     {
