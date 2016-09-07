@@ -253,7 +253,11 @@ int main (int argc, char * argv[])
    * tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "Hello from rank %d\n", tst_global_rank);
    */
 
+  #if MPI_VERSION < 2
   MPI_CHECK (MPI_Attr_get (MPI_COMM_WORLD, MPI_TAG_UB, &val, &flag));
+  #else
+  MPI_CHECK (MPI_Comm_get_attr (MPI_COMM_WORLD, MPI_TAG_UB, &val, &flag));
+  #endif
   if (!flag)
     ERROR (EINVAL, "Couldn't retrieve MPI_TAG_UB attribute");
 
@@ -263,7 +267,7 @@ int main (int argc, char * argv[])
    */
   /*
    * Checking if the upper boundary for tag values is at least 32767 as required by MPI-1.1.
-   * (see MPI-1.1 section 7.1.1.1 Tag values)
+   * (see MPI-1.1 section 7.1.1.1 Tag values or MPI-3.1 section 8.1.2)
    */
   if (tst_tag_ub < 32767)
   {
