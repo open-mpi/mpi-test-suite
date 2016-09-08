@@ -277,14 +277,14 @@ int main (int argc, char * argv[])
   tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "(Rank:%d) MPI_TAG_UB:%d\n",
                     tst_global_rank, tst_tag_ub);
 
-  /* XXX CN Maybe rename these functions to tst_get_num_comms/types/tests ?
-   */
-  tst_comm_init (&num_comms);
-  tst_type_init (&num_types);
-  /* XXX CN What was the following function good for ? */
-  /* tst_reduce_fn_init (&num_reduce_fns); */
-  tst_test_init (&num_tests);
+  /* XXX CN Maybe rename these functions to tst_get_num_comms/types/tests ?  */
+  tst_comm_init(&num_comms);
+  tst_type_init(&num_types);
+  tst_test_init(&num_tests);
 
+  if (num_comms < 1 || num_types < 1 || num_tests < 1) {
+    ERROR(EINVAL, "Nothing to execute");
+  }
 
   /*
    * Schedule every test to be run.
