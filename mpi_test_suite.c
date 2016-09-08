@@ -675,7 +675,7 @@ int main (int argc, char * argv[])
 
   MPI_Finalize ();
 
-  return (tst_test_get_failed_num () ? -1 : 0);
+  return (tst_test_get_failed_num () > 0 ? -1 : 0);
 }
 
 /****************************************************************************/
