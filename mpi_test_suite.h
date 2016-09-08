@@ -17,7 +17,7 @@
 #  include <sys/types.h>
 #endif
 
-#include "mpi.h"
+#include <mpi.h>
 #include "tst_output.h"
 
 /****************************************************************************/
