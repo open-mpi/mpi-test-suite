@@ -31,7 +31,7 @@ int tst_env_cart_communicator_run (struct tst_env * env)
   MPI_Comm comm_cart;
   int rank;
   int rank_cart;
-  int newrank:
+  int newrank;
 
   /*
    * Create a 1-dimensional communicator and check that ranks are
