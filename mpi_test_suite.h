@@ -71,14 +71,15 @@
 
 #define TST_DESCRIPTION_LEN 48
 
+#define TST_SUCESS 0
+#define TST_ERROR -1
+
 /*
  * Global definitions for the io tests
  */
 #define TST_FILE_NAME "tst_io_test_file"
 #define ATOM_MODE 0
 #define NO_ATOM_MODE 1
-#define TST_SUCESS 0
-#define TST_ERROR -1
 
 /*
  * Definitions of the internal representation for the mpi communicators
