@@ -94,7 +94,7 @@ int tst_accumulate_with_lock_max_run (struct tst_env * env)
       MPI_Win_unlock (i,window);
     }
   MPI_CHECK(MPI_Win_fence (0, window));
-  MPI_Win_free (&window);
+  MPI_CHECK(MPI_Win_free (&window));
 
   tst_test_checkstandardarray (env, recv_buffer,  comm_size-1 );
 
