@@ -69,7 +69,7 @@ int tst_accumulate_with_lock_max_run (struct tst_env * env)
   type = tst_type_getdatatype (env->type);
   type_size = tst_type_gettypesize (env->type);
 
-  if (tst_comm_getcommclass (env->comm) == TST_MPI_INTRA_COMM)
+  if (tst_comm_getcommclass (env->comm) & TST_MPI_INTRA_COMM)
     MPI_CHECK (MPI_Comm_size (comm, &comm_size));
   else
     MPI_CHECK (MPI_Comm_remote_size (comm, &comm_size));
