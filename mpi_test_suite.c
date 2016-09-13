@@ -361,7 +361,7 @@ int main (int argc, char * argv[])
                  * In case we find the magic word all, we reset the list as above.
                  * In case we find a '^', deselect the test (test-class)
                  */
-                /* Need to Check how to test for 'All' but not getting in the way of sthing like 'Alltoall with' */
+                /* Need to Check how to test for 'All' but not getting in the way of something like 'Alltoall with' */
                 if (!strncasecmp ("All", str, strlen("All")) &&
                     (str[strlen("All")]=='\0'))
                   {
