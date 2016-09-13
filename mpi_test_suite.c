@@ -361,14 +361,15 @@ int main (int argc, char * argv[])
                  * In case we find the magic word all, we reset the list as above.
                  * In case we find a '^', deselect the test (test-class)
                  */
-                /* Need to Check how to test for 'All' but not getting in the way of something like 'Alltoall with' */
-                if (!strncasecmp ("All", str, strlen("All")) &&
-                    (str[strlen("All")]=='\0'))
-                  {
-                    for (i = 0; i < tst_test_array_max; i++)
-                      tst_test_array[i] = i;
-                    num_tests = tst_test_array_max;
+                if (0 == strcasecmp("All", str)) {
+                  /* str returned by strtok terminated by '\0'. So this will
+                   * match only 'All' but not getting in the way of something
+                   * like 'Alltoall with' */
+                  for (i = 0; i < tst_test_array_max; i++) {
+                    tst_test_array[i] = i;
+                    num_tests++;
                   }
+		}
                 else if ('^' == str[0])
                   {
                     char tmp_str[TST_DESCRIPTION_LEN+1];
@@ -419,12 +420,12 @@ int main (int argc, char * argv[])
                  * In case we find the magic word all, we reset the list as above.
                  * In case we find a '^', deselect the communicator (communicators of a comm-class)
                  */
-                if (!strncasecmp ("All", str, strlen("All")))
-                  {
-                    for (i = 0; i < tst_comm_array_max; i++)
-                      tst_comm_array[i] = i;
-                    num_comms = tst_comm_array_max;
+                if (0 == strcasecmp("All", str)) {
+                  for (i = 0; i < tst_comm_array_max; i++) {
+                    tst_comm_array[i] = i;
+                    num_comms++;
                   }
+		}
                 else if ('^' == str[0])
                   {
                     char tmp_str[TST_DESCRIPTION_LEN+1];
@@ -466,12 +467,12 @@ int main (int argc, char * argv[])
                  * In case we find the magic word all, we reset the list as above.
                  * In case we find a '^', deselect the type (types of a type-class)
                  */
-                if (!strncasecmp ("All", str, strlen("All")))
-                  {
-                    for (i = 0; i < tst_type_array_max; i++)
-                      tst_type_array[i] = i;
-                    num_types = tst_type_array_max;
+                if (0 == strcasecmp("All", str)) {
+                  for (i = 0; i < tst_type_array_max; i++) {
+                    tst_type_array[i] = i;
+                    num_types++;
                   }
+		}
                 else if ('^' == str[0])
                   {
                     char tmp_str[TST_DESCRIPTION_LEN+1];
