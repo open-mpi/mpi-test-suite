@@ -624,7 +624,7 @@ int main (int argc, char * argv[])
 
             if (tst_global_rank == 0 && tst_report > TST_REPORT_SUMMARY)
               printf ("%s tests %s (%d/%d), comm %s (%d/%d), type %s (%d/%d)\n",
-                      tst_test_getclass (tst_env.test),
+                      tst_test_getclass_string (tst_env.test),
                       tst_test_getdescription (tst_env.test), tst_env.test+1, num_tests,
                       tst_comm_getdescription (tst_env.comm), tst_env.comm+1, num_comms,
                       tst_type_getdescription (tst_env.type), tst_env.type+1, num_types);

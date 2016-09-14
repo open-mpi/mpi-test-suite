@@ -1409,11 +1409,11 @@ int tst_test_cleanup (void)
   return 0;
 }
 
-const char * tst_test_getclass (int i)
-{
+const char *tst_test_getclass_string(int i) {
   CHECK_ARG (i, NULL);
 
-  /* XXX CN Can this internal check be implemented another way, because it can easily be forgetten when adding a new calss ...
+  /* XXX CN Can this internal check be implemented another way, because it can
+   * easily be forgetten when adding a new calss ...
    */
   INTERNAL_CHECK
     (
@@ -1427,7 +1427,7 @@ const char * tst_test_getclass (int i)
        ERROR (EINVAL, "Class of test is unknown");
      );
   /*
-  printf ("tst_test_getclass: i:%d class:%d ffs():%d string:%s\n",
+  printf ("tst_test_getclass_string: i:%d class:%d ffs():%d string:%s\n",
           i, tst_tests[i].class, ffs(tst_tests[i].class)-1,
           tst_test_class_strings[ffs (tst_tests[i].class)-1]);
   */
@@ -1528,7 +1528,7 @@ void tst_test_list (void)
   printf ("Num Tests : %d\n", TST_TESTS_NUM);
   for (i = 0; i < TST_TESTS_NUM; i++)
     printf ("%s test:%d %s\n",
-            tst_test_getclass (i), i, tst_tests[i].description);
+            tst_test_getclass_string (i), i, tst_tests[i].description);
 
   for (i = 0; i < TST_TEST_CLASS_NUM; i++)
     printf ("Test-Class:%d %s\n",
@@ -1759,7 +1759,7 @@ int tst_test_print_failed (void)
       const int values_num= tst_tests_failed[i].values_num;
 
       printf ("ERROR class:%s test:%s (%d), comm %s (%d), type %s (%d) number of values:%d\n",
-              tst_test_getclass (test),
+              tst_test_getclass_string (test),
               tst_test_getdescription (test), test+1,
               tst_comm_getdescription (comm), comm+1,
               tst_type_getdescription (type), type+1, values_num);
