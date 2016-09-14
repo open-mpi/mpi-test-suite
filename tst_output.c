@@ -26,7 +26,7 @@ Todo:
 #  include <string.h>
 #endif
 #include <stdarg.h>
-#include "mpi.h"
+#include <mpi.h>
 #include "mpi_test_suite.h"
 #include "tst_output.h"
 

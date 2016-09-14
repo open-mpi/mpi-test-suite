@@ -12,7 +12,7 @@
 /* XXX Christoph Niethammer 21.7.2010:
  *  This test is wrong as the quadsum operator is not associative as claimed by the MPI standard!
  */
-#include "mpi.h"
+#include <mpi.h>
 #include "mpi_test_suite.h"
 
 #undef DEBUG

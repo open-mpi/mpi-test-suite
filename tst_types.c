@@ -18,7 +18,7 @@
 #ifdef HAVE_STRINGS_H
 #  include <strings.h>
 #endif
-#include "mpi.h"
+#include <mpi.h>
 #include "mpi_test_suite.h"
 
 #ifndef LLONG_MAX
@@ -403,6 +403,7 @@ int tst_type_init (int * num_types)
       }
     num++;
   }
+#if MPI_VERSION < 3
 #ifndef HAVE_MPI_NECSX
   {
     /*
@@ -445,6 +446,7 @@ int tst_type_init (int * num_types)
     num++;
   }
 #endif
+#endif
 
 #if defined(HAVE_MPI2)
   {
@@ -462,6 +464,7 @@ int tst_type_init (int * num_types)
     types[num].type_mapping[0] = types[0].type_mapping[0];*/
     num++;
   }
+#if MPI_VERSION < 3
 #if !defined (HAVE_MPI_NECSX) && !defined(HAVE_MPI_OPENMPI)
   /*
    * OpenMPI fails here!!!
@@ -486,6 +489,7 @@ int tst_type_init (int * num_types)
 
     num++;
   }
+#endif
 #endif
 #endif /* HAVE_MPI2 */
 

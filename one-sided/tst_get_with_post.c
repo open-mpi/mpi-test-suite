@@ -15,7 +15,7 @@
 //#include "config.h"
 //#ifdef HAVE_MPI2_ONESIDE
 
-#include "mpi.h"
+#include <mpi.h>
 #include "mpi_test_suite.h"
 
 #undef DEBUG

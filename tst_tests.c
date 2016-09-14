@@ -9,7 +9,7 @@
 #ifdef HAVE_STRINGS_H
 #  include <strings.h>
 #endif
-#include "mpi.h"
+#include <mpi.h>
 #include "mpi_test_suite.h"
 
 #define CHECK_ARG(i,ret) do {         \

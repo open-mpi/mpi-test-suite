@@ -9,7 +9,7 @@
  *
  * Date: Dec. 1., 2005
  */
-#include "mpi.h"
+#include <mpi.h>
 #include "mpi_test_suite.h"
 #include "tst_output.h"
 

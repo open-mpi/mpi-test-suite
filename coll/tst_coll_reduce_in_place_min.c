@@ -11,7 +11,7 @@
  *
  * Date: Jan 16th 2007
  */
-#include "mpi.h"
+#include <mpi.h>
 #include "mpi_test_suite.h"
 
 #undef DEBUG

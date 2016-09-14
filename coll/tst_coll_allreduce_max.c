@@ -9,7 +9,7 @@
  *
  * Date: Aug 8th 2003
  */
-#include "mpi.h"
+#include <mpi.h>
 #include "mpi_test_suite.h"
 
 #undef DEBUG

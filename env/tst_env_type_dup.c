@@ -8,7 +8,7 @@
  *
  * Date: Sep. 2., 2009
  */
-#include "mpi.h"
+#include <mpi.h>
 #include "mpi_test_suite.h"
 #include "tst_output.h"
 

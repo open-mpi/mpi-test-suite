@@ -12,7 +12,7 @@
 #ifdef HAVE_LIMITS_H
 #  include <limits.h>
 #endif
-#include "mpi.h"
+#include <mpi.h>
 #include "mpi_test_suite.h"
 
 
