@@ -49,11 +49,16 @@
     exit (__local_error);                                               \
   } while(0)
 
-
-#define MPI_CHECK(x) do {                   \
-    int __ret;                              \
-    if (MPI_SUCCESS != (__ret = (x)))       \
-      ERROR (__ret, "MPI returned error");  \
+#define MPI_CHECK(x)                                                           \
+  do {                                                                         \
+    int __ret = (x);                                                           \
+    if (MPI_SUCCESS != __ret) {                                                \
+      char err_string[MPI_MAX_ERROR_STRING];                                   \
+      int err_string_len = 0;                                                  \
+      MPI_Error_string(__ret, err_string, &err_string_len);                    \
+      fprintf(stderr, "(%s:%d) ERROR: MPI call returned error code %d (%s)",   \
+              __FILE__, __LINE__, __ret, err_string);                          \
+    }                                                                          \
   } while (0)
 
 #if SIZEOF_INT == 8
