@@ -95,6 +95,7 @@
 #define TST_MPI_INTER_COMM  8
 #define TST_MPI_CART_COMM  16 /* Same for these */
 #define TST_MPI_TOPO_COMM  32 /* Same for these */
+#define TST_MPI_SHARED_COMM 64 /* Same for these */
 
 /*
  * Definition of the internal representations for the test classes

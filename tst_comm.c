@@ -47,6 +47,9 @@ static const char * const tst_comms_class_strings [] =
     "INTER_COMM",
     "CART_COMM",
     "TOPO_COMM"
+#if MPI_VERSION >= 3
+    , "SHARED_COMM"
+#endif
   };
 
 
@@ -568,6 +571,36 @@ int tst_comm_init (int * num_comms)
           */
         }
     }
+#endif
+
+#if MPI_VERSION >= 3
+  /*
+   * Create a communicator of type MPI_COMM_TYPE_SHARED
+   */
+  {
+    strncpy (comms[count_comms].description, "MPI_COMM_TYPE_SHARED comm", TST_DESCRIPTION_LEN);
+    MPI_CHECK(MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, comm_rank, MPI_INFO_NULL, &comms[count_comms].mpi_comm));
+    MPI_CHECK(MPI_Comm_size(comms[count_comms].mpi_comm, &comms[count_comms].size));
+    if ((comms[count_comms].mapping = malloc (comm_size * sizeof(int))) == NULL)
+      ERROR (errno, "malloc");
+    for (i = 0; i < comm_size; i++)
+      comms[count_comms].mapping[i] = i;
+
+    /*
+     * Remark, that if the communicator's size is one, we are also an TST_MPI_COMM_SELF
+     */
+    comms[count_comms].class = TST_MPI_SHARED_COMM;
+    /* We are also an INTRA COMM */
+    comms[count_comms].class |= TST_MPI_INTRA_COMM;
+    if (comms[count_comms].size == 1)
+      comms[count_comms].class |= TST_MPI_COMM_SELF;
+
+    comms[count_comms].other_size = 0;
+    comms[count_comms].other_mapping = NULL;
+
+    if (++count_comms > COMM_NUM)
+      ERROR (EINVAL, "Too many communicators, increase COMM_NUM");
+  }
 #endif
 
   *num_comms = count_comms;
