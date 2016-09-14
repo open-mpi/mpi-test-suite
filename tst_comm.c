@@ -69,8 +69,6 @@ static struct comm comms[COMM_NUM] = {
   {MPI_COMM_NULL, "",                -1,                 -1, NULL, 0, NULL},
 };
 
-#define NUM_CONNS *num_conns;
-
 int tst_comm_init (int * num_comms)
 {
   int comm_size;
