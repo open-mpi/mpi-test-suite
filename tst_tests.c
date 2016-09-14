@@ -1546,160 +1546,148 @@ static int tst_test_search (const int search_test, const int * test_list, const 
   return (k == test_list_num) ? -1 : k;
 }
 
-
-int tst_test_select (const char * test_string, int * test_list, const int test_list_max, int * test_list_num)
-{
+int tst_test_select(const char *test_string, int *test_list,
+                    const int test_list_max, int *test_list_num) {
   int i;
 
-  if (test_string == NULL || test_list == NULL || test_list_num == NULL)
-    ERROR (EINVAL, "Passed a NULL parameter");
+  if (test_string == NULL || test_list == NULL || test_list_num == NULL) {
+    ERROR(EINVAL, "Passed a NULL parameter");
+  }
 
-  for (i = 0; i < TST_TEST_CLASS_NUM; i++)
-    {
-      /*
-       * In case we match a complete class of tests, include every one!
-       */
-      if (!strcasecmp (test_string, tst_test_class_strings[i]))
-        {
-          int j;
-          int tst_class = i-1;
-          DEBUG (printf ("test_string:%s matched with tst_test_class_strings[%d]:%s\n",
-                         test_string, i, tst_test_class_strings[i]));
-          for (j = 0; j < TST_TESTS_NUM; j++)
-            {
-              /*
-               * First search for this test in the test_list -- if already in, continue!
-               */
-              if (-1 != tst_test_search (j, test_list, *test_list_num))
-                {
-                  DEBUG (printf ("Test:%s selected through class:%s was already "
-                                   "included in list -- not including\n",
-                                   tst_tests[j].description,
-                                   tst_test_class_strings[tst_class]));
-                  continue;
-                }
-              if (tst_tests[j].class & (1 << tst_class))
-                {
-                  DEBUG (printf ("test_string:%s test j:%d (1 << tst_class):%d with class:%d matches, test_list_num:%d\n",
-                                 test_string, j, (1 << tst_class), tst_tests[j].class, *test_list_num));
-                  test_list[*test_list_num] = j;
-                  (*test_list_num)++;
-                  if (*test_list_num == test_list_max)
-                    ERROR (EINVAL, "Too many user selected tests");
-                }
-            }
-          return 0;
+  /*
+   * In case we match a complete class of tests, include every one!
+   */
+  for (i = 0; i < TST_TEST_CLASS_NUM; i++) {
+    if (0 == strcasecmp(test_string, tst_test_class_strings[i])) {
+      int j;
+      int tst_class = i - 1;
+      DEBUG(
+          printf("test_string:%s matched with tst_test_class_strings[%d]:%s\n",
+                 test_string, i, tst_test_class_strings[i]));
+      for (j = 0; j < TST_TESTS_NUM; j++) {
+        /*
+         * First search for this test in the test_list -- if already in,
+         * continue!
+         */
+        if (tst_tests[j].class & (1 << tst_class)) {
+          if (-1 != tst_test_search(j, test_list, *test_list_num)) {
+            DEBUG(printf("Test:%s selected through class:%s (already included)\n",
+                         tst_tests[j].description,
+                         tst_test_class_strings[tst_class]));
+            continue;
+          }
+          test_list[*test_list_num] = j;
+          (*test_list_num)++;
+          DEBUG(printf("Test:%s selected through class:%s\n",
+                       tst_tests[j].description,
+                       tst_test_class_strings[tst_class]));
+          if (*test_list_num >= test_list_max) {
+            ERROR(EINVAL, "Too many user selected tests");
+          }
         }
+      }
+      return 0;
     }
+  }
 
   /*
    * In case we didn't match a complete class of tests, test for every single one...
    */
-  for (i = 0; i < TST_TESTS_NUM; i++)
-    {
-      if (!strcasecmp (test_string, tst_tests[i].description))
-        {
-          if (-1 != tst_test_search (i, test_list, *test_list_num))
-            {
-              WARNING (printf ("Test:%s was already included in list -- not including\n",
-                               tst_tests[i].description));
-              return 0;
-            }
-
-          test_list[*test_list_num] = i;
-          (*test_list_num)++;
-          if (*test_list_num == test_list_max)
-            ERROR (EINVAL, "Too many user selected tests");
-
-          DEBUG (printf ("test_string:%s matched with test_list_num:%d\n",
-                         test_string, *test_list_num));
-
-          return 0;
-        }
+  for (i = 0; i < TST_TESTS_NUM; i++) {
+    if (0 == strcasecmp(test_string, tst_tests[i].description)) {
+      DEBUG(printf("test_string:%s matched with tst_tests[%d]:%s\n",
+                   test_string, i, tst_tests[i]));
+      if (-1 != tst_test_search(i, test_list, *test_list_num)) {
+        DEBUG(printf("Test:%s selected (already included)\n",
+                     tst_tests[i].description));
+        return 0;
+      }
+      test_list[*test_list_num] = i;
+      (*test_list_num)++;
+      if (*test_list_num >= test_list_max) {
+        ERROR(EINVAL, "Too many user selected tests");
+      }
+      DEBUG(printf("Test:%s selected\n", tst_tests[i].description));
+      return 0;
     }
+  }
 
   {
     char buffer[128];
-    sprintf (buffer, "Test %s not recognized",
-             test_string);
+    sprintf(buffer, "Test %s not recognized", test_string);
     ERROR (EINVAL, buffer);
   }
   return 0;
 }
 
-
-
-int tst_test_deselect (const char * test_string, int * test_list, const int test_list_max, int * test_list_num)
-{
+int tst_test_deselect(const char *test_string, int *test_list,
+                      const int test_list_max, int *test_list_num) {
   int i;
 
-  if (test_string == NULL || test_list == NULL || test_list_num == NULL)
-    ERROR (EINVAL, "Passed a NULL parameter");
+  if (test_string == NULL || test_list == NULL || test_list_num == NULL) {
+    ERROR(EINVAL, "Passed a NULL parameter");
+  }
 
-  for (i = 0; i < TST_TEST_CLASS_NUM; i++)
-    {
-      /*
-       * In case we match a complete class of tests, exclude every one!
-       */
-      if (!strcasecmp (test_string, tst_test_class_strings[i]))
-        {
-          int j;
-          int tst_class = i-1;
-          DEBUG (printf ("test_string:%s matched with tst_test_class_strings[%d]:%s\n",
-                         test_string, i, tst_test_class_strings[i]));
-          for (j = 0; j < TST_TESTS_NUM; j++)
-            {
-              int ret;
-              /*
-               * Search for this test in the test_list --
-               * if it belongs to this class and is already included, deselect
-               */
-              if (((ret = tst_test_search (j, test_list, test_list_max)) != -1) &&
-                  tst_tests[j].class & (1 << tst_class))
-                {
-                  DEBUG (printf ("test_string:%s test j:%d (1 << tst_class):%d with class:%d matches for deselect, test_list_num:%d\n",
-                                 test_string, j, (1 << tst_class), tst_tests[j].class, *test_list_num));
-                  test_list[ret] = -1;
-                  (*test_list_num)--;
-                  if (*test_list_num < 0)
-                    ERROR (EINVAL, "Negative selected tests: This should not happen");
-                }
-            }
-          return 0;
+  for (i = 0; i < TST_TEST_CLASS_NUM; i++) {
+    /*
+     * In case we match a complete class of tests, exclude every one!
+     */
+    if (0 == strcasecmp(test_string, tst_test_class_strings[i])) {
+      int j;
+      int tst_class = i - 1;
+      DEBUG(
+          printf("test_string:%s matched with tst_test_class_strings[%d]:%s\n",
+                 test_string, i, tst_test_class_strings[i]));
+      for (j = 0; j < TST_TESTS_NUM; j++) {
+        int ret;
+        /*
+         * Search for this test in the test_list --
+         * if it belongs to this class and is already included, deselect
+         */
+        if (((ret = tst_test_search(j, test_list, test_list_max)) != -1) &&
+            tst_tests[j].class & (1 << tst_class)) {
+          DEBUG(
+              printf("test_string:%s test j:%d (1 << tst_class):%d with "
+                     "class:%d matches for deselect, test_list_num:%d\n",
+                     test_string, j, (1 << tst_class), tst_tests[j].class,
+                     *test_list_num));
+          test_list[ret] = -1;
+          (*test_list_num)--;
+          if (*test_list_num < 0)
+            ERROR(EINVAL, "Negative selected tests: This should not happen");
         }
+      }
+      return 0;
     }
+  }
 
   /*
    * In case we didn't match a complete class of tests, test for every single one...
    */
-  for (i = 0; i < TST_TESTS_NUM; i++)
-    {
-      if (!strcasecmp (test_string, tst_tests[i].description))
-        {
-          int ret;
-          if ((ret = tst_test_search (i, test_list, *test_list_num)) == -1)
-            {
-              WARNING (printf ("Test:%s was not included in list -- not excluding\n",
-                               tst_tests[i].description));
-              return 0;
-            }
+  for (i = 0; i < TST_TESTS_NUM; i++) {
+    if (0 == strcasecmp(test_string, tst_tests[i].description)) {
+      int ret;
+      if ((ret = tst_test_search(i, test_list, *test_list_num)) == -1) {
+        DEBUG(printf("Test:%s was not included in list -- not excluding\n",
+                       tst_tests[i].description));
+        return 0;
+      }
 
-          test_list[ret] = -1;
-          (*test_list_num)--;
-          if (*test_list_num < 0)
-            ERROR (EINVAL, "Negative selected tests: This should not happen");
+      test_list[ret] = -1;
+      (*test_list_num)--;
+      if (*test_list_num < 0) {
+        ERROR(EINVAL, "Negative selected tests: This should not happen");
+      }
+      DEBUG(printf("test_string:%s matched with test_list_num:%d excluding\n",
+                   test_string, *test_list_num));
 
-          DEBUG (printf ("test_string:%s matched with test_list_num:%d excluding\n",
-                         test_string, *test_list_num));
-
-          return 0;
-        }
+      return 0;
     }
+  }
 
   {
     char buffer[128];
-    sprintf (buffer, "Test %s not recognized",
-             test_string);
+    sprintf(buffer, "Test %s not recognized", test_string);
     ERROR (EINVAL, buffer);
   }
   return 0;
