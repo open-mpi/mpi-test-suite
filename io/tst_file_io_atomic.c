@@ -34,8 +34,8 @@ int tst_file_io_atomic_init (struct tst_env * env)
   int comm_rank;
   MPI_Comm comm;
 
-  DEBUG (printf ("(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
-                 tst_global_rank, env->comm, env->type, env->values_num));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
+                 tst_global_rank, env->comm, env->type, env->values_num);
 
   read_buffer = tst_type_allocvalues (env->type, env->values_num);
   write_buffer = tst_type_allocvalues (env->type, env->values_num);

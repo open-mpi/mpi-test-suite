@@ -30,8 +30,8 @@ int tst_accumulate_with_lock_max_init (struct tst_env * env)
   int comm_rank;
   int comm_size;
 
-  DEBUG (printf ("(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
-                 tst_global_rank, env->comm, env->type, env->values_num));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
+                 tst_global_rank, env->comm, env->type, env->values_num);
 
   /*
    * Now, initialize the buffer
@@ -76,8 +76,8 @@ int tst_accumulate_with_lock_max_run (struct tst_env * env)
 
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
 
-  DEBUG (printf ("(Rank:%d) comm_size:%d comm_rank:%d\n",
-                 tst_global_rank, comm_size, comm_rank));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) comm_size:%d comm_rank:%d\n",
+                 tst_global_rank, comm_size, comm_rank);
 
 
 

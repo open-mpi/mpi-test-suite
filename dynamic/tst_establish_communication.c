@@ -147,8 +147,8 @@ int tst_establish_communication_run (struct tst_env * env)
 
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
 
-  DEBUG (printf ("(Rank:%d) comm_size:%d comm_rank:%d\n",
-                 tst_global_rank, comm_size, comm_rank));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) comm_size:%d comm_rank:%d\n",
+                 tst_global_rank, comm_size, comm_rank);
 
   for(i = 0; i<comm_size; i++)
     {
@@ -178,11 +178,11 @@ int tst_establish_communication_run (struct tst_env * env)
       if (status_buffer[i].MPI_SOURCE != j  ||
           status_buffer[i].MPI_TAG != i)
         {
-          DEBUG (printf ("(Rank:%d) rank:%d comm_size:%d should be:%d "
+          tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) rank:%d comm_size:%d should be:%d "
                          "MPI_SOURCE:%d MPI_TAG:%d\n",
                          comm_rank, rank, comm_size, i,
                          status_buffer[i].MPI_SOURCE,
-                         status_buffer[i].MPI_TAG));
+                         status_buffer[i].MPI_TAG);
           ERROR (EINVAL, "Error in communication");
         }
 

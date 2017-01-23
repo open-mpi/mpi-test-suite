@@ -28,8 +28,8 @@ int tst_coll_allgather_in_place_init (struct tst_env * env)
   char * local_buffer;
   MPI_Comm comm;
 
-  DEBUG (printf ("(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
-                 tst_global_rank, env->comm, env->type, env->values_num));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
+                 tst_global_rank, env->comm, env->type, env->values_num);
 
   comm = tst_comm_getcomm (env->comm);
   MPI_CHECK (MPI_Comm_size (comm, &comm_size));
@@ -58,11 +58,11 @@ int tst_coll_allgather_in_place_run (struct tst_env * env)
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
   MPI_CHECK (MPI_Comm_size (comm, &comm_size));
 
-  DEBUG (printf ("(Rank:%d) comm_size:%d comm_rank:%d\n",
-                 tst_global_rank, comm_size, comm_rank));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) comm_size:%d comm_rank:%d\n",
+                 tst_global_rank, comm_size, comm_rank);
 
-  DEBUG (printf ("(Rank:%d) Going to Allgather\n",
-                 tst_global_rank));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) Going to Allgather\n",
+                 tst_global_rank);
   MPI_CHECK (MPI_Allgather (MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, 
                             env->recv_buffer, env->values_num, type,
                             comm));
