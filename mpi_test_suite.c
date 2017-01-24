@@ -663,14 +663,12 @@ int main (int argc, char * argv[])
   free (tst_test_array);
 */
 
-  tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "(Rank:%d) Going to MPI_Finalize\n",
-                     tst_global_rank);
-
-  tst_output_close (DEBUG_LOG);
-
   time_stop = MPI_Wtime ();
   tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "(Rank:%d) Overall time taken:%f\n",
                      tst_global_rank, time_stop - time_start);
+  tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "(Rank:%d) Going to MPI_Finalize\n",
+                     tst_global_rank);
+  tst_output_close (DEBUG_LOG);
 
   MPI_Finalize ();
 
