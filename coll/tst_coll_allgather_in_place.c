@@ -13,8 +13,6 @@
 #include <mpi.h>
 #include "mpi_test_suite.h"
 
-#undef DEBUG
-#define DEBUG(x)
 
 /*
  * XXX

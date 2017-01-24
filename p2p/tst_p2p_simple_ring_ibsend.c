@@ -18,8 +18,6 @@
 #  include <pthread.h>
 #endif
 
-#undef DEBUG
-#define DEBUG(x)
 
 /*
  * XXX

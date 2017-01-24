@@ -19,8 +19,6 @@
 #include <mpi.h>
 #include "mpi_test_suite.h"
 
-#undef DEBUG
-#define DEBUG(x)
 
 static char * send_buffer = NULL;
 static char * recv_buffer = NULL;

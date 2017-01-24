@@ -14,8 +14,6 @@
 #include "mpi_test_suite.h"
 #include "tst_output.h"
 
-#undef DEBUG
-#define DEBUG(x)
 
 /* Set this to 1 if you want to use MPI_Startall instead seperate MPI_Starts */
 #define STARTALL 0

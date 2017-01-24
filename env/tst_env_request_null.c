@@ -13,8 +13,6 @@
 #include "mpi_test_suite.h"
 #include "tst_output.h"
 
-#undef DEBUG
-#define DEBUG(x)
 
 static int tst_test_reset_statuses (int count, MPI_Status * statuses)
 {

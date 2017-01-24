@@ -12,8 +12,6 @@
 #include "mpi_test_suite.h"
 #include "tst_output.h"
 
-#undef DEBUG
-#define DEBUG(x)
 
 #define LOCAL_CHECK(func_string,var,op,expected) \
   if (var op expected) { \

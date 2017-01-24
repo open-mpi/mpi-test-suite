@@ -18,8 +18,6 @@
 #include "mpi_test_suite.h"
 #include "tst_output.h"
 
-#undef DEBUG
-#define DEBUG(x)
 
 
 int tst_coll_scatterv_stride_init (struct tst_env * env)

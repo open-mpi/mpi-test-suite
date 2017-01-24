@@ -18,8 +18,6 @@
 #  include <pthread.h>
 #endif
 
-#undef DEBUG
-#define DEBUG(x)
 
 int debug_wait = 1;
 

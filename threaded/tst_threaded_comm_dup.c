@@ -18,8 +18,6 @@
 #  include <pthread.h>
 #endif
 
-#undef DEBUG
-#define DEBUG(x)
 
 static MPI_Comm * new_comms;
 

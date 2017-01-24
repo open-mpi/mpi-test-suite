@@ -12,8 +12,6 @@
 #include <mpi.h>
 #include "mpi_test_suite.h"
 
-#undef DEBUG
-#define DEBUG(x)
 
 
 int tst_coll_allreduce_min_init (struct tst_env * env)

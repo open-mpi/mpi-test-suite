@@ -15,8 +15,6 @@
 
 #include "tst_output.h"
 
-#undef DEBUG
-#define DEBUG(x)
 
 #ifdef HAVE_MPI2_DYNAMIC
 static char * send_buffer = NULL;

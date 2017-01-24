@@ -20,8 +20,6 @@
 
 /*#define HAVE_MPI_CLUSTER_SIZE*/
 
-#undef DEBUG
-#define DEBUG(x)
 
 #ifndef MIN
 #define MIN(a,b) ((a) < (b) ? (a) : (b))

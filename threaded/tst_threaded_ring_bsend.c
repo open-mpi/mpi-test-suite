@@ -18,8 +18,6 @@
 #  include <pthread.h>
 #endif
 
-#undef DEBUG
-#define DEBUG(x)
 
 
 int tst_threaded_ring_bsend_init (struct tst_env * env)

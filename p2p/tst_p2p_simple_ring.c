@@ -18,8 +18,6 @@
 #  include <pthread.h>
 #endif
 
-#undef DEBUG
-#define DEBUG(x)
 
 int tst_p2p_simple_ring_init (struct tst_env * env)
 {

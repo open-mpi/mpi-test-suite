@@ -5,8 +5,6 @@
 
 #include "mpi_test_suite.h"
 
-#undef DEBUG
-#define DEBUG(x)
 
 static int num_threads; /* Number of available threads - 1 */
 static int working;

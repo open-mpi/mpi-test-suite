@@ -20,8 +20,6 @@
 #include "mpi_test_suite.h"
 #include "tst_output.h"
 
-#undef DEBUG
-#define DEBUG(x)
 
 int tst_p2p_alltoall_probe_anysource_init (struct tst_env * env)
 {

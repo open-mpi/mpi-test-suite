@@ -17,8 +17,6 @@
     return (ret);                     \
 } while (0)
 
-#undef DEBUG
-#define DEBUG(x)
 
 /*
  * Do not count the last test with UNSPEC-Class

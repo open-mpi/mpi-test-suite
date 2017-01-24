@@ -22,8 +22,6 @@
 /**                     DEFINITIONS AND MACROS                             **/
 /**                                                                        **/
 /****************************************************************************/
-#undef DEBUG
-#define DEBUG(x)
 
 #define NUM_VALUES 1000
 

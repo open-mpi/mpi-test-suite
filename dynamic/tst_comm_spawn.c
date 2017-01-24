@@ -13,8 +13,6 @@
 #include <mpi.h>
 #include "mpi_test_suite.h"
 
-#undef DEBUG
-#define DEBUG(x)
 
 #define BUFFER_NUM 1000
 

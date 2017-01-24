@@ -18,8 +18,6 @@
 #include <mpi.h>
 #include "mpi_test_suite.h"
 
-//#undef DEBUG
-//#define DEBUG(x)
 
 
 int tst_get_with_fence_alltoall_init (struct tst_env * env)
