@@ -609,6 +609,9 @@ int main (int argc, char * argv[])
             tst_env.type        = tst_type_array[k];
             tst_env.tag         = (i+j+k+l) % tst_tag_ub;
             tst_env.comm        = tst_comm_array[j];
+            double time_curr = MPI_Wtime ();
+            tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "(Rank:%d) starting test_env.test:%d at time %f\n",
+                     tst_global_rank, tst_env.test, time_curr - time_start);
 
             if (!tst_test_check_run (&tst_env))
               {
