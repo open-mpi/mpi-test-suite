@@ -408,6 +408,7 @@ extern int tst_comm_deselect (const char * comm_string,
 extern int tst_test_init (int * num_tests);
 extern int tst_test_cleanup (void);
 extern const char * tst_test_getclass (int i);
+extern const char * tst_test_getclass_string(int i);
 extern const char * tst_test_getdescription (int i);
 extern int tst_test_getmode (int i);
 extern int tst_test_init_func (struct tst_env * env);
