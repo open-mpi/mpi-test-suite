@@ -86,8 +86,8 @@ static inline void worker_barrier(void)
   pthread_mutex_lock (&working_mutex);
   while (working > 0)
     {
-      DEBUG (printf ("(Rank:%d) worker_barrier still working:%d\n",
-                    tst_global_rank, working));
+      tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) worker_barrier still working:%d\n",
+                    tst_global_rank, working);
       pthread_cond_wait (&working_cond, &working_mutex);
     }
   pthread_mutex_unlock (&working_mutex);
@@ -101,8 +101,8 @@ static void * tst_thread_dispatcher (void * arg)
   int local_cmd_count = 0;
 
 
-  DEBUG (printf ("(Rank:%d; Thread:%d) tst_thread_dispatcher started.\n",
-                 tst_global_rank, thread_env->thread_num));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d; Thread:%d) tst_thread_dispatcher started.\n",
+                 tst_global_rank, thread_env->thread_num);
 
   /*
    * Wait for tests to be dispatched and scheduled.
@@ -126,18 +126,18 @@ static void * tst_thread_dispatcher (void * arg)
        */
       env = &(thread_env->env);
 
-      DEBUG(printf ("(Rank:%d; Thread:%d) tst_thread_dispatcher cmd:%d func:[%s] comm:[%s] type:[%s] values_num:%d\n",
+      tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d; Thread:%d) tst_thread_dispatcher cmd:%d func:[%s] comm:[%s] type:[%s] values_num:%d\n",
                     tst_global_rank, thread_env->thread_num, local_cmd,
                     tst_test_getdescription (env->test),
                     tst_test_getdescription (env->comm),
                     tst_test_getdescription (env->type),
-                    env->values_num));
+                    env->values_num);
 
       switch (local_cmd) {
         case TST_THREAD_CMD_INIT:
           thread_env->state = TST_THREAD_STATE_CALLING_INIT;
-          DEBUG(printf ("(Rank:%d; Thread:%d) tst_thread_dispatcher calling init\n",
-                        tst_global_rank, thread_env->thread_num));
+          tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d; Thread:%d) tst_thread_dispatcher calling init\n",
+                        tst_global_rank, thread_env->thread_num);
           thread_env->tst_init_func (env);
 
           worker_done();
@@ -145,8 +145,8 @@ static void * tst_thread_dispatcher (void * arg)
 
         case TST_THREAD_CMD_RUN:
           thread_env->state = TST_THREAD_STATE_CALLING_RUN;
-          DEBUG(printf ("(Rank:%d; Thread:%d) tst_thread_dispatcher calling run\n",
-                        tst_global_rank, thread_env->thread_num));
+          tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d; Thread:%d) tst_thread_dispatcher calling run\n",
+                        tst_global_rank, thread_env->thread_num);
           thread_env->tst_run_func (env);
 
           worker_done();
@@ -154,8 +154,8 @@ static void * tst_thread_dispatcher (void * arg)
 
         case TST_THREAD_CMD_CLEANUP:
           thread_env->state = TST_THREAD_STATE_CALLING_CLEANUP;
-          DEBUG(printf ("(Rank:%d; Thread:%d) tst_thread_dispatcher calling cleanup\n",
-                        tst_global_rank, thread_env->thread_num));
+          tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d; Thread:%d) tst_thread_dispatcher calling cleanup\n",
+                        tst_global_rank, thread_env->thread_num);
           thread_env->tst_cleanup_func (env);
 
           worker_done();
@@ -190,8 +190,8 @@ int tst_thread_init (int max_threads, struct tst_thread_env_t *** thread_env)
    */
   working = 0;
 
-  DEBUG (printf ("(Rank:%d) tst_thread_init: max_threads:%d sizeof (struct tst_thread_env_t):%d\n",
-                 tst_global_rank, max_threads, sizeof (struct tst_thread_env_t)));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) tst_thread_init: max_threads:%d sizeof (struct tst_thread_env_t):%d\n",
+                 tst_global_rank, max_threads, sizeof (struct tst_thread_env_t));
 
   tst_thread_tid_array = malloc ( max_threads * sizeof (pthread_t));
   memset (tst_thread_tid_array, 0, max_threads * sizeof (pthread_t));
@@ -254,19 +254,19 @@ inline int tst_thread_get_num (void)
 {
   int i = 0;
   pthread_t self = pthread_self();
-  DEBUG (printf ("Searching for thread_id %p\n", self));
+  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "Searching for thread_id %p\n", self);
 
   if (NULL == tst_thread_tid_array) {
       return 0;
   }
   for (i = 0; i <= num_threads; i++) {
-     DEBUG (printf ("Comparing with thread_id %p ....", tst_thread_tid_array[i]));
+     tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "Comparing with thread_id %p ....", tst_thread_tid_array[i]);
      if ( pthread_equal (tst_thread_tid_array[i], self) ) {
-	DEBUG (printf ("Found :-) Return %d\n", i));
+	tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "Found :-) Return %d\n", i);
 	return i;
      }
      else
-	DEBUG (printf ("Not equal\n"));
+	tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "Not equal\n");
   }
   ERROR (EINVAL, "Thread ID could not be determined");
   return -1;

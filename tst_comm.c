@@ -108,7 +108,6 @@ int tst_comm_init (int * num_comms)
     for (i = 0; i < comm_size; i++)
       comms[count_comms].mapping[i] = i;
 
-    DEBUG (printf ("\n"));
     MPI_CHECK (MPI_Comm_dup (MPI_COMM_WORLD, &comms[count_comms].mpi_comm));
 
     /*
@@ -540,8 +539,8 @@ int tst_comm_init (int * num_comms)
                   if (++j > comms[count_comms].size)
                     ERROR (EINVAL, "Too many processes in this cluster_color");
                 }
-              DEBUG(printf ("(Rank:%d) cluster_color:%d tmp_array[%d]:%d\n",
-                            tst_global_rank, cluster_color, i, tmp_array[i]));
+              tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) cluster_color:%d tmp_array[%d]:%d\n",
+                            tst_global_rank, cluster_color, i, tmp_array[i]);
             }
 
           /*
@@ -701,8 +700,8 @@ int tst_comm_select (const char * comm_string, int * comm_list, const int comm_l
       if (!strcasecmp (comm_string, tst_comms_class_strings[i]))
         {
           int j;
-          DEBUG (printf ("comm_string:%s matched with tst_comms_class_strings[%d]:%s\n",
-                         comm_string, i, tst_comms_class_strings[i]));
+          tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "comm_string:%s matched with tst_comms_class_strings[%d]:%s\n",
+                         comm_string, i, tst_comms_class_strings[i]);
           for (j = 0; j < TST_COMMS_NUM; j++)
             {
               /*
@@ -719,8 +718,8 @@ int tst_comm_select (const char * comm_string, int * comm_list, const int comm_l
 
               if (comms[j].class & (1 << i))
                 {
-                  DEBUG (printf ("comm_string:%s test j:%d i:%d with class:%d matches, comm_list_num:%d\n",
-                                 comm_string, j, (1 << i), comms[j].class, *comm_list_num));
+                  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "comm_string:%s test j:%d i:%d with class:%d matches, comm_list_num:%d\n",
+                                 comm_string, j, (1 << i), comms[j].class, *comm_list_num);
                   comm_list[*comm_list_num] = j;
                   (*comm_list_num)++;
                   if (*comm_list_num == comm_list_max)
@@ -746,8 +745,8 @@ int tst_comm_select (const char * comm_string, int * comm_list, const int comm_l
           if (*comm_list_num == comm_list_max)
             ERROR (EINVAL, "Too many user selected tests");
 
-          DEBUG (printf ("comm_string:%s matched with comm_list_num:%d\n",
-                         comm_string, *comm_list_num));
+          tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "comm_string:%s matched with comm_list_num:%d\n",
+                         comm_string, *comm_list_num);
 
           return 0;
         }
@@ -777,8 +776,8 @@ int tst_comm_deselect (const char * comm_string, int * comm_list, const int comm
       if (!strcasecmp (comm_string, tst_comms_class_strings[i]))
         {
           int j;
-          DEBUG (printf ("comm_string:%s matched with tst_comms_class_strings[%d]:%s\n",
-                         comm_string, i, tst_comms_class_strings[i]));
+          tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "comm_string:%s matched with tst_comms_class_strings[%d]:%s\n",
+                         comm_string, i, tst_comms_class_strings[i]);
           for (j = 0; j < TST_COMMS_NUM; j++)
             {
               int ret;
@@ -789,8 +788,8 @@ int tst_comm_deselect (const char * comm_string, int * comm_list, const int comm
               if (((ret = tst_comm_search (j, comm_list, *comm_list_num)) != 1) &&
                   comms[j].class & (1 << i))
                 {
-                  DEBUG (printf ("comm_string:%s test j:%d i:%d with class:%d matches for deselect, comm_list_num:%d\n",
-                                 comm_string, j, (1 << i), comms[j].class, *comm_list_num));
+                  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "comm_string:%s test j:%d i:%d with class:%d matches for deselect, comm_list_num:%d\n",
+                                 comm_string, j, (1 << i), comms[j].class, *comm_list_num);
                   comm_list[ret] = -1;
                   (*comm_list_num)--;
                   if (*comm_list_num < 0)
@@ -817,8 +816,8 @@ int tst_comm_deselect (const char * comm_string, int * comm_list, const int comm
           if (*comm_list_num < 0)
             ERROR (EINVAL, "Negative selected tests: This should not happen");
 
-          DEBUG (printf ("comm_string:%s matched with comm_list_num:%d excluding\n",
-                         comm_string, *comm_list_num));
+          tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "comm_string:%s matched with comm_list_num:%d excluding\n",
+                         comm_string, *comm_list_num);
 
           return 0;
         }

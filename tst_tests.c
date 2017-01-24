@@ -1502,12 +1502,12 @@ int tst_test_check_run (struct tst_env * env)
       (tst_comm_getcommsize (env->comm) < tst_tests[env->test].min_comm_size) ||
       (tst_type_gettypeclass (env->type) & tst_tests[env->test].run_with_type) == (tst_uint64)0)
     {
-      DEBUG (printf ("(Rank:%d) env->comm:%d getcommclass:%d test is run_with_comm:%d "
+      tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) env->comm:%d getcommclass:%d test is run_with_comm:%d "
                      "comm_size:%d min_comm_size:%d gettypeclass:%lld run_with_type:%d\n",
                      tst_global_rank, env->comm, tst_comm_getcommclass (env->comm),
                      tst_tests[env->test].run_with_comm,
                      tst_comm_getcommsize(env->comm), tst_tests[env->test].min_comm_size,
-                     tst_type_gettypeclass (env->type), tst_tests[env->test].run_with_type));
+                     tst_type_gettypeclass (env->type), tst_tests[env->test].run_with_type);
       return 0;
     }
   else
@@ -1561,9 +1561,8 @@ int tst_test_select(const char *test_string, int *test_list,
     if (0 == strcasecmp(test_string, tst_test_class_strings[i])) {
       int j;
       int tst_class = i - 1;
-      DEBUG(
-          printf("test_string:%s matched with tst_test_class_strings[%d]:%s\n",
-                 test_string, i, tst_test_class_strings[i]));
+      tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "test_string:%s matched with tst_test_class_strings[%d]:%s\n",
+                 test_string, i, tst_test_class_strings[i]);
       for (j = 0; j < TST_TESTS_NUM; j++) {
         /*
          * First search for this test in the test_list -- if already in,
@@ -1571,16 +1570,16 @@ int tst_test_select(const char *test_string, int *test_list,
          */
         if (tst_tests[j].class & (1 << tst_class)) {
           if (-1 != tst_test_search(j, test_list, *test_list_num)) {
-            DEBUG(printf("Test:%s selected through class:%s (already included)\n",
+            tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "Test:%s selected through class:%s (already included)\n",
                          tst_tests[j].description,
-                         tst_test_class_strings[tst_class]));
+                         tst_test_class_strings[tst_class]);
             continue;
           }
           test_list[*test_list_num] = j;
           (*test_list_num)++;
-          DEBUG(printf("Test:%s selected through class:%s\n",
+          tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "Test:%s selected through class:%s\n",
                        tst_tests[j].description,
-                       tst_test_class_strings[tst_class]));
+                       tst_test_class_strings[tst_class]);
           if (*test_list_num >= test_list_max) {
             ERROR(EINVAL, "Too many user selected tests");
           }
@@ -1595,11 +1594,11 @@ int tst_test_select(const char *test_string, int *test_list,
    */
   for (i = 0; i < TST_TESTS_NUM; i++) {
     if (0 == strcasecmp(test_string, tst_tests[i].description)) {
-      DEBUG(printf("test_string:%s matched with tst_tests[%d]:%s\n",
-                   test_string, i, tst_tests[i]));
+      tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "test_string:%s matched with tst_tests[%d]:%s\n",
+                   test_string, i, tst_tests[i]);
       if (-1 != tst_test_search(i, test_list, *test_list_num)) {
-        DEBUG(printf("Test:%s selected (already included)\n",
-                     tst_tests[i].description));
+        tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "Test:%s selected (already included)\n",
+                     tst_tests[i].description);
         return 0;
       }
       test_list[*test_list_num] = i;
@@ -1607,7 +1606,7 @@ int tst_test_select(const char *test_string, int *test_list,
       if (*test_list_num >= test_list_max) {
         ERROR(EINVAL, "Too many user selected tests");
       }
-      DEBUG(printf("Test:%s selected\n", tst_tests[i].description));
+      tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "Test:%s selected\n", tst_tests[i].description);
       return 0;
     }
   }
@@ -1635,9 +1634,8 @@ int tst_test_deselect(const char *test_string, int *test_list,
     if (0 == strcasecmp(test_string, tst_test_class_strings[i])) {
       int j;
       int tst_class = i - 1;
-      DEBUG(
-          printf("test_string:%s matched with tst_test_class_strings[%d]:%s\n",
-                 test_string, i, tst_test_class_strings[i]));
+      tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "test_string:%s matched with tst_test_class_strings[%d]:%s\n",
+                 test_string, i, tst_test_class_strings[i]);
       for (j = 0; j < TST_TESTS_NUM; j++) {
         int ret;
         /*
@@ -1646,11 +1644,10 @@ int tst_test_deselect(const char *test_string, int *test_list,
          */
         if (((ret = tst_test_search(j, test_list, test_list_max)) != -1) &&
             tst_tests[j].class & (1 << tst_class)) {
-          DEBUG(
-              printf("test_string:%s test j:%d (1 << tst_class):%d with "
+          tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "test_string:%s test j:%d (1 << tst_class):%d with "
                      "class:%d matches for deselect, test_list_num:%d\n",
                      test_string, j, (1 << tst_class), tst_tests[j].class,
-                     *test_list_num));
+                     *test_list_num);
           test_list[ret] = -1;
           (*test_list_num)--;
           if (*test_list_num < 0)
@@ -1668,8 +1665,8 @@ int tst_test_deselect(const char *test_string, int *test_list,
     if (0 == strcasecmp(test_string, tst_tests[i].description)) {
       int ret;
       if ((ret = tst_test_search(i, test_list, *test_list_num)) == -1) {
-        DEBUG(printf("Test:%s was not included in list -- not excluding\n",
-                       tst_tests[i].description));
+        tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "Test:%s was not included in list -- not excluding\n",
+                       tst_tests[i].description);
         return 0;
       }
 
@@ -1678,8 +1675,8 @@ int tst_test_deselect(const char *test_string, int *test_list,
       if (*test_list_num < 0) {
         ERROR(EINVAL, "Negative selected tests: This should not happen");
       }
-      DEBUG(printf("test_string:%s matched with test_list_num:%d excluding\n",
-                   test_string, *test_list_num));
+      tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "test_string:%s matched with test_list_num:%d excluding\n",
+                   test_string, *test_list_num);
 
       return 0;
     }

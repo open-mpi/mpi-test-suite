@@ -1188,8 +1188,8 @@ int tst_type_select (const char * type_string,
       if (!strcasecmp (type_string, tst_types_class_strings[i].class_string))
         {
           int j;
-          DEBUG (printf ("type_string:%s matched with tst_types_class_strings[%d]:%s\n",
-                         type_string, i, tst_types_class_strings[i].class_string));
+          tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "type_string:%s matched with tst_types_class_strings[%d]:%s\n",
+                         type_string, i, tst_types_class_strings[i].class_string);
           for (j = 0; j < TST_TYPES_NUM; j++)
             {
               /*
@@ -1205,8 +1205,8 @@ int tst_type_select (const char * type_string,
                 }
               if (types[j].type_class & tst_types_class_strings[i].class)
                 {
-                  DEBUG (printf ("type_string:%s test j:%d i:%d with class:%d matches, type_list_num:%d\n",
-                                 type_string, j, (1 << i), types[j].type_class, *type_list_num));
+                  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "type_string:%s test j:%d i:%d with class:%d matches, type_list_num:%d\n",
+                                 type_string, j, (1 << i), types[j].type_class, *type_list_num);
                   type_list[*type_list_num] = j;
                   (*type_list_num)++;
                   if (*type_list_num == type_list_max)
@@ -1236,8 +1236,8 @@ int tst_type_select (const char * type_string,
           if (*type_list_num == type_list_max)
             ERROR (EINVAL, "Too many user selected types");
 
-          DEBUG (printf ("type_string:%s matched with type_list_num:%d\n",
-                         type_string, *type_list_num));
+          tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "type_string:%s matched with type_list_num:%d\n",
+                         type_string, *type_list_num);
           return 0;
         }
     }
@@ -1267,8 +1267,8 @@ int tst_type_deselect (const char * type_string,
       if (!strcasecmp (type_string, tst_types_class_strings[i].class_string))
         {
           int j;
-          DEBUG (printf ("type_string:%s matched with tst_types_class_strings[%d]:%s\n",
-                         type_string, i, tst_types_class_strings[i].class_string));
+          tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "type_string:%s matched with tst_types_class_strings[%d]:%s\n",
+                         type_string, i, tst_types_class_strings[i].class_string);
           for (j = 0; j < TST_TYPES_NUM; j++)
             {
               int ret;
@@ -1279,8 +1279,8 @@ int tst_type_deselect (const char * type_string,
               if (((ret = tst_type_search (j, type_list, *type_list_num)) != -1) &&
                   types[j].type_class & tst_types_class_strings[i].class)
                 {
-                  DEBUG (printf ("type_string:%s test j:%d i:%d with class:%d matches for deselect, type_list_num:%d\n",
-                                 type_string, j, (1 << i), types[j].type_class, *type_list_num));
+                  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "type_string:%s test j:%d i:%d with class:%d matches for deselect, type_list_num:%d\n",
+                                 type_string, j, (1 << i), types[j].type_class, *type_list_num);
                   type_list[ret] = -1;
                   (*type_list_num)--;
                   if (*type_list_num < 0)
@@ -1311,8 +1311,8 @@ int tst_type_deselect (const char * type_string,
           if (*type_list_num < 0)
             ERROR (EINVAL, "Negative selected types: This should not happen");
 
-          DEBUG (printf ("type_string:%s matched with type_list_num:%d excluding\n",
-                         type_string, *type_list_num));
+          tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "type_string:%s matched with type_list_num:%d excluding\n",
+                         type_string, *type_list_num);
           return 0;
         }
     }
