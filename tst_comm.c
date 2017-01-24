@@ -636,7 +636,10 @@ int tst_comm_getcommsize (int i)
 {
   int size;
   CHECK_ARG (i, -1);
-
+  /* XXX Niethammer: Some log output calls this also with MPI_COMM_NULL. */
+  if(MPI_COMM_NULL == comms[i].mpi_comm) {
+    return 0;
+  }
   MPI_Comm_size (comms[i].mpi_comm, &size);
   return size;
 }
