@@ -73,10 +73,10 @@ int tst_accumulate_with_post_min_run (struct tst_env * env)
   type = tst_type_getdatatype (env->type);
   type_size = tst_type_gettypesize (env->type);
 
-  if (tst_comm_getcommclass (env->comm) == TST_MPI_INTRA_COMM)
-    MPI_CHECK (MPI_Comm_size (comm, &comm_size));
-  else
+  if (tst_comm_getcommclass (env->comm) == TST_MPI_INTER_COMM)
     MPI_CHECK (MPI_Comm_remote_size (comm, &comm_size));
+  else
+    MPI_CHECK (MPI_Comm_size (comm, &comm_size));
 
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
 
@@ -88,7 +88,7 @@ int tst_accumulate_with_post_min_run (struct tst_env * env)
 
   for(i=0; i<comm_size; i++)
     {
-      if(comm_rank ==i )
+      if(comm_rank == i)
         {
           MPI_Win_post(host, 0, window);
           MPI_Win_wait(window);
