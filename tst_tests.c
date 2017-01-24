@@ -1593,7 +1593,7 @@ int tst_test_select(const char *test_string, int *test_list,
   for (i = 0; i < TST_TESTS_NUM; i++) {
     if (0 == strcasecmp(test_string, tst_tests[i].description)) {
       tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "test_string:%s matched with tst_tests[%d]:%s\n",
-                   test_string, i, tst_tests[i]);
+                   test_string, i, tst_tests[i].description);
       if (-1 != tst_test_search(i, test_list, *test_list_num)) {
         tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "Test:%s selected (already included)\n",
                      tst_tests[i].description);
