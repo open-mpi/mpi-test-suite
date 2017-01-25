@@ -262,7 +262,7 @@
 #define TST_TYPE_SET_VALUE 3
 
 /*
- * Synchronisation
+ * Synchronization
  */
 #define TST_NONE 0
 #define TST_SYNC 1
@@ -376,7 +376,7 @@ extern tst_report_types tst_report;
 
 extern const char * tst_modes[];
 typedef enum {
-  TST_MODE_DISABLED=0,      /* Just dsiable this test for the moment (or read: Run the disabled!) */
+  TST_MODE_DISABLED=0,      /* Just disable this test for the moment (or read: Run the disabled!) */
   TST_MODE_STRICT,          /* Check for anal stuff in MPI-standard */
   TST_MODE_RELAXED,         /* Leave out tests for strict conformance to MPI standard */
   TST_MODE_MAX

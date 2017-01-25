@@ -98,7 +98,7 @@ int tst_file_append_mode_run (struct tst_env * env)
  if(amode_check != (MPI_MODE_CREATE |MPI_MODE_WRONLY |MPI_MODE_APPEND))
     ERROR (EINVAL, "Error in view amode_check");
  if(atomic_check != atomic_check)
-    ERROR (EINVAL, "Error in tomicity_check");
+    ERROR (EINVAL, "Error in atomicity_check");
  tst_file_check(env ->type, env ->values_num,comm_size, file_name, comm);
 #endif
 

@@ -16,7 +16,7 @@ $HEADER$
 
 ===========================================================================
 
-           Documentation (beta ,-]) for the MPI-Testsuite 
+           Documentation (beta ,-]) for the MPI-Testsuite
            ----------------------------------------------
 
 Overview
@@ -32,7 +32,7 @@ Overview
 
 Introduction
 ------------
-This MPI-testsuite was initially developped for the use with PACX-MPI and
+This MPI-testsuite was initially developed for the use with PACX-MPI and
 has been extended within the Open MPI project.
 
 The main focus is on:
@@ -42,7 +42,7 @@ The main focus is on:
   - Rich underlying functionality for flexible tests
     (convenience functions for datatypes, comms and checking),
   - Only a single binary (for single, since expensive
-    MPI_Init/MPI_Finalize) to make it as quick and easy as possible to 
+    MPI_Init/MPI_Finalize) to make it as quick and easy as possible to
     run automatically.
 
 
@@ -63,7 +63,7 @@ Running the MPI-Testsuite
 -------------------------
 The MPI-Testsuite may be run with an arbitrary number of processes!
 It runs a variety of P2P and Collective tests with varying
-datatypes and preset comunicators. Each test specifies, which kind of 
+datatypes and preset communicators. Each test specifies, which kind of
 datatypes, e.g. struct-datatypes and comms, e.g. MPI_COMM_SELF,
 intra-comms and alike it may run.
 
@@ -88,7 +88,7 @@ execution_mode: level of correctness testing, tests to run and internal tests, s
 num_threads:    number of threads to execute the tests (default:no threads)
 
 All multiple test/comm/datatype-names must be comma-separated.
-Names are not case-sensisitve, due to spaces in names, proper quoting should be used.
+Names are not case-sensitive, due to spaces in names, proper quoting should be used.
 
 -h:             Show this help
 -v:             Turn on verbose mode for debugging output
@@ -104,30 +104,30 @@ all of the tests, comms and types are grouped in classes, all of which are
 listed with (first the class, followed by number, then a free distinct name):
 
 >>> mpirun -np 1 ./mpi_test_suite -l
-Num Tests : 100                                                                                                
-Environment test:0 Status                                                                                      
-Environment test:1 Request_Null                                                                                
-P2P test:2 Ring                                                                                                
+Num Tests : 100
+Environment test:0 Status
+Environment test:1 Request_Null
+P2P test:2 Ring
 ...
-P2P test:27 Alltoall with topo comm                                                                            
-Collective test:28 Bcast                                                                                       
+P2P test:27 Alltoall with topo comm
+Collective test:28 Bcast
 ...
-Collective test:46 Alltoall                                                                                    
-One-sided test:47 get_fence                                                                                    
+Collective test:46 Alltoall
+One-sided test:47 get_fence
 ...
-One-sided test:58 Ring with Put                                                                                
-IO test:59 file simple                                                                                         
+One-sided test:58 Ring with Put
+IO test:59 file simple
 ...
-IO test:99 io_with_hole2                                                                                       
-Test-Class:0 Unspecified                                                                                       
-Test-Class:1 Environment                                                                                       
-Test-Class:2 P2P                                                                                               
-Test-Class:3 Collective                                                                                        
-Test-Class:4 One-sided                                                                                         
-Test-Class:5 Dynamic                                                                                           
-Test-Class:6 IO                                                                                                
-Test-Class:7 Threaded                                                                                          
-Communicator:0 MPI_COMM_WORLD                                                                                  
+IO test:99 io_with_hole2
+Test-Class:0 Unspecified
+Test-Class:1 Environment
+Test-Class:2 P2P
+Test-Class:3 Collective
+Test-Class:4 One-sided
+Test-Class:5 Dynamic
+Test-Class:6 IO
+Test-Class:7 Threaded
+Communicator:0 MPI_COMM_WORLD
 ...
 Communicator:12 Intracomm merged of the Halved Intercomm
 Communicator-Class:0 COMM_SELF
@@ -171,7 +171,7 @@ MPI_COMM_NULL) it is not being run.
 
 MPI-implementations already tested
 ----------------------------------
-We have run the testsuite successfully on 
+We have run the testsuite successfully on
   Linux/IA32 using MPIch-1.2.7
   Linux/IA32 using LAM-7.0
   Linux/IA32 using PACX-MPI-5.0 on top of MPIch-1.2.5
@@ -186,7 +186,7 @@ Tests failing on specific platforms
 -----------------------------------
 On some platforms, we found, that some tests fail:
 - With MPIch-1.2.5 and the ch_shmem-device, we trigger a bug in "Ring Ssend", which seems to be known:
-  
+
   P2P tests Alltoall - Issend (9/14), comm Zero-and-Rest Intercommunicator (8/10), type MPI_CHAR (1/18)
   [0] MPI Internal Aborting program Nested call to GetSendPkt
   [0] Nested call to GetSendPkt
@@ -232,7 +232,7 @@ In order to integrate a new test, the programmer should
      int (*tst_run_func) (const struct tst_env * env);
      int (*tst_cleanup_func) (const struct tst_env * env);
    };
-   describes with 
+   describes with
      class:            Which kind of test is being run
                        (one of TST_CLASS_ENV, TST_CLASS_P2P, TST_CLASS_COLL, TST_CLASS_THREADED),
      description:      A short notion of what is being done,
@@ -242,8 +242,8 @@ In order to integrate a new test, the programmer should
      run_with_type:    Similar to the above, a OR-ed list of type being one/several of:
                        TST_MPI_CHAR, TST_MPI_UNSIGNED_CHAR, ..., TST_MPI_INT, ... or even
                        sets like TST_MPI_STANDARD_C_INT_TYPES or TST_MPI_STRUCT_FORTRAN_TYPES
-     needs_sync:       If non-zero a MPI_Barrier is done before and after the test, if the 
-                       test's communication may not intermingle with other (or own) test due 
+     needs_sync:       If non-zero a MPI_Barrier is done before and after the test, if the
+                       test's communication may not intermingle with other (or own) test due
                        to MPI_ANY_SOURCE or MPI_ANY_TAG or alike.
      tst_init_func:    The initialization function run once before the test to allocate arrays.
      tst_run_func:     The test-function itself, run once or many times!
@@ -262,7 +262,7 @@ In order to integrate a new test, the programmer should
    struct tst_env {
      int comm;
      int type;
-     int test; 
+     int test;
      int values_num;
    };
 

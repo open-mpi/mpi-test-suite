@@ -123,7 +123,7 @@ static int usage (void)
            "num_threads:\tnumber of threads to execute the tests (default:no threads)\n"
            "\n"
            "All multiple test/comm/datatype-names must be comma-separated.\n"
-           "Names are not case-sensisitve, due to spaces in names, proper quoting should be used.\n"
+           "Names are not case-sensitive, due to spaces in names, proper quoting should be used.\n"
            "\n"
            "-h:\t\tShow this help\n"
            "-v:\t\tTurn on verbose mode for debugging output\n"
@@ -189,22 +189,22 @@ int main (int argc, char * argv[])
   MPI_Comm_rank (MPI_COMM_WORLD, &tst_global_rank);
   MPI_Comm_size (MPI_COMM_WORLD, &tst_global_size);
 
-  /* XXX INC stdlib.h CN Needs stdlib.h so we should check in copnfigure script
+  /* XXX INC stdlib.h CN Needs stdlib.h so we should check in configure script
    */
   {
     char * start_delay_str;
-    /* XXX DOC CN Need to add MPI_TEST_SUITE_START_DELAY environment variabel to documentation
+    /* XXX DOC CN Need to add MPI_TEST_SUITE_START_DELAY environment variable to documentation
      */
     start_delay_str = getenv ("MPI_TEST_SUITE_START_DELAY");
   if (NULL != start_delay_str)
     {
       char hostname[256];
       int delay;
-      /* XXX INC stdlib.h CN Needs stdlib.h so we should check in copnfigure script
+      /* XXX INC stdlib.h CN Needs stdlib.h so we should check in configure script
       */
       delay = atoi(start_delay_str);
       if (delay < 0) {
-	printf ("Warning: Delay time sould be greater than zero! Using no delay now.\n");
+	printf ("Warning: Delay time should be greater than zero! Using no delay now.\n");
       }
       else {
 	gethostname (hostname, 256);
@@ -253,7 +253,7 @@ int main (int argc, char * argv[])
 
   tst_tag_ub = *val;
 
-  /* XXX CN This check sould be implemented better ...
+  /* XXX CN This check should be implemented better ...
    */
   /*
    * Checking if the upper boundary for tag values is at least 32767 as required by MPI-1.1.
