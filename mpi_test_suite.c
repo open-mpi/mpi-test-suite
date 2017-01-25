@@ -62,14 +62,6 @@ tst_output_stream tst_output;
 /**                                                                        **/
 /****************************************************************************/
 
-/*
- * This should correspond to the enum tst_report
- */
-const char * tst_reports[] = {
-  "Summary",
-  "Run",
-  "Full"
-};
 
 const char * tst_modes[] = {
   "disabled",

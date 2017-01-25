@@ -85,6 +85,14 @@ static int tst_output_latex_special_chars(char * string, char * result[]);
 
 static int tst_output_global_rank;
 
+/* Corresponding strings to values in enum tst_report_types. */
+const char * tst_reports[] = {
+  "Summary",
+  "Run",
+  "Full",
+  "Max"
+};
+
 #ifdef HAVE_MPI2_THREADS
 extern int num_threads;
 extern int tst_thread_running (void);

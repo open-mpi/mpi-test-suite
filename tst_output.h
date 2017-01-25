@@ -52,11 +52,12 @@ typedef enum {
   TST_OUTPUT_TYPE_HTML			/* Output into html file */
 } tst_output_types;
 
+
 typedef enum {
   TST_REPORT_SUMMARY=0,     /* No output, except for failed tests at the end of the run */
   TST_REPORT_RUN,           /* Output every test that runs, plus the previous */
   TST_REPORT_FULL,          /* Full output, including the hexdump of wrong memory */
-  TST_REPORT_MAX
+  TST_REPORT_MAX            /* Output everything */
 } tst_report_types;
 
 
