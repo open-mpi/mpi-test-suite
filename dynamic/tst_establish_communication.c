@@ -138,10 +138,10 @@ int tst_establish_communication_run (struct tst_env * env)
   comm = tst_comm_getcomm (env->comm);
   type = tst_type_getdatatype (env->type);
 
-  if (tst_comm_getcommclass (env->comm) == TST_MPI_INTRA_COMM)
-    MPI_CHECK (MPI_Comm_size (comm, &comm_size));
-  else
+  if (tst_comm_getcommclass (env->comm) == TST_MPI_INTER_COMM)
     MPI_CHECK (MPI_Comm_remote_size (comm, &comm_size));
+  else
+    MPI_CHECK (MPI_Comm_size (comm, &comm_size));
 
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
 
