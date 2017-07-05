@@ -1050,7 +1050,11 @@ int tst_type_cmpvalue (int type, const char * buffer1, const char * buffer2)
   printf ("buffer1:%p buf1:%p buffer2:%p buf2:%p lb:%d\n",
           buffer1, buf1, buffer2, buf2, tst_type_gettypelb(type));
   */
-  return memcmp (buf1, buf2, tst_type_gettypesize (type));
+  if (tst_type_gettypeclass(type) == TST_MPI_LONG_DOUBLE) {
+      return *((long double*)buffer1) != *((long double*)buffer2);
+  } else {
+      return memcmp (buf1, buf2, tst_type_gettypesize (type));
+  }
 }
 
 int tst_type_checkstandardarray (int type, int values_num, char * buffer, int comm_rank)
