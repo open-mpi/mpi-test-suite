@@ -55,25 +55,21 @@ int get_compiler_info( char **info_str ) {
 
 #if defined(MPI_VERSION)
 
-
-int get_mpi_info( char **info_str ) {
-	/* Intel MPI */
-	/* FIXME */
-
-	/* MVAPICH2 */
+int get_mpi_info(char **info_str) {
 #if defined(MVAPICH2)
-	sprintf( *info_str, "MVAPICH2" );
-
-	/* Open MPI */
+  sprintf(*info_str, "MVAPICH2");
 #elif defined(OPEN_MPI)
-	sprintf( *info_str, "Open MPI" );
-
-	/* unknown */
+  sprintf(*info_str, "Open MPI");
+#elif defined(I_MPI_VERSION)
+  sprintf(*info_str, "Intel MPI");
+#elif defined(CRAY_MPI)
+  sprintf(*info_str, "Cray MPI");
+#elif defined(MPICH)
+  sprintf(*info_str, "MPICH");
 #else
-	sprintf( *info_str, "unknown" );
+  sprintf(*info_str, "unknown");
 #endif
-
-	return 0;
+  return 0;
 }
 
 #endif
