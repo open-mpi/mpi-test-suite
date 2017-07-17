@@ -309,7 +309,7 @@ LIBS=${old_LIBS}
 AC_CHECK_MPI_VERSION
 
 if test "x$ENABLE_MPI2" = "xyes" ; then
-  if test "x$ac_cv_mpi_major_version" != "x2" ; then
+  if test "$ac_cv_mpi_major_version" -lt 2 ; then
     AC_MSG_ERROR([MPI Version does not seem to be supporting MPI2 features (maybe version check went wrong -- see config.log for details)...])
   fi
   AC_DEFINE(HAVE_MPI2, 1, [Define if MPI library supports MPI2])
