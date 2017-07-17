@@ -250,6 +250,7 @@ int main (int argc, char * argv[])
     ERROR (EINVAL, "Couldn't retrieve MPI_TAG_UB attribute");
 
   tst_tag_ub = *val;
+  tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "MPI_TAG_UB is %d\n", tst_tag_ub);
 
   /* XXX CN This check should be implemented better ...
    */
@@ -541,7 +542,7 @@ int main (int argc, char * argv[])
         case 'j':
 #ifdef HAVE_MPI2_THREADS
           if (tst_thread_level_provided != MPI_THREAD_MULTIPLE)
-            printf ("Threads are not enabled by the MPI-Implementation\n");
+            printf ("The provided thread level from the MPI-Implementation is not sufficient to run with threads.\n");
           else
             num_threads = atoi (optarg);
 #else
