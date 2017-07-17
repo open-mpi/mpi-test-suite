@@ -346,7 +346,7 @@ AC_HEADER_STDC
 
 dnl Check for headers used by us
 dnl Need to check for sys/types.h since AC_TYPE_PID_T depends on it later!
-AC_CHECK_HEADERS([float.h getopt.h limits.h unistd.h sys/time.h sys/types.h values.h pthread.h])
+AC_CHECK_HEADERS([float.h getopt.h limits.h stdlib.h unistd.h sys/time.h sys/types.h values.h pthread.h])
 
 dnl Checks for typedefs, structures.
 AC_TYPE_PID_T

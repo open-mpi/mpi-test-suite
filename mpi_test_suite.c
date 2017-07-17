@@ -189,8 +189,6 @@ int main (int argc, char * argv[])
   MPI_Comm_rank (MPI_COMM_WORLD, &tst_global_rank);
   MPI_Comm_size (MPI_COMM_WORLD, &tst_global_size);
 
-  /* XXX INC stdlib.h CN Needs stdlib.h so we should check in configure script
-   */
   {
     char * start_delay_str;
     /* XXX DOC CN Need to add MPI_TEST_SUITE_START_DELAY environment variable to documentation
