@@ -219,7 +219,7 @@ int tst_type_init (int * num_types)
     /*
      * MPI_HVECTOR_INT
      */
-    MPI_Type_hvector (TYPES_NUM_REPEAT, 1, sizeof(int), MPI_INT, &(types[num].mpi_datatype));
+    MPI_Type_create_hvector (TYPES_NUM_REPEAT, 1, sizeof(int), MPI_INT, &(types[num].mpi_datatype));
     MPI_Type_commit (&(types[num].mpi_datatype));
     types[num].type_num = TYPES_NUM_REPEAT;
     for(i=0; i < TYPES_NUM_REPEAT; i++)
@@ -259,7 +259,7 @@ int tst_type_init (int * num_types)
       block[i] = 1;
       dis[i] = i*sizeof(int);
     }
-    MPI_Type_hindexed (TYPES_NUM_REPEAT, block, dis, MPI_INT, &(types[num].mpi_datatype));
+    MPI_Type_create_hindexed (TYPES_NUM_REPEAT, block, dis, MPI_INT, &(types[num].mpi_datatype));
     MPI_Type_commit (&(types[num].mpi_datatype));
     types[num].type_num = TYPES_NUM_REPEAT;
     for(i=0 ; i < TYPES_NUM_REPEAT; i++)
@@ -285,7 +285,7 @@ int tst_type_init (int * num_types)
     dis_struct[0] = 0;
     dtype[0] = MPI_INT;
 
-    MPI_Type_struct (1, block_struct, dis_struct, dtype, &(types[num].mpi_datatype));
+    MPI_Type_create_struct (1, block_struct, dis_struct, dtype, &(types[num].mpi_datatype));
     MPI_Type_commit (&(types[num].mpi_datatype));
 
     types[num].type_num = TYPES_NUM_REPEAT;
@@ -307,21 +307,21 @@ int tst_type_init (int * num_types)
     MPI_Aint mix_base;
     struct tst_mpi_type_mix type_tmp;
 
-    MPI_Address (&(type_tmp.a), disp_mix);
-    MPI_Address (&(type_tmp.b), disp_mix+1);
-    MPI_Address (&(type_tmp.c), disp_mix+2);
-    MPI_Address (&(type_tmp.d), disp_mix+3);
-    MPI_Address (&(type_tmp.e), disp_mix+4);
-    MPI_Address (&(type_tmp.f), disp_mix+5);
-    MPI_Address (&(type_tmp.g), disp_mix+6);
-    MPI_Address (&(type_tmp.h), disp_mix+7);
-    MPI_Address (&(type_tmp.i), disp_mix+8);
-    MPI_Address (&(type_tmp.j), disp_mix+9);
-    MPI_Address (&(type_tmp.k), disp_mix+10);
+    MPI_Get_address (&(type_tmp.a), disp_mix);
+    MPI_Get_address (&(type_tmp.b), disp_mix+1);
+    MPI_Get_address (&(type_tmp.c), disp_mix+2);
+    MPI_Get_address (&(type_tmp.d), disp_mix+3);
+    MPI_Get_address (&(type_tmp.e), disp_mix+4);
+    MPI_Get_address (&(type_tmp.f), disp_mix+5);
+    MPI_Get_address (&(type_tmp.g), disp_mix+6);
+    MPI_Get_address (&(type_tmp.h), disp_mix+7);
+    MPI_Get_address (&(type_tmp.i), disp_mix+8);
+    MPI_Get_address (&(type_tmp.j), disp_mix+9);
+    MPI_Get_address (&(type_tmp.k), disp_mix+10);
     mix_base = disp_mix[0];
     for(i=0; i < 11; i++) disp_mix[i] -= mix_base;
     for(i=0; i < 11; i++) block_mix[i] = 1;
-    MPI_Type_struct (11, block_mix, disp_mix, mix_type, &(types[num].mpi_datatype));
+    MPI_Type_create_struct (11, block_mix, disp_mix, mix_type, &(types[num].mpi_datatype));
     MPI_Type_commit (&(types[num].mpi_datatype));
     types[num].type_num = 11;
     types[num].type_mapping[0] = TST_MPI_CHAR;
@@ -368,17 +368,17 @@ int tst_type_init (int * num_types)
     MPI_Type_commit (&(mix_type[4]));
     MPI_Type_commit (&(mix_type[5]));
 */
-    MPI_Address(&(type_tmp_array.a[0]), disp_mix);
-    MPI_Address(&(type_tmp_array.b[0]), disp_mix+1);
-    MPI_Address(&(type_tmp_array.c[0]), disp_mix+2);
-    MPI_Address(&(type_tmp_array.d[0]), disp_mix+3);
-    MPI_Address(&(type_tmp_array.e[0]), disp_mix+4);
-    MPI_Address(&(type_tmp_array.f[0]), disp_mix+5);
+    MPI_Get_address(&(type_tmp_array.a[0]), disp_mix);
+    MPI_Get_address(&(type_tmp_array.b[0]), disp_mix+1);
+    MPI_Get_address(&(type_tmp_array.c[0]), disp_mix+2);
+    MPI_Get_address(&(type_tmp_array.d[0]), disp_mix+3);
+    MPI_Get_address(&(type_tmp_array.e[0]), disp_mix+4);
+    MPI_Get_address(&(type_tmp_array.f[0]), disp_mix+5);
 
     mix_base = disp_mix[0];
     for(i=0; i < 6; i++) disp_mix[i] -= mix_base;
     for(i=0; i < 6; i++) block_mix[i] = 1;
-    MPI_Type_struct (6, block_mix, disp_mix, mix_type, &(types[num].mpi_datatype));
+    MPI_Type_create_struct (6, block_mix, disp_mix, mix_type, &(types[num].mpi_datatype));
 
     MPI_Type_free (&(mix_type[0]));
     MPI_Type_free (&(mix_type[1]));
@@ -429,7 +429,7 @@ int tst_type_init (int * num_types)
         MPI_DOUBLE,
         MPI_UB };
     for(i=0 ; i <  8; i++) block_mix[i]=1;
-    MPI_Type_struct(8, block_mix, disp_array, mix_type, &(types[num].mpi_datatype));
+    MPI_Type_create_struct(8, block_mix, disp_array, mix_type, &(types[num].mpi_datatype));
     MPI_Type_commit(&(types[num].mpi_datatype));
     types[num].type_num = 6;
     types[num].type_mapping[0] = TST_MPI_CHAR;

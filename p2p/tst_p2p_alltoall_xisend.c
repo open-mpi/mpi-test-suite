@@ -51,7 +51,7 @@ int tst_p2p_alltoall_xisend_init (struct tst_env * env)
    */
 
   type = tst_type_getdatatype (env->type);
-  MPI_Type_hvector (env->values_num, 1, 0, type, &env->extra_type_send);
+  MPI_Type_create_hvector (env->values_num, 1, 0, type, &env->extra_type_send);
   MPI_Type_commit (&env->extra_type_send);
 
   if ((env->req_buffer = malloc (2 * sizeof (MPI_Request) * comm_size)) == NULL)

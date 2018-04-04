@@ -40,7 +40,7 @@ int tst_p2p_simple_ring_xsend_init (struct tst_env * env)
    * Create the derived datatype to send multiple entries of this type
    */
   type = tst_type_getdatatype (env->type);
-  MPI_Type_hvector (env->values_num, 1, 0, type, &env->extra_type_send);
+  MPI_Type_create_hvector (env->values_num, 1, 0, type, &env->extra_type_send);
   MPI_Type_commit (&env->extra_type_send);
   return 0;
 }

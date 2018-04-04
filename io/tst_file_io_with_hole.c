@@ -28,7 +28,6 @@ int tst_file_io_with_hole_init (struct tst_env * env)
 #ifdef HAVE_MPI2_IO
   MPI_Comm comm;
   int comm_size, comm_rank;
-  int i;
   MPI_File file;
   MPI_Datatype type;
   MPI_Aint extent;
@@ -77,22 +76,8 @@ int tst_file_io_with_hole_init (struct tst_env * env)
         exit(1);
   }
   MPI_CHECK (MPI_File_get_type_extent(file , type, &extent));
-  {
-    int block_mix[3];
-    MPI_Aint disp_array[3]={
-        0,
-        0,
-        2*extent
-    };
-    MPI_Datatype mix_type[3] = {
-        MPI_LB,
-        type,
-        MPI_UB
-    };
-    for(i=0 ; i <  3; i++) block_mix[i]=1;
-    MPI_CHECK (MPI_Type_struct(3, block_mix, disp_array, mix_type, &filetype));
-    MPI_CHECK (MPI_Type_commit(&filetype));
-  }
+  MPI_CHECK (MPI_Type_create_resized(type, 0, 2 * extent, &filetype));
+  MPI_CHECK (MPI_Type_commit(&filetype));
   MPI_CHECK (MPI_File_get_type_extent(file , filetype, &filetype_extent));
 
   MPI_CHECK ( MPI_File_set_view(file,comm_rank*filetype_extent*env->values_num,type, filetype,                                       "native", MPI_INFO_NULL));

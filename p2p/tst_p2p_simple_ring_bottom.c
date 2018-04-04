@@ -30,8 +30,8 @@ int tst_p2p_simple_ring_bottom_init (struct tst_env * env)
   env->recv_buffer = tst_type_allocvalues (env->type, env->values_num);
 
   dtype[0] = tst_type_getdatatype (env->type);
-  MPI_Address(env->send_buffer, &(disp[0]));
-  MPI_Type_struct(1, block, disp, dtype, &env->extra_type_send);
+  MPI_Get_address(env->send_buffer, &(disp[0]));
+  MPI_Type_create_struct(1, block, disp, dtype, &env->extra_type_send);
   MPI_Type_commit(&env->extra_type_send);
   /*
    * Now, initialize the send_buffer

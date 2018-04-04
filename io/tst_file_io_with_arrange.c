@@ -29,7 +29,6 @@ int tst_file_io_with_arrange_init (struct tst_env * env)
 #ifdef HAVE_MPI2_IO
   MPI_Comm comm;
   int comm_size, comm_rank, global_size;
-  int i;
   MPI_Offset off_view, off_position;
   MPI_Datatype filetype_check, datatype_check;
   MPI_File file;
@@ -61,22 +60,8 @@ int tst_file_io_with_arrange_init (struct tst_env * env)
     exit(1);
   }
   MPI_CHECK(MPI_File_get_type_extent(file , type, &extent));
-  {
-    int block_mix[3];
-    MPI_Aint disp_array[3]={
-        0,
-        0,
-        comm_size*extent
-    };
-    MPI_Datatype mix_type[3] = {
-        MPI_LB,
-        type,
-        MPI_UB
-    };
-    for(i=0 ; i <  3; i++) block_mix[i]=1;
-    MPI_CHECK(MPI_Type_struct(3, block_mix, disp_array, mix_type, &filetype));
-    MPI_CHECK(MPI_Type_commit(&filetype));
-  }
+  MPI_CHECK(MPI_Type_create_resized (type, 0, comm_size * extent, &filetype));
+  MPI_CHECK(MPI_Type_commit(&filetype));
   MPI_CHECK(MPI_File_set_view(file,comm_rank*extent,type, filetype, "native", MPI_INFO_NULL));
   tst_type_setstandardarray (env->type, env->values_num,
                              write_buffer, comm_rank);
