@@ -1,14 +1,9 @@
 #include "config.h"
 
+#include <getopt.h>
 #include <stdio.h>
-
-#ifdef HAVE_UNISTD_H
-#  include <unistd.h>
-#endif
-
-#ifdef HAVE_GETOPT_H
-#  include <getopt.h>
-#endif
+#include <stdlib.h>
+#include <unistd.h>
 
 #include <mpi.h>
 
@@ -50,7 +45,7 @@ int tst_atomic = 0;
 tst_report_types tst_report = TST_REPORT_RUN;
 tst_mode_types tst_mode = TST_MODE_RELAXED;
 /*
- * Declaration of output_relevant data
+ * Declaration of output relevant data
  * Do not remove or change the following without modifying tst_output.h!
  */
 tst_output_stream tst_output;
@@ -198,8 +193,6 @@ int main (int argc, char * argv[])
     {
       char hostname[256];
       int delay;
-      /* XXX INC stdlib.h CN Needs stdlib.h so we should check in configure script
-      */
       delay = atoi(start_delay_str);
       if (delay < 0) {
 	printf ("Warning: Delay time should be greater than zero! Using no delay now.\n");
@@ -344,8 +337,7 @@ int main (int argc, char * argv[])
             num_tests = 0;
 
             str = strtok (optarg, ",");
-            while (str)
-              {
+            while (str) {
                 /*
                  * In case we find the magic word all, we reset the list as above.
                  * In case we find a '^', deselect the test (test-class)
@@ -358,26 +350,25 @@ int main (int argc, char * argv[])
                     tst_test_array[i] = i;
                     num_tests++;
                   }
-		}
-                else if ('^' == str[0])
-                  {
+                }
+                else if ('^' == str[0]) {
                     char tmp_str[TST_DESCRIPTION_LEN+1];
 
                     INTERNAL_CHECK (if (strlen(str) > TST_DESCRIPTION_LEN) ERROR (EINVAL, "Name of test too long for negation"));
 
                     strncpy (tmp_str, &(str[1]), TST_DESCRIPTION_LEN);
                     tst_test_deselect (tmp_str, tst_test_array, tst_test_array_max, &num_tests);
-                  }
-                else if ('0' <= str[0] && '9' >= str[0])
-                  {
+                }
+                else if ('0' <= str[0] && '9' >= str[0]) {
                     int tmp_test = atoi (str);
                     if (0 > tmp_test || tst_test_array_max <= tmp_test)
                       ERROR (EINVAL, "Specified test number out of range");
 
                     tst_test_array[num_tests++] = tmp_test;
-                  }
-                else
+                }
+                else {
                   tst_test_select (str, tst_test_array, tst_test_array_max, &num_tests);
+                }
                 str = strtok (NULL, ",");
               }
             tst_array_compress (tst_test_array, tst_test_array_max, &num_tests);
@@ -476,7 +467,7 @@ int main (int argc, char * argv[])
                     int tmp_test_type = atoi (str);
                     if (0 > tmp_test_type || tst_type_array_max <= tmp_test_type)
                       ERROR (EINVAL, "Specified type number out of range");
-                  
+
                     tst_type_array[num_types++] = tmp_test_type;
                   }
                 else
@@ -641,8 +632,9 @@ int main (int argc, char * argv[])
               MPI_Barrier (MPI_COMM_WORLD);
           }
 
-  if (tst_global_rank == 0)
+  if (tst_global_rank == 0) {
     tst_test_print_failed ();
+  }
 
 /*
  * XXX Disable for Thread Checker test, as we free twice???
@@ -658,7 +650,7 @@ int main (int argc, char * argv[])
 */
 
   time_stop = MPI_Wtime ();
-  tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "(Rank:%d) Overall time taken:%f\n",
+  tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "(Rank:%d) Overall time taken:%lf\n",
                      tst_global_rank, time_stop - time_start);
   tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "(Rank:%d) Going to MPI_Finalize\n",
                      tst_global_rank);
