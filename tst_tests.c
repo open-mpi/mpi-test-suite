@@ -1730,23 +1730,22 @@ int tst_test_get_failed_num (void)
 int tst_test_print_failed (void)
 {
   int i;
-  printf ("Number of failed tests:%d%s",
-          tst_tests_failed_num,
-          (tst_tests_failed_num > 0) ? " summary of failed tests:\n" : "\n");
+  printf ("Number of failed tests: %d\n", tst_tests_failed_num);
+  if (tst_tests_failed_num > 0) {
+    printf ("Summary of failed tests:\n");
+    for (i = 0; i < tst_tests_failed_num; i++) {
+        const int test = tst_tests_failed[i].test;
+        const int comm = tst_tests_failed[i].comm;
+        const int type = tst_tests_failed[i].type;
+        const int values_num= tst_tests_failed[i].values_num;
 
-  for (i = 0; i < tst_tests_failed_num; i++)
-    {
-      const int test = tst_tests_failed[i].test;
-      const int comm = tst_tests_failed[i].comm;
-      const int type = tst_tests_failed[i].type;
-      const int values_num= tst_tests_failed[i].values_num;
-
-      printf ("ERROR class:%s test:%s (%d), comm %s (%d), type %s (%d) number of values:%d\n",
-              tst_test_getclass_string (test),
-              tst_test_getdescription (test), test+1,
-              tst_comm_getdescription (comm), comm+1,
-              tst_type_getdescription (type), type+1, values_num);
-    }
+        printf ("ERROR class:%s test:%s (%d), comm %s (%d), type %s (%d) number of values:%d\n",
+                tst_test_getclass_string (test),
+                tst_test_getdescription (test), test+1,
+                tst_comm_getdescription (comm), comm+1,
+                tst_type_getdescription (type), type+1, values_num);
+      }
+  }
   return 0;
 }
 
