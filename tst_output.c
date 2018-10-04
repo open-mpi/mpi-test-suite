@@ -229,8 +229,10 @@ int tst_output_printf(tst_output_stream * output,
         msg = malloc (sizeof(char) * 2048);
         count = vsnprintf (msg, 2047, format, arglist);
         /* Output was truncated */
-        if (count >= 2047)
+        if (count >= 2047) {
+          free(msg);
           return -1;
+        }
         tst_output_str_replace ("rank", "<B>rank</B>$", msg, &tmpstrptr);
         free (msg);
         tst_output_str_replace ("Rank", "<B>Rank</B>", tmpstrptr, &msg);
@@ -250,8 +252,10 @@ int tst_output_printf(tst_output_stream * output,
         msg = malloc (sizeof(char) * 2048);
         count = vsnprintf (msg, 2047, format, arglist);
         /* Output was truncated */
-        if (count >= 2047)
+        if (count >= 2047) {
+          free(msg);
           return -1;
+        }
         tst_output_latex_special_chars(msg, &tmpstrptr);
         tst_output_str_replace ("<", "$<$", tmpstrptr, &msg);
         free (tmpstrptr);
