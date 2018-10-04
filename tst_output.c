@@ -1,55 +1,21 @@
-/*
-******************************* C SOURCE FILE *******************************
-**                                                                         **
-** project   : MPI Testsuite                                               **
-** filename  : TST_OUTPUT.C                                                **
-** version   : 1                                                           **
-** date      : June 11, 2006                                               **
-** Revised by: Christoph Niethammer                                        **
-**                                                                         **
-*****************************************************************************
-Todo:
-- Multiple outputs at the same time
-- Rankspecific output
-- Macros for different output types
-*/
+/**
+ * \todo Multiple outputs at the same time
+ * \todo Rank specific output
+ * \todo Macros for different output types
+ */
 
 #define _TST_OUTPUT_C_SRC
-
-/****************************************************************************/
-/**                                                                        **/
-/**                     MODULES USED                                       **/
-/**                                                                        **/
-/****************************************************************************/
-#include <stdio.h>
-#ifdef HAVE_STRING_H
-#  include <string.h>
-#endif
-#include <stdarg.h>
-#include <mpi.h>
-#include "mpi_test_suite.h"
 #include "tst_output.h"
 
-/****************************************************************************/
-/**                                                                        **/
-/**                     PROTOTYPES OF LOCAL FUNCTIONS                      **/
-/**                                                                        **/
-/****************************************************************************/
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
 
-/* Functions to parse output for LaTeX/HTML files
- *
- * Parameters:
- *      char * src[]    source
- *      char * dest[]   destination
- *
- * Results:
- *      Sucess:         Value unequal 0
- *      Fail:           0
- */
-/*
-int tst_output_parse_html (char * src[], char * dest[]);
-int tst_output_parse_latex (char * src[], char * dest[]) ;
-*/
+#include <mpi.h>
+
+#include "mpi_test_suite.h"
+
+
 
 /* Function to replace substrings in a string
  *
@@ -62,7 +28,7 @@ int tst_output_parse_latex (char * src[], char * dest[]) ;
  * Results:
  *      Success:        number of replacements
  */
-static int tst_output_str_replace (char * search, char * replace, char * string, char * result[]);
+static int tst_output_str_replace(char *search, char *replace, char *string, char **result);
 
 
 /* Function to mask special chars for latex in a string
@@ -74,7 +40,7 @@ static int tst_output_str_replace (char * search, char * replace, char * string,
  *      Success:        Number of replacements
  *      Fail:           -1
  */
-static int tst_output_latex_special_chars(char * string, char * result[]);
+static int tst_output_latex_special_chars(char *string, char **result);
 
 
 /****************************************************************************/
@@ -104,22 +70,19 @@ extern int tst_thread_running (void);
 /**                                                                        **/
 /****************************************************************************/
 
-int tst_output_set_level (tst_output_stream * output, tst_report_types level)
-{
+int tst_output_set_level(tst_output_stream * output, tst_report_types level) {
 #ifdef HAVE_MPI2_THREADS
-  if (tst_thread_running () && tst_thread_get_num () != 0)
-    {
-      return 0;
-    }
+  if (tst_thread_running() && tst_thread_get_num() != 0) {
+    return 0;
+  }
 #endif
   output->level = level;
   return level;
 }
 
 
-tst_output_types tst_output_init (tst_output_stream * output, int rank,
-    tst_report_types level, tst_output_types type, ...)
-{
+tst_output_types tst_output_init(tst_output_stream * output, int rank,
+    tst_report_types level, tst_output_types type, ...) {
 
   va_list arglist;
   char * fname;
@@ -137,13 +100,6 @@ tst_output_types tst_output_init (tst_output_stream * output, int rank,
   }
 #endif
 
-  /* Checking if stream is already opened */
-#if 0
-  if (output->isopen) {
-    fprintf (stderr, "Error opening stream: Stream allready opened.");
-    return output->type;
-  }
-#endif
   /* Check if stream type uses a file and get the name of this file */
   if (type == TST_OUTPUT_TYPE_LOGFILE || type == TST_OUTPUT_TYPE_HTML ||
       type == TST_OUTPUT_TYPE_LATEX) {
@@ -207,8 +163,7 @@ tst_output_types tst_output_init (tst_output_stream * output, int rank,
   return output->type;
 }
 
-int tst_output_close (tst_output_stream * output)
-{
+int tst_output_close(tst_output_stream * output) {
 #ifdef HAVE_MPI2_THREADS
   {
     if (tst_thread_running()) {
@@ -249,9 +204,8 @@ int tst_output_close (tst_output_stream * output)
   return 1;
 }
 
-int tst_output_printf (tst_output_stream * output,
-    tst_report_types error_level, char * format, ...)
-{
+int tst_output_printf(tst_output_stream * output,
+    tst_report_types error_level, char * format, ...) {
   int count;
   va_list arglist;
 
@@ -265,8 +219,6 @@ int tst_output_printf (tst_output_stream * output,
   }
 #endif
 
-  // XXX CN should be removed
-  //printf ("Open: %d\nOutput Rank: %d\nglobal rank: %d\nerror Level: %d\nLog Level: %d\n" , output->isopen, output->rank , tst_output_global_rank , error_level ,output->level) ;
   if ((output->isopen == 1) && (output->rank == tst_output_global_rank) && (error_level <= output->level)) {
     va_start(arglist, format);
     switch (output->type) {
@@ -337,8 +289,7 @@ int tst_output_printf (tst_output_stream * output,
 /**                                                                        **/
 /****************************************************************************/
 
-int tst_output_latex_special_chars(char * string, char * result[])
-{
+int tst_output_latex_special_chars(char *string, char **result) {
   int count = 0;
   int newlength = 0;
   char * strptr = NULL;
@@ -395,8 +346,7 @@ int tst_output_latex_special_chars(char * string, char * result[])
   return count;
 }
 
-int tst_output_str_replace (char * search, char * replace, char * string, char * result[])
-{
+int tst_output_str_replace(char *search, char *replace, char *string, char **result) {
   int count = 0, replace_count = 0;
   int oldlength = 0;
   int newlength = 0 ;
@@ -405,31 +355,20 @@ int tst_output_str_replace (char * search, char * replace, char * string, char *
   char * strptr = NULL;
   char * oldstrptr = NULL;
 
-  oldlength = strlen (string);
+  oldlength = strlen(string);
   searchlength = strlen (search);
 
-  /*
-   * Calculate number of neccessary replacements
-   */
-  for (strptr = string; strptr; strptr++)
-  {
-    strptr = strstr (strptr, search);
-    if (strptr == NULL)
-      break;
+  /* Calculate number of replacements to be preformed */
+  for (strptr = strstr(string, search); strptr != NULL; strptr = strstr(++strptr, search)) {
     count++;
   }
-  /*
-   * Calculate new neccessary stinglength and allocate the neccessary memory
-   */
+  /* Calculate length of the resulting string and allocate the necessary memory */
   newlength = oldlength + count * (strlen(replace) - strlen(search));
   *result = (char *) malloc ( (newlength + 1) * sizeof (char) );
   memset (*result, 0, newlength + 1);
 
-  /*
-   * Generate the new String
-   */
-  for (strptr = string; ; )
-  {
+  /* Perform replacements and store result to new string */
+  for (strptr = string; ; ) {
     oldstrptr = strptr;
     strptr = strstr (strptr, search);
     /* all replacements done? */
@@ -446,18 +385,10 @@ int tst_output_str_replace (char * search, char * replace, char * string, char *
     replace_count++;
   }
 
-  /*
-   * Safty check
-   */
+  /* Safety check */
   if (count != replace_count) {
     fprintf (stderr, "Error: count (%d) != replace_count (%d)!\n", count, replace_count);
     exit (-1);
   }
   return count;
 }
-
-/****************************************************************************/
-/**                                                                        **/
-/**                     EOF                                                **/
-/**                                                                        **/
-/****************************************************************************/

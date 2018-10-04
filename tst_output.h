@@ -1,161 +1,98 @@
-/*
-******************************* C HEADER FILE *******************************
-**                                                                         **
-** project   : MPI Testsuite                                               **
-** filename  : TPL.H                                                       **
-** date      : June 11, 2006                                               **
-** Revised by  : Christoph Niethammer                                      **
-**                                                                         **
-*****************************************************************************
-*/
+#ifndef TST_OUTPUT_H_
+#define TST_OUTPUT_H_
 
-#ifndef _TST_OUTPUT_INCLUDED
-#define _TST_OUTPUT_INCLUDED
-
-/****************************************************************************/
-/**                                                                        **/
-/**                     MODULES USED                                       **/
-/**                                                                        **/
-/****************************************************************************/
-
-#include "config.h"
 
 #include <stdio.h>
 #include <stdarg.h>
 
-/****************************************************************************/
-/**                                                                        **/
-/**                     DEFINITIONS AND MACROS                             **/
-/**                                                                        **/
-/****************************************************************************/
+#include "./config.h"
+
 
 #define DEBUG_REPORT_TYPE       TST_REPORT_MAX
 #define DEBUG_LOG_TYPE          TST_OUTPUT_TYPE_LOGFILE
 #define DEBUG_LOG_FILENAME      "tst.log"
 #define DEBUG_LOG               (&tst_output)
 
-#define TST_OUTPUT_RANK_MASTER	0
+#define TST_OUTPUT_RANK_MASTER  0
 #define TST_OUTPUT_RANK_SELF    (tst_global_rank)
 
-/****************************************************************************/
-/**                                                                        **/
-/**                     TYPEDEFS AND STRUCTURES                            **/
-/**                                                                        **/
-/****************************************************************************/
 
 typedef enum {
-  TST_OUTPUT_TYPE_NONE = 0,			/* No Output opened */
-  TST_OUTPUT_TYPE_STDERR,			/* Output on stderr */
-  TST_OUTPUT_TYPE_STDOUT,			/* Output on stdout */
-  TST_OUTPUT_TYPE_LOGFILE,			/* Output into logfile */
-  TST_OUTPUT_TYPE_LATEX,			/* Output into latex file */
-  TST_OUTPUT_TYPE_HTML			/* Output into html file */
+  TST_OUTPUT_TYPE_NONE = 0,  /**< No Output opened */
+  TST_OUTPUT_TYPE_STDERR,    /**< Output on stderr */
+  TST_OUTPUT_TYPE_STDOUT,    /**< Output on stdout */
+  TST_OUTPUT_TYPE_LOGFILE,   /**< Output into logfile */
+  TST_OUTPUT_TYPE_LATEX,     /**< Output into latex file */
+  TST_OUTPUT_TYPE_HTML       /**< Output into html file */
 } tst_output_types;
 
 
 typedef enum {
-  TST_REPORT_SUMMARY=0,     /* No output, except for failed tests at the end of the run */
-  TST_REPORT_RUN,           /* Output every test that runs, plus the previous */
-  TST_REPORT_FULL,          /* Full output, including the hexdump of wrong memory */
-  TST_REPORT_MAX            /* Output everything */
+  TST_REPORT_SUMMARY = 0, /**< No output, except for final summary */
+  TST_REPORT_RUN,         /**< Output every test that runs, plus the previous */
+  TST_REPORT_FULL,        /**< Full output, including hexdump of wrong memory */
+  TST_REPORT_MAX          /**< Output everything */
 } tst_report_types;
 
 
-
 typedef struct {
-  FILE * streamptr;		/* Pointer on the stream */
+  FILE * streamptr;  /**< Pointer on the stream */
   tst_output_types type;
-  char filename[256];		/* Filename if stream writes to file */
+  char filename[256];  /**< Filename if stream writes to file */
   tst_report_types level;
-  int rank;			/* Thread responsible for output */
-  int isopen;			/* 1 if open */
+  int rank;    /**< MPI rank responsible for output */
+  int isopen;  /**< open status: 1 if open */
 } tst_output_stream;
 
-/****************************************************************************/
-/**                                                                        **/
-/**                     EXPORTED VARIABLES                                 **/
-/**                                                                        **/
-/****************************************************************************/
 
 #ifndef _TST_OUTPUT_C_SRC
 extern tst_output_stream tst_output;
 #endif
 
-/****************************************************************************/
-/**                                                                        **/
-/**                     EXPORTED FUNCTIONS                                 **/
-/**                                                                        **/
-/****************************************************************************/
 
-
-/* Functin to set the amount of information to be written into the output.
+/** \brief Function to set the maximal level of information to be outputted.
  *
- * Parameters:
- * 	tst_report_types level	Level describing the amount of information
- * 				Can be one of the following
+ * \param[in] level  Level describing the amount of information to be outputted
  *
- * 	  TST_REPORT_SUMMARY, 	No output, except for failed tests at the end
- * 				of the run
- * 	  TST_REPORT_RUN,	Output every test that runs, plus the previous
- * 	  TST_REPORT_FULL,	Full output, including the hexdump of wrong
- * 				memory
- * 	  TST_REPORT_MAX
- *
- * Results:
- * 	Success:		Vaule unequal 0
- *	Fail:			0
+ * \return  Success: Value unequal 0, Fail: 0
  */
-int tst_output_set_level (tst_output_stream * output, tst_report_types level);
+int tst_output_set_level(tst_output_stream *output, tst_report_types level);
 
 
-/*
- * Initialise the output dependent on the set parameters
+/** \brief Initialise the output dependent on the set parameters.
  *
- * Parameters:
- * 	tst_output_stream * output	Pointer on the ouput structure holding
- * 					the information
- * 	int rank		Rank of thread responsible for the
- * 				output. TST_OUTPUT_RANK_MASTER
- * 	tst_report_types level	Output level up to which the output will be
- * 				performed
- * 	tst_output_types type	Output type of the stream
- * 	 ...			Filename if the output will be written to a
- * 	 			file
+ * \param[in,out] output  Pointer to output structure holding all output relevant information
+ * \param[in] rank   rank of MPI process responsible for the output TST_OUTPUT_RANK_MASTER
+ * \param[in] level  Initial output level up to which the output will be performed
+ * \param[in] type   Output type of the stream
+ * \param[in] ...    Filename if the output will be written to a file
  *
- * Success:		output type of the opened output
- * Fail:		TST_OUTPUT_TYPE_NONE
+ * \return  Success: output type of the opened output, Fail: TST_OUTPUT_TYPE_NONE
  */
-tst_output_types tst_output_init (tst_output_stream * output, int rank,
+tst_output_types tst_output_init(tst_output_stream *output, int rank,
     tst_report_types level, tst_output_types type, ...);
 
-/* Closes an opened output.
+/** \brief Closes an opened output.
  *
- * Parameters:
- * 	tst_output_stream * output	Pointer onto the stream to be closed
+ * \param[in,out]: output  Pointer to the stream to be closed
  *
- * Success:		1
- * Fail:		0
+ * \return  Success: 1, Fail: 0
  */
-int tst_output_close (tst_output_stream * output);
+int tst_output_close(tst_output_stream *output);
 
-/*
- * Replacement for printf / fprintf. Prints the string format with the given
- * replacements ... (like printf) if the error level is included in the
- * output level of the output_stream.
+/** \brief Replacement of printf for output
  *
- * Parameters:
- * 	tst_output_stream * output	Pointer onto the stream to write on
- * 	tst_report_types error_level	The error level of this output
- * 	char * format			Format string (see printf)
- * 	...				Parameters for replace in format
+ * Prints a formatted output like printf if the error level is lower than the
+ * maximal output level of the output stream.
  *
- * Results:
+ * \param[in] output      Pointer to the output stream to be used
+ * \param[in] error_level The error level of this output
+ * \param[in] format      Format string (see printf)
+ * \param[in] ...         Parameters for replace in format
  *
- * Success:	Number of written characters.
- * Fail:	0
+ * \return  Success: Number of written characters, Fail: 0
  */
-int tst_output_printf (tst_output_stream * output,
-    tst_report_types error_level, char * format, ...);
+int tst_output_printf(tst_output_stream *output,
+    tst_report_types error_level, char *format, ...);
 
-#endif
-
+#endif  /* TST_OUTPUT_H_ */
