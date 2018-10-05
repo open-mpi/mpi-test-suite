@@ -88,9 +88,8 @@ static inline void worker_barrier() {
 }
 
 
-static void * tst_thread_dispatcher (void * arg)
-{
-  struct tst_thread_env_t * thread_env = (struct tst_thread_env_t*) arg;
+static void *tst_thread_dispatcher(void *arg) {
+  struct tst_thread_env_t *thread_env = (struct tst_thread_env_t *) arg;
   tst_thread_cmd_t local_cmd = TST_THREAD_CMD_NULL;
   int local_cmd_count = 0;
 
@@ -101,8 +100,7 @@ static void * tst_thread_dispatcher (void * arg)
   /*
    * Wait for tests to be dispatched and scheduled.
    */
-  while (TST_THREAD_CMD_FINALIZE != local_cmd)
-    {
+  while (TST_THREAD_CMD_FINALIZE != local_cmd) {
       const struct tst_env * env;
 
       pthread_mutex_lock (&cmd_mutex);
@@ -133,8 +131,6 @@ static void * tst_thread_dispatcher (void * arg)
           tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d; Thread:%d) tst_thread_dispatcher calling init\n",
                         tst_global_rank, thread_env->thread_num);
           thread_env->tst_init_func (env);
-
-          worker_done();
           break;
 
         case TST_THREAD_CMD_RUN:
@@ -142,8 +138,6 @@ static void * tst_thread_dispatcher (void * arg)
           tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d; Thread:%d) tst_thread_dispatcher calling run\n",
                         tst_global_rank, thread_env->thread_num);
           thread_env->tst_run_func (env);
-
-          worker_done();
           break;
 
         case TST_THREAD_CMD_CLEANUP:
@@ -151,8 +145,6 @@ static void * tst_thread_dispatcher (void * arg)
           tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d; Thread:%d) tst_thread_dispatcher calling cleanup\n",
                         tst_global_rank, thread_env->thread_num);
           thread_env->tst_cleanup_func (env);
-
-          worker_done();
           break;
 
         case TST_THREAD_CMD_FINALIZE:
@@ -162,6 +154,7 @@ static void * tst_thread_dispatcher (void * arg)
           ERROR(EINVAL, "Unhandled cmd");
       }
       thread_env->state = TST_THREAD_STATE_IDLE;
+      worker_done();
     }
   return NULL;
 }
