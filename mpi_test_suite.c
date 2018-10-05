@@ -87,23 +87,25 @@ int tst_hash_value (const struct tst_env * env)
           env->test) % tst_tag_ub;
 }
 
-static int tst_array_compress (int * list, const int list_max, int * list_num)
-{
+/** \brief Compress array, by removing all -1 entries
+ *
+ * \param[in,out]  list      array list to be compressed
+ * \param[in]      list_max  number of elements in list
+ * \param[out]     list_num  number of elements in list after compression
+ *
+ * \return number of elements after compression
+ */
+static int tst_array_compress(int *list, const int list_max, int *list_num) {
   int i;
-  int current_pos;
-  /*
-   * Compress array, by removing all -1 entries.
-   */
-  for (current_pos = i = 0; i < list_max; i++)
-    {
+  int current_pos = 0;
+  for (i = 0; i < list_max; i++) {
+    if (list[i] != -1) {
       list[current_pos] = list[i];
-      tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "(Rank:%d) tst_array_compress list[%d]=list[%d]:%d\n",
-                         tst_global_rank, current_pos, i, list[current_pos]);
-      if (list[i] != -1)
-        current_pos++;
+      current_pos++;
     }
+  }
   (*list_num) = current_pos;
-  return 0;
+  return current_pos;
 }
 
 
