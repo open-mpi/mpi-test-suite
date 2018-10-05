@@ -50,9 +50,8 @@ typedef enum {
   TST_THREAD_SIGNAL_STATE_WAIT = 0,
   TST_THREAD_SIGNAL_STATE_GOON
 } tst_thread_signal_state;
-/*
- * Local declarations
- */
+
+
 /* saving thread_ids for global access, also available in main via struct thread_env */
 static pthread_t * tst_thread_tid_array;
 
@@ -67,28 +66,25 @@ int tst_thread_signals_count = 0;       /* number of waiting threads */
 static MPI_Request * tst_thread_requests_array;
 int tst_thread_requests_max = 0;
 
-/*
- * Function: worker_done
- */
-static inline void worker_done(void)
-{
+
+/** \brief Function to signal when a worker thread finished execution of his work */
+static inline void worker_done() {
   pthread_mutex_lock (&working_mutex);
   working--;
-  if (0 == working)
-    pthread_cond_signal (&working_cond);
-  pthread_mutex_unlock (&working_mutex);
+  if (0 == working) {
+    pthread_cond_signal(&working_cond);
+  }
+  pthread_mutex_unlock(&working_mutex);
 }
 
-static inline void worker_barrier(void)
-{
-  pthread_mutex_lock (&working_mutex);
-  while (working > 0)
-    {
-      tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) worker_barrier still working:%d\n",
-                    tst_global_rank, working);
-      pthread_cond_wait (&working_cond, &working_mutex);
-    }
-  pthread_mutex_unlock (&working_mutex);
+
+/** \brief Barrier to synchronize all worker threads finishing their work */
+static inline void worker_barrier() {
+  pthread_mutex_lock(&working_mutex);
+  while (working > 0) {
+    pthread_cond_wait(&working_cond, &working_mutex);
+  }
+  pthread_mutex_unlock(&working_mutex);
 }
 
 
@@ -179,9 +175,7 @@ int tst_thread_init(int max_threads, struct tst_thread_env_t ***thread_env) {
   assert(max_threads > 0);
   assert(thread_env != NULL);
 
-  /*
-   * Without the pthread_mutex_lock, as no threads are started, yet
-   */
+  /* Without the pthread_mutex_lock, as no threads are started, yet */
   working = 0;
 
   tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) tst_thread_init: max_threads:%d sizeof (struct tst_thread_env_t):%d\n",
@@ -207,7 +201,6 @@ int tst_thread_init(int max_threads, struct tst_thread_env_t ***thread_env) {
     if (ret != 0)
       ERROR (errno, "tst_thread_init: pthread_create");
     tst_thread_tid_array[i + 1] = env[i]->tid;
-
     num_threads++;
   }
 
@@ -267,49 +260,57 @@ inline int tst_thread_get_num (void)
   return -1;
 }
 
-/*
- * Assign all running threads the same test-environment
+/** \brief Reset test environment of all running threads
+ *
+ * \param[out] thread_env  list of thread environments
+ *
+ * \return always 0
  */
-int tst_thread_assign_reset (struct tst_thread_env_t ** thread_env)
+int tst_thread_assign_reset(struct tst_thread_env_t **thread_env)
 {
   int i;
-  for (i = 0; i < num_threads; i++)
-    {
-      memset (&(thread_env[i]->env), 0, sizeof (struct tst_env));
-      thread_env[i]->tst_init_func = NULL;
-      thread_env[i]->tst_run_func = NULL;
-      thread_env[i]->tst_cleanup_func = NULL;
-    }
+  for (i = 0; i < num_threads; i++) {
+    memset (&(thread_env[i]->env), 0, sizeof (struct tst_env));
+    thread_env[i]->tst_init_func = NULL;
+    thread_env[i]->tst_run_func = NULL;
+    thread_env[i]->tst_cleanup_func = NULL;
+  }
   pthread_mutex_lock (&working_mutex);
   working = 0;
   pthread_mutex_unlock (&working_mutex);
-
   return 0;
 }
 
-/*
- * Assign all running threads the same test-environment
+/** \brief Assign all running threads the same test-environment
+ *
+ * \param[in]  env  original environment to be assigned to all threads
+ * \param[out] thread_env  list of thread environments
+ *
+ * \return always 0
  */
-int tst_thread_assign_all (struct tst_env * env, struct tst_thread_env_t ** thread_env)
-{
+int tst_thread_assign_all(struct tst_env *env, struct tst_thread_env_t **thread_env) {
   int i;
-  for (i = 0; i < num_threads; i++)
-    {
-      memcpy (&(thread_env[i]->env), env, sizeof (struct tst_env));
-      thread_env[i]->tst_init_func = tst_test_get_init_func(env);
-      thread_env[i]->tst_run_func = tst_test_get_run_func(env);
-      thread_env[i]->tst_cleanup_func = tst_test_get_cleanup_func(env);
-    }
+  for (i = 0; i < num_threads; i++) {
+    memcpy (&(thread_env[i]->env), env, sizeof (struct tst_env));
+    thread_env[i]->tst_init_func = tst_test_get_init_func(env);
+    thread_env[i]->tst_run_func = tst_test_get_run_func(env);
+    thread_env[i]->tst_cleanup_func = tst_test_get_cleanup_func(env);
+  }
   pthread_mutex_lock (&working_mutex);
   working = num_threads;
   pthread_mutex_unlock (&working_mutex);
   return 0;
 }
 
-/*
- * Assign one particular running threads a test-environment
+/** \brief Assign a test-environment to one particular thread
+ *
+ * \param[in]  env  original environment to be assigned to the thread
+ * \param[in]  thread_number  id of the thread to assign the env to
+ * \param[out] thread_env  list of thread environments
+ *
+ * \return always 0
  */
-int tst_thread_assign_one (struct tst_env * env, int thread_number, struct tst_thread_env_t ** thread_env)
+int tst_thread_assign_one (struct tst_env *env, int thread_number, struct tst_thread_env_t **thread_env)
 {
   if (thread_number < 0 || thread_number >= num_threads)
     ERROR (EINVAL, "tst_thread_assign_one: Assignment not possible -- not enough threads");
@@ -378,14 +379,12 @@ int tst_thread_execute_cleanup (struct tst_env * env)
 }
 
 
-inline int tst_thread_num_threads (void)
-{
+inline int tst_thread_num_threads () {
   return num_threads + 1; /* +1 because the main thread also is doing some work */
 }
 
 
-inline int tst_thread_running (void)
-{
+inline int tst_thread_running () {
   return (num_threads > 0);
 }
 
