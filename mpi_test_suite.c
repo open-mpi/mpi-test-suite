@@ -261,7 +261,7 @@ int main (int argc, char * argv[])
                     tst_global_rank, tst_tag_ub);
 
   /* XXX CN Maybe rename these functions to tst_get_num_comms/types/tests ?  */
-  tst_comm_init(&num_comms);
+  tst_comms_init(&num_comms);
   tst_type_init(&num_types);
   tst_test_init(&num_tests);
 

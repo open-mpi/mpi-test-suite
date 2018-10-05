@@ -1,25 +1,20 @@
+/** \todo Check: If the communicator's size is one, are we also an TST_MPI_COMM_SELF ? */
+
 #include "config.h"
+
+#include <assert.h>
 #include <stdio.h>
-#ifdef HAVE_STDLIB_H
-#  include <stdlib.h>
-#endif
-#ifdef HAVE_STRING_H
-#  include <string.h>
-#endif
-#ifdef HAVE_STRINGS_H
-#  include <strings.h>
-#endif
-#ifdef HAVE_LIMITS_H
-#  include <limits.h>
-#endif
+#include <stdlib.h>
+#include <string.h>
+#include <strings.h>
+#include <limits.h>
+
 #include <mpi.h>
 #include "mpi_test_suite.h"
+#include "tst_threads.h"
 
 
 #define COMM_NUM 32
-
-/*#define HAVE_MPI_CLUSTER_SIZE*/
-
 
 #ifndef MIN
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
@@ -53,6 +48,7 @@ static const char * const tst_comms_class_strings [] =
 
 struct comm {
   MPI_Comm mpi_comm;                       /* The actual MPI communicator */
+  MPI_Comm *mpi_thread_comms;              /* List of duplicate MPI communicators used for threads */
   char description [TST_DESCRIPTION_LEN];  /* The communicator's description */
   int class;                               /* Class of communicator */
   int size;                                /* Size of this communicator */
@@ -61,181 +57,409 @@ struct comm {
   int * other_mapping;                     /* In case of intra-comms, the mapping of the other communicator */
 };
 
-static struct comm comms[COMM_NUM] = {
-  {MPI_COMM_WORLD, "MPI_COMM_WORLD", TST_MPI_INTRA_COMM, -1, NULL, 0, NULL},
-  {MPI_COMM_NULL,  "MPI_COMM_NULL",  TST_MPI_COMM_NULL,   0, NULL, 0, NULL},
-  {MPI_COMM_SELF,  "MPI_COMM_SELF",  TST_MPI_COMM_SELF,   1, NULL, 0, NULL},
-#define PREDEFINED_COMMUNICATORS 3
-  /* The Rest */
-  {MPI_COMM_NULL, "",                -1,                 -1, NULL, 0, NULL},
-};
+static int num_registered_comms = 0;
 
-int tst_comm_init (int * num_comms)
-{
+static struct comm comms[COMM_NUM];
+
+
+int tst_comm_register(char *description, MPI_Comm mpi_comm, int class, int size, int *mapping, int other_size, int *other_mapping) {
+  assert(num_registered_comms < COMM_NUM);
+  int i;
+  int num_threads = tst_thread_num_threads();
+  comms[num_registered_comms].mpi_comm = mpi_comm;
+  comms[num_registered_comms].mpi_thread_comms = (MPI_Comm *) malloc(num_threads * sizeof(MPI_Comm));
+  for (i = 0; i < num_threads; i++) {
+    if(mpi_comm != MPI_COMM_NULL) {
+      MPI_CHECK (MPI_Comm_dup(mpi_comm, &comms[num_registered_comms].mpi_thread_comms[i]));
+    }
+    else {
+      comms[num_registered_comms].mpi_thread_comms[i] = MPI_COMM_NULL;
+    }
+  }
+  strncpy(comms[num_registered_comms].description, description, TST_DESCRIPTION_LEN);
+  comms[num_registered_comms].class = class;
+  comms[num_registered_comms].size = size;
+  comms[num_registered_comms].mapping = mapping;
+  comms[num_registered_comms].other_size = other_size;
+  comms[num_registered_comms].other_mapping = other_mapping;
+  num_registered_comms++;
+  return 0;
+}
+
+
+int tst_comm_register_comm_world() {
+  int comm_size = 1;
+  MPI_CHECK (MPI_Comm_size(MPI_COMM_WORLD, &comm_size));
+  int i;
+  int *mapping = (int *) malloc(comm_size * sizeof(int));
+  if (NULL == mapping) {
+    ERROR (errno, "malloc");
+  }
+  for (i = 0; i < comm_size; i++) {
+    mapping[i] = i;
+  }
+  tst_comm_register("MPI_COMM_WORLD", MPI_COMM_WORLD, TST_MPI_INTRA_COMM, comm_size, mapping, 0, NULL);
+  return 0;
+}
+
+int tst_comm_register_comm_null() {
+  tst_comm_register("MPI_COMM_NULL", MPI_COMM_NULL, TST_MPI_COMM_NULL, 0, NULL, 0, NULL);
+  return 0;
+}
+
+int tst_comm_register_comm_self() {
+  tst_comm_register("MPI_COMM_SELF", MPI_COMM_SELF, TST_MPI_COMM_SELF, 1, NULL, 0, NULL);
+  return 0;
+}
+
+int tst_comm_register_duplicate_comm_world() {
+  MPI_Comm comm;
+  int comm_size = 1;
+  int i;
+  MPI_CHECK (MPI_Comm_dup (MPI_COMM_WORLD, &comm));
+  MPI_CHECK (MPI_Comm_size (comm, &comm_size));
+  int *mapping = (int *) malloc(comm_size * sizeof(int));
+  if (NULL == mapping) {
+    ERROR (errno, "malloc");
+  }
+  for (i = 0; i < comm_size; i++) {
+    mapping[i] = i;
+  }
+
+  INTERNAL_CHECK (
+    int tmp_rank; int comm_rank;
+    int tmp_size; int comm_size;
+    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &comm_rank);
+    MPI_Comm_size(comm, &tmp_size);
+    MPI_Comm_rank(comm, &tmp_rank);
+    if (tmp_size != comm_size || tmp_rank != comm_rank)
+      ERROR (EINVAL, "CHECK for Reversed MPI_COMM_WORLD failed");
+  );
+
+  tst_comm_register("Duplicated MPI_COMM_WORLD", comm, TST_MPI_INTRA_COMM, comm_size, mapping, 0, NULL);
+  return 0;
+}
+
+int tst_comm_register_reversed_comm_world() {
+  MPI_Comm comm;
+  int comm_size = 1;
+  int i;
+  MPI_Group tmp_group, tmp_group2;
+
+  MPI_CHECK (MPI_Comm_size(MPI_COMM_WORLD, &comm_size));
+  int *mapping = (int *) malloc(comm_size * sizeof(int));
+  if (NULL == mapping) {
+    ERROR (errno, "malloc");
+  }
+  for (i = 1; i <= comm_size; i++) {
+    mapping[i - 1] = comm_size - i;
+  }
+  MPI_CHECK (MPI_Comm_group(MPI_COMM_WORLD, &tmp_group));
+  MPI_CHECK (MPI_Group_incl(tmp_group, comm_size, mapping, &tmp_group2));
+  MPI_CHECK (MPI_Comm_create(MPI_COMM_WORLD, tmp_group2, &comm));
+  MPI_CHECK (MPI_Group_free(&tmp_group));
+  MPI_CHECK (MPI_Group_free(&tmp_group2));
+  MPI_CHECK (MPI_Comm_size(comm, &comm_size));
+
+  INTERNAL_CHECK (
+    int tmp_rank; int comm_rank;
+    int tmp_size; int comm_size;
+    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &comm_rank);
+    MPI_Comm_size(comm, &tmp_size);
+    MPI_Comm_rank(comm, &tmp_rank);
+    if (tmp_size != comm_size || tmp_rank != comm_size - comm_rank-1)
+      ERROR (EINVAL, "CHECK for Reversed MPI_COMM_WORLD failed");
+  );
+
+  tst_comm_register("Reversed MPI_COMM_WORLD", comm, TST_MPI_INTRA_COMM, comm_size, mapping, 0, NULL);
+  return 0;
+}
+
+
+int tst_comm_register_halved_comm_world() {
+  MPI_Comm comm;
+  int comm_size = 1;
+  int i;
+  int world_size = -1;
+  int world_rank = -1;
+
+  MPI_CHECK (MPI_Comm_size(MPI_COMM_WORLD, &world_size));
+  MPI_CHECK (MPI_Comm_rank(MPI_COMM_WORLD, &world_rank));
+  comm_size = world_size / 2;
+  int *mapping = (int *) malloc(comm_size * sizeof(int));
+  if (NULL == mapping) {
+    ERROR (errno, "malloc");
+  }
+  /** \todo Check mapping definition */
+  for (i = 0; i < comm_size; i++) {
+    mapping[i] = i;
+  }
+  MPI_CHECK (MPI_Comm_split (MPI_COMM_WORLD, world_rank >= comm_size,
+                               world_rank, &comm));
+  /** \todo WATCH OUT, ONE process may contain MPI_COMM_NULL */
+  MPI_CHECK (MPI_Comm_size(comm, &comm_size));
+
+  tst_comm_register("Halved MPI_COMM_WORLD", comm, TST_MPI_INTRA_COMM, comm_size, mapping, 0, NULL);
+  return 0;
+}
+
+
+int tst_comm_register_2D_cart_comm() {
+  int comm_size;
+  MPI_CHECK (MPI_Comm_size(MPI_COMM_WORLD, &comm_size));
+  if (comm_size > 1) {
+    MPI_Comm comm;
+    int i;
+    int dims[2] = {0, 0};
+    int periods[2] = {1, 1};
+    int *mapping = (int *) malloc(comm_size * sizeof(int));
+    if (NULL == mapping) {
+      ERROR (errno, "malloc");
+    }
+    /** \todo Check mapping definition */
+    for (i = 0; i < comm_size; i++) {
+      mapping[i] = i;
+    }
+    MPI_CHECK (MPI_Dims_create(comm_size, 2, dims));
+    MPI_CHECK (MPI_Cart_create(MPI_COMM_WORLD, 2, dims, periods, 1, &comm));
+
+    tst_comm_register("2D Cart_comm", comm, TST_MPI_CART_COMM, comm_size, mapping, 0, NULL);
+  }
+  return 0;
+}
+
+
+int tst_comm_register_3D_cart_comm() {
+  int comm_size;
+  MPI_CHECK (MPI_Comm_size(MPI_COMM_WORLD, &comm_size));
+  if (comm_size > 1) {
+    MPI_Comm comm;
+    int i;
+    int dims[3] = {0, 0, 0};         /* Set to zero in order to receive value */
+    int periods[3] = {0, 0, 0};
+    int *mapping = (int *) malloc(comm_size * sizeof(int));
+    if (NULL == mapping) {
+      ERROR (errno, "malloc");
+    }
+    /** \todo Check mapping definition */
+    for (i = 0; i < comm_size; i++) {
+      mapping[i] = i;
+    }
+    MPI_CHECK(MPI_Dims_create(comm_size, 3, dims));
+    MPI_CHECK(MPI_Cart_create(MPI_COMM_WORLD, 3, dims, periods, 1, &comm));
+
+    tst_comm_register("3D Cart_comm", comm, TST_MPI_CART_COMM, comm_size, mapping, 0, NULL);
+  }
+  return 0;
+}
+
+int tst_comm_register_odd_even_split() {
+  MPI_Comm comm;
+  int i;
+  int comm_size = 1;
+  int world_size = -1;
+  int world_rank = -1;
+
+  MPI_CHECK (MPI_Comm_size(MPI_COMM_WORLD, &world_size));
+  MPI_CHECK (MPI_Comm_rank(MPI_COMM_WORLD, &world_rank));
+
+  MPI_CHECK (MPI_Comm_split(MPI_COMM_WORLD, world_rank % 2, world_rank, &comm));
+  MPI_CHECK (MPI_Comm_size(comm, &comm_size));
+
+  int *mapping = (int *) malloc(comm_size * sizeof(int));
+  if (NULL == mapping) {
+    ERROR (errno, "malloc");
+  }
+  for (i = 0; i < comm_size; i++) {
+    mapping[i] = i*2 + (world_rank % 2);
+  }
+
+  tst_comm_register("Odd/Even split MPI_COMM_WORLD", comm, TST_MPI_INTRA_COMM, comm_size, mapping, 0, NULL);
+  return 0;
+}
+
+int tst_comm_register_fully_connected_topology() {
+  MPI_Comm comm;
+  int i;
+  int comm_size = 1;
+
+  MPI_CHECK (MPI_Comm_size(MPI_COMM_WORLD, &comm_size));
+  int *mapping = (int *) malloc(comm_size * sizeof(int));
+  if (NULL == mapping) {
+    ERROR (errno, "malloc");
+  }
+  for (i = 0; i < comm_size; i++) {
+    mapping[i] = i;
+  }
+  int *index=NULL;
+  int *edges=NULL;
+  int j, num;
+  /*allocate index*/
+  if((index = (int*)malloc(sizeof(int) * comm_size))==NULL)
+    ERROR(errno, "malloc");
+  for (i=0; i < comm_size; i++)
+    index[i] = (i+1)*(comm_size-1);
+  /*allocate edges*/
+  if((edges = (int*)malloc(sizeof(int) * comm_size * (comm_size - 1)))==NULL)
+    ERROR(errno,"malloc");
+  num=0;
+  for(i=0; i < comm_size; i++) {
+    for(j=0; j < comm_size;j++) {
+      if(j==i) {
+        continue;
+      }
+      edges[num] = j;
+      num++;
+    }
+  }
+  MPI_CHECK (MPI_Graph_create(MPI_COMM_WORLD, comm_size, index, edges, 1, &comm));
+
+  free(index);
+  free(edges);
+
+  tst_comm_register("Full-connected Topology", comm, TST_MPI_TOPO_COMM, comm_size, mapping, 0, NULL);
+  return 0;
+}
+
+
+/*
+ * Create a halved inter-communicator with all processes < comm_size/2 on one side
+ * and all the others on the other side!
+ */
+int tst_comm_register_halved_inter_comm() {
+  int world_size;
+  MPI_CHECK (MPI_Comm_size(MPI_COMM_WORLD, &world_size));
+
+  if (world_size > 1) {
+    int i;
+    MPI_Comm comm;
+    MPI_Comm tmp_comm;
+    int world_rank;
+    MPI_CHECK (MPI_Comm_rank(MPI_COMM_WORLD, &world_rank));
+    MPI_CHECK (MPI_Comm_split(MPI_COMM_WORLD, world_rank >= world_size / 2, world_rank, &tmp_comm));
+
+    int comm_size;
+    MPI_CHECK (MPI_Comm_size(MPI_COMM_WORLD, &comm_size));
+    int other_size = world_size - comm_size;
+
+    int *mapping;
+    if ((mapping = malloc (comm_size * sizeof(int))) == NULL)
+      ERROR (errno, "malloc");
+    for (i = 0; i < comm_size; i++)
+      mapping[i] = i;
+
+    int *other_mapping;
+    if ((other_mapping = malloc (other_size * sizeof(int))) == NULL)
+      ERROR (errno, "malloc");
+    for (i = 0; i < other_size; i++)
+      other_mapping[i] = comm_size + i;
+
+    /*
+     * The MPI-standard doesn't require the remote_leader to be the same on all processes.
+     * Here, we specify for process zero the correct value, all others
+     * (including the process world_size/2 gets the value 0 -- which is correct for him, but
+     * not the others).
+     *
+     * More correct would be: (comm_rank < comm_size/2 ? comm_size/2 : 0).
+     */
+    MPI_CHECK (MPI_Intercomm_create(tmp_comm,
+                                    0,
+                                    MPI_COMM_WORLD,
+                                    (world_rank == 0) ? world_size / 2 : 0,
+                                    num_registered_comms,
+                                    &comm));
+
+    MPI_CHECK (MPI_Comm_free (&tmp_comm));
+
+    tst_comm_register("Halved Inter_communicator", comm, TST_MPI_INTER_COMM, comm_size, mapping, other_size, other_mapping);
+  }
+  return 0;
+}
+
+int tst_comm_register_merged_inter_comm() {
+  int world_size;
+  MPI_CHECK (MPI_Comm_size(MPI_COMM_WORLD, &world_size));
+
+  if (world_size > 1) {
+    /* Create an Intra-communicator merged out of the "Halved Inter_communicator" communicator */
+    int i;
+    MPI_Comm comm;
+    int halved_inter_comm_Id;
+    for(halved_inter_comm_Id = 0; halved_inter_comm_Id <num_registered_comms; halved_inter_comm_Id++) {
+      if (strcmp("Halved Inter_communicator", comms[halved_inter_comm_Id].description) == 0) {
+        break;
+      }
+    }
+
+    int comm_size;
+    MPI_CHECK (MPI_Intercomm_merge(comms[halved_inter_comm_Id].mpi_comm, 0, &comm));
+    MPI_CHECK (MPI_Comm_size(comm, &comm_size));
+
+    int *mapping;
+    if ((mapping = malloc (comm_size * sizeof(int))) == NULL)
+      ERROR (errno, "malloc");
+    for (i = 0; i < comm_size; i++)
+      mapping[i] = i;
+
+    tst_comm_register("Intracomm merged of the Halved Inter_communicator", comm, TST_MPI_INTRA_COMM, comm_size, mapping, 0, NULL);
+  }
+  return 0;
+}
+
+
+int tst_comm_register_split_type_shared() {
+#if MPI_VERSION >= 3
+  int i;
+  MPI_Comm comm;
+  int comm_size;
+  int world_rank;
+  MPI_CHECK(MPI_Comm_rank(MPI_COMM_WORLD, &world_rank));
+  MPI_CHECK (MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, world_rank, MPI_INFO_NULL, &comm));
+  MPI_CHECK(MPI_Comm_size(comm, &comm_size));
+  int *mapping;
+  if ((mapping = malloc (comm_size * sizeof(int))) == NULL) {
+    ERROR (errno, "malloc");
+  }
+  for (i = 0; i < comm_size; i++) {
+    mapping[i] = i;
+  }
+
+  tst_comm_register("MPI_COMM_TYPE_SHARED comm", comm, TST_MPI_SHARED_COMM | TST_MPI_INTRA_COMM, comm_size, mapping, 0, NULL);
+#endif
+  return 0;
+}
+
+
+int tst_comms_init(int * num_comms) {
+
+  tst_comm_register_comm_world();
+  tst_comm_register_comm_null();
+  tst_comm_register_comm_self();
+  tst_comm_register_duplicate_comm_world();
+  tst_comm_register_reversed_comm_world();
+  tst_comm_register_halved_comm_world();
+  tst_comm_register_2D_cart_comm();
+  tst_comm_register_3D_cart_comm();
+  tst_comm_register_odd_even_split();
+  tst_comm_register_fully_connected_topology();
+  tst_comm_register_halved_inter_comm();
+  tst_comm_register_merged_inter_comm();
+  tst_comm_register_split_type_shared();
+
+  *num_comms = num_registered_comms;
+  return 0;
+
+  int count_comms = num_registered_comms;
   int comm_size;
   int comm_rank;
-  MPI_Group tmp_group, tmp_group2;
   MPI_Comm tmp_comm = MPI_COMM_NULL;
   int i;
-  int count_comms;
-  int INTERCOMM_TO_MERGE;
 
   MPI_Comm_size (MPI_COMM_WORLD, &comm_size);
   MPI_Comm_rank (MPI_COMM_WORLD, &comm_rank);
 
-  /*
-   * Finish definition of MPI_COMM_WORLD
-   */
-  comms[0].size = comm_size;
-  if ((comms[0].mapping = malloc (comm_size * sizeof(int))) == NULL)
-    ERROR (errno, "malloc");
-  for (i = 0; i < comm_size; i++)
-    comms[0].mapping[i] = i;
-
-  count_comms = PREDEFINED_COMMUNICATORS;
-
-  /*
-   * Create a duplicate of MPI_COMM_WORLD
-   * Might be used for communication concurrently to MPI_COMM_WORLD
-   */
-  {
-    strncpy (comms[count_comms].description, "Duplicated MPI_COMM_WORLD", TST_DESCRIPTION_LEN);
-    comms[count_comms].size = comm_size;
-    if ((comms[count_comms].mapping = malloc (comm_size * sizeof(int))) == NULL)
-      ERROR (errno, "malloc");
-    for (i = 0; i < comm_size; i++)
-      comms[count_comms].mapping[i] = i;
-
-    MPI_CHECK (MPI_Comm_dup (MPI_COMM_WORLD, &comms[count_comms].mpi_comm));
-
-    /*
-     * Remark, that if the communicator's size is one, we are also an TST_MPI_COMM_SELF
-     */
-    comms[count_comms].class = TST_MPI_INTRA_COMM;
-    if (comms[count_comms].size == 1)
-      comms[count_comms].class |= TST_MPI_COMM_SELF;
-
-    comms[count_comms].other_size = 0;
-    comms[count_comms].other_mapping = NULL;
-
-    INTERNAL_CHECK
-      (
-       int tmp_rank;
-       int tmp_size;
-       MPI_Comm_size (comms[count_comms].mpi_comm, &tmp_size);
-       MPI_Comm_rank (comms[count_comms].mpi_comm, &tmp_rank);
-       if (tmp_size != comm_size || tmp_rank != comm_rank)
-         ERROR (EINVAL, "CHECK for Reversed MPI_COMM_WORLD failed");
-       );
-
-    if (++count_comms > COMM_NUM)
-      ERROR (EINVAL, "Too many communicators, increase COMM_NUM");
-  }
-
-  /*
-   * Create a communicator, which is reversed
-   */
-  {
-    strncpy (comms[count_comms].description, "Reversed MPI_COMM_WORLD", TST_DESCRIPTION_LEN);
-    comms[count_comms].size = comm_size;
-    if ((comms[count_comms].mapping = malloc (comm_size * sizeof(int))) == NULL)
-      ERROR (errno, "malloc");
-    for (i = 1; i <= comm_size; i++)
-      comms[count_comms].mapping[i-1] = comm_size - i;
-
-    MPI_CHECK (MPI_Comm_group (MPI_COMM_WORLD, &tmp_group));
-    MPI_CHECK (MPI_Group_incl (tmp_group, comm_size, comms[count_comms].mapping, &tmp_group2));
-    MPI_CHECK (MPI_Comm_create (MPI_COMM_WORLD, tmp_group2, &comms[count_comms].mpi_comm));
-    MPI_CHECK (MPI_Group_free (&tmp_group));
-    MPI_CHECK (MPI_Group_free (&tmp_group2));
-
-    /*
-     * Remark, that if the communicator's size is one, we are also an TST_MPI_COMM_SELF
-     */
-      comms[count_comms].class = TST_MPI_INTRA_COMM;
-    if (comms[count_comms].size == 1)
-      comms[count_comms].class |= TST_MPI_COMM_SELF;
-    comms[count_comms].other_size = 0;
-    comms[count_comms].other_mapping = NULL;
-
-    INTERNAL_CHECK (
-                    int tmp_rank;
-                    int tmp_size;
-                    MPI_Comm_size (comms[count_comms].mpi_comm, &tmp_size);
-                    MPI_Comm_rank (comms[count_comms].mpi_comm, &tmp_rank);
-                    if (tmp_size != comm_size || tmp_rank != comm_size - comm_rank-1)
-                      ERROR (EINVAL, "CHECK for Reversed MPI_COMM_WORLD failed");
-                    );
-
-    if (++count_comms > COMM_NUM)
-      ERROR (EINVAL, "Too many communicators, increase COMM_NUM");
-  }
-
-  /*
-   * Create a communicator, which is split in two halves.
-   * WATCH OUT, ONE process may contain MPI_COMM_NULL
-   */
-  {
-    strncpy (comms[count_comms].description, "Halved MPI_COMM_WORLD", TST_DESCRIPTION_LEN);
-    comms[count_comms].size = comm_size / 2;
-    if ((comms[count_comms].mapping = malloc (comms[count_comms].size * sizeof(int))) == NULL)
-      ERROR (errno, "malloc");
-    for (i = 0; i < comms[count_comms].size; i++)
-      comms[count_comms].mapping[i] = i;
-
-    MPI_CHECK (MPI_Comm_split (MPI_COMM_WORLD, comm_rank >= comm_size / 2,
-                               comm_rank, &comms[count_comms].mpi_comm));
-
-    /*
-     * Remark, that if the communicator's size is one, we are also an TST_MPI_COMM_SELF
-     */
-    comms[count_comms].class = TST_MPI_INTRA_COMM;
-    if (comms[count_comms].size == 1)
-      comms[count_comms].class |= TST_MPI_COMM_SELF;
-
-    comms[count_comms].other_size = 0;
-    comms[count_comms].other_mapping = NULL;
-
-    if (++count_comms > COMM_NUM)
-      ERROR (EINVAL, "Too many communicators, increase COMM_NUM");
-  }
-
-  /*
-   * Create a communicator which is all the even and one with all the odd processes
-   * So comm_size is for an even MPI_COMM_WORLD comm_size / 2 and
-   *   for odd MPI_COMM_WORLD: comm_size / 2 + 1 for all even processes!
-   */
-  {
-    strncpy (comms[count_comms].description, "Odd/Even split MPI_COMM_WORLD", TST_DESCRIPTION_LEN);
-    if (comm_size % 2)
-      {
-        /* Odd number of processes in MPI_COMM_WORLD */
-        comms[count_comms].size = comm_size / 2 + (comm_rank+1) % 2;
-      }
-    else
-      comms[count_comms].size = comm_size / 2;
-
-    if ((comms[count_comms].mapping = malloc (comms[count_comms].size * sizeof(int))) == NULL)
-      ERROR (errno, "malloc");
-
-    for (i = 0; i < comms[count_comms].size; i++)
-      comms[count_comms].mapping[i] = i*2 + (comm_rank % 2);
-
-    MPI_CHECK (MPI_Comm_split (MPI_COMM_WORLD, comm_rank % 2, comm_rank, &comms[count_comms].mpi_comm));
-
-
-    /*
-     * Remark, that if the communicator's size is one, we are also an TST_MPI_COMM_SELF
-     */
-    comms[count_comms].class = TST_MPI_INTRA_COMM;
-    if (comms[count_comms].size == 1)
-      comms[count_comms].class |= TST_MPI_COMM_SELF;
-
-    comms[count_comms].other_size = 0;
-    comms[count_comms].other_mapping = NULL;
-    if (++count_comms > COMM_NUM)
-      ERROR (EINVAL, "Too many communicators, increase COMM_NUM");
-  }
 
   /*
    * Create a inter-communicator with process zero on one side and all the others
@@ -296,186 +520,7 @@ int tst_comm_init (int * num_comms)
 
 
 
- /*
-   * Create a 2 dimensional communicator, with MPI_Cart_create.
-   */
-  if (comm_size > 1)
-  {
-    int dims[2] = {0, 0};           /* Set to zero in order to receive value */
-    int periods[2] = {1, 1};
 
-    strncpy (comms[count_comms].description, "Two dimensional Cartesian", TST_DESCRIPTION_LEN);
-    comms[count_comms].size = comm_size;
-    if ((comms[count_comms].mapping = malloc (comms[count_comms].size * sizeof(int))) == NULL)
-      ERROR (errno, "malloc");
-    for (i = 0; i < comms[count_comms].size; i++)
-      comms[count_comms].mapping[i] = i;
-
-    MPI_CHECK(MPI_Dims_create(comm_size, 2, dims));
-    MPI_CHECK(MPI_Cart_create(MPI_COMM_WORLD, 2, dims, periods, 1, &comms[count_comms].mpi_comm));
-
-    comms[count_comms].class = TST_MPI_CART_COMM;
-
-    comms[count_comms].other_size = 0;
-    comms[count_comms].other_mapping = NULL;
-
-    if (++count_comms > COMM_NUM)
-      ERROR (EINVAL, "Too many communicators, increase COMM_NUM");
-  }
-
-
-  /*
-   * Create a 3 dimensional communicator, with MPI_Cart_create.
-   */
-  if (comm_size > 1)
-  {
-    int dims[3] = {0, 0, 0};         /* Set to zero in order to receive value */
-    int periods[3] = {0, 0, 0};
-
-    strncpy (comms[count_comms].description, "Three dimensional Cartesian", TST_DESCRIPTION_LEN);
-    comms[count_comms].size = comm_size;
-    if ((comms[count_comms].mapping = malloc (comms[count_comms].size * sizeof(int))) == NULL)
-      ERROR (errno, "malloc");
-    for (i = 0; i < comms[count_comms].size; i++)
-      comms[count_comms].mapping[i] = i;
-
-    MPI_CHECK(MPI_Dims_create(comm_size, 3, dims));
-    MPI_CHECK(MPI_Cart_create(MPI_COMM_WORLD, 3, dims, periods, 1, &comms[count_comms].mpi_comm));
-
-    comms[count_comms].class = TST_MPI_CART_COMM;
-
-    comms[count_comms].other_size = 0;
-    comms[count_comms].other_mapping = NULL;
-
-    if (++count_comms > COMM_NUM)
-      ERROR (EINVAL, "Too many communicators, increase COMM_NUM");
-  }
-
-  /*
-   * Create a TOPO communication with MPI_Graph_create
-   */
-
-  {
-    int *index=NULL;
-    int *edges=NULL;
-    int j, num;
-
-    strncpy (comms[count_comms].description, "Full-connected Topology", TST_DESCRIPTION_LEN);
-    /*allocate index*/
-    if((index = (int*)malloc(sizeof(int) * comm_size))==NULL)
-      ERROR(errno, "malloc");
-    for (i=0; i < comm_size; i++)
-      index[i] = (i+1)*(comm_size-1);
-    /*allocate edges*/
-    if((edges = (int*)malloc(sizeof(int) * comm_size * (comm_size - 1)))==NULL)
-      ERROR(errno,"malloc");
-    num=0;
-    for(i=0; i < comm_size; i++)
-      {
-        for(j=0; j < comm_size;j++)
-          {
-            if(j==i)
-              continue;
-            edges[num]=j;
-            num++;
-          }
-      }
-    MPI_CHECK(MPI_Graph_create (MPI_COMM_WORLD, comm_size, index,
-                                edges, 1, &comms[count_comms].mpi_comm));
-    comms[count_comms].class = TST_MPI_TOPO_COMM;
-    comms[count_comms].other_size = 0;
-    comms[count_comms].other_mapping = NULL;
-
-    if (++count_comms > COMM_NUM)
-      ERROR (EINVAL, "Too many communicators, increase COMM_NUM");
-    free(index);
-    free(edges);
-  }
-
-
-  /*
-   * Create a halved inter-communicator with all processes < comm_size/2 on one side
-   * and all the others on the other side!
-   */
-  if (comm_size > 1)
-    {
-      {
-        INTERCOMM_TO_MERGE = count_comms;
-
-        strncpy (comms[count_comms].description, "Halved Intercommunicator", TST_DESCRIPTION_LEN);
-
-        if (comm_rank > comm_size / 2)
-          {
-            comms[count_comms].size = comm_size / 2 + comm_size % 2;
-            comms[count_comms].other_size = comm_size/2;
-          }
-        else
-          {
-            comms[count_comms].size = comm_size / 2;
-            comms[count_comms].other_size = comm_size/2 + comm_size % 2;
-          }
-
-        if ((comms[count_comms].mapping = malloc (comms[count_comms].size * sizeof(int))) == NULL)
-          ERROR (errno, "malloc");
-        for (i = 0; i < comms[count_comms].size; i++)
-          comms[count_comms].mapping[i] = i;
-
-        if ((comms[count_comms].other_mapping = malloc (comms[count_comms].other_size * sizeof(int))) == NULL)
-          ERROR (errno, "malloc");
-        for (i = 0; i < comms[count_comms].other_size; i++)
-          comms[count_comms].other_mapping[i] = comms[count_comms].size + i;
-
-        MPI_CHECK (MPI_Comm_split (MPI_COMM_WORLD, comm_rank >= comm_size / 2, comm_rank, &tmp_comm));
-
-        /*
-        * The MPI-standard doesn't require the remote_leader to be the same on all processes.
-        * Here, we specify for process zero the correct value, all others
-        * (including the process comm_size/2 gets the value 0 -- which is correct for him, but
-        * not the others).
-        *
-        * More correct would be: (comm_rank < comm_size/2 ? comm_size/2 : 0).
-        */
-        MPI_CHECK (MPI_Intercomm_create (tmp_comm,
-                                        0,
-                                        MPI_COMM_WORLD,
-                                        (comm_rank == 0) ? comm_size / 2 : 0,
-                                        count_comms,
-                                        &comms[count_comms].mpi_comm));
-
-
-        MPI_CHECK (MPI_Comm_free (&tmp_comm));
-
-        comms[count_comms].class = TST_MPI_INTER_COMM;
-        if (++count_comms > COMM_NUM)
-          ERROR (EINVAL, "Too many communicators, increase COMM_NUM");
-      }
-
-      /*
-      * Create an Intra-communicator merged out of the communicator created above...
-      */
-      {
-        strncpy (comms[count_comms].description, "Intracomm merged of the Halved Intercomm", TST_DESCRIPTION_LEN);
-        comms[count_comms].size = comm_size;
-        comms[count_comms].other_size = 0;
-        comms[count_comms].other_mapping = NULL;
-
-        if ((comms[count_comms].mapping = malloc (comms[count_comms].size * sizeof(int))) == NULL)
-          ERROR (errno, "malloc");
-        for (i = 0; i < comm_size; i++)
-          comms[count_comms].mapping[i] = i;
-
-        MPI_CHECK (MPI_Intercomm_merge (comms[INTERCOMM_TO_MERGE].mpi_comm,
-                                        /*                                    (comm_rank > comm_size/2),*/
-                                        0,
-                                        &comms[count_comms].mpi_comm));
-        /*
-        * A merged intercommunicator must have at least two processes!
-        */
-        comms[count_comms].class = TST_MPI_INTRA_COMM;
-        if (++count_comms > COMM_NUM)
-          ERROR (EINVAL, "Too many communicators, increase COMM_NUM");
-      }
-    }
 #ifdef HAVE_MPI_CLUSTER_SIZE
     {
       int cluster_size;
@@ -570,63 +615,40 @@ int tst_comm_init (int * num_comms)
     }
 #endif
 
-#if MPI_VERSION >= 3
-  /*
-   * Create a communicator of type MPI_COMM_TYPE_SHARED
-   */
-  {
-    strncpy (comms[count_comms].description, "MPI_COMM_TYPE_SHARED comm", TST_DESCRIPTION_LEN);
-    MPI_CHECK(MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, comm_rank, MPI_INFO_NULL, &comms[count_comms].mpi_comm));
-    MPI_CHECK(MPI_Comm_size(comms[count_comms].mpi_comm, &comms[count_comms].size));
-    if ((comms[count_comms].mapping = malloc (comm_size * sizeof(int))) == NULL) {
-      ERROR (errno, "malloc");
-    }
-    for (i = 0; i < comm_size; i++) {
-      comms[count_comms].mapping[i] = i;
-    }
-    comms[count_comms].class = TST_MPI_SHARED_COMM;
-    /* We are also an INTRA COMM */
-    comms[count_comms].class |= TST_MPI_INTRA_COMM;
-    /* If the communicator's size is one, we are also an TST_MPI_COMM_SELF */
-    if (comms[count_comms].size == 1) {
-      comms[count_comms].class |= TST_MPI_COMM_SELF;
-    }
-
-    comms[count_comms].other_size = 0;
-    comms[count_comms].other_mapping = NULL;
-
-    if (++count_comms > COMM_NUM)
-      ERROR (EINVAL, "Too many communicators, increase COMM_NUM");
-  }
-#endif
-
   *num_comms = count_comms;
   return 0;
 }
 
 
-int tst_comm_cleanup (void)
-{
+int tst_comm_cleanup () {
   int i;
-  for (i=PREDEFINED_COMMUNICATORS; i < TST_COMMS_NUM; i++)
-    {
-      if (NULL == ((void*)comms[i].mpi_comm) || MPI_COMM_NULL == comms[i].mpi_comm)
-        continue;
-      free (comms[i].mapping);
-      if (NULL != comms[i].other_mapping)
-        free (comms[i].other_mapping);
+  for (i = 0; i < num_registered_comms; i++) {
+    if (NULL == ((void*)comms[i].mpi_comm) || MPI_COMM_NULL == comms[i].mpi_comm)
+      continue;
 
-      MPI_Comm_free (&comms[i].mpi_comm);
+    free(comms[i].mapping);
+    free(comms[i].other_mapping);
+    MPI_Comm_free(&comms[i].mpi_comm);
+    int j;
+    for (j = 0; j < tst_thread_num_threads(); j++) {
+      MPI_Comm_free(&comms[i].mpi_thread_comms[j]);
     }
+  }
   return 0;
 }
 
 
-MPI_Comm tst_comm_getcomm (int i)
-{
+MPI_Comm tst_comm_getcomm (int i) {
+
   CHECK_ARG (i, MPI_COMM_NULL);
 
-  return comms[i].mpi_comm;
+  if (tst_thread_get_num() > 0) {
+    int threadId = tst_thread_get_num();
+    return comms[i].mpi_thread_comms[threadId - 1];
+  }
+  else {
+    return comms[i].mpi_comm;
+  }
 }
 
 int tst_comm_getcommsize (int i)
@@ -656,20 +678,14 @@ const char * tst_comm_getdescription (int i)
 }
 
 
-void tst_comm_list (void)
-{
+void tst_comm_list() {
   int i;
-  for (i = 0; i < TST_COMMS_NUM; i++)
-    {
-      if (comms[i].description[0] == '\0')
-        break;
-      printf ("Communicator:%d %s\n",
-              i, comms[i].description);
-    }
-
-  for (i = 0; i < TST_COMMS_CLASS_NUM; i++)
-    printf ("Communicator-Class:%d %s\n",
-            i, tst_comms_class_strings[i]);
+  for (i = 0; i < num_registered_comms; i++) {
+    printf ("Communicator:%d %s\n", i, comms[i].description);
+  }
+  for (i = 0; i < TST_COMMS_CLASS_NUM; i++) {
+    printf ("Communicator-Class:%d %s\n", i, tst_comms_class_strings[i]);
+  }
 }
 
 
@@ -683,8 +699,7 @@ static int tst_comm_search (const int search_test, const int * test_list, const 
   return (k == test_list_num) ? -1 : k;
 }
 
-int tst_comm_select (const char * comm_string, int * comm_list, const int comm_list_max, int * comm_list_num)
-{
+int tst_comm_select (const char * comm_string, int * comm_list, const int comm_list_max, int * comm_list_num) {
   int i;
 
   if (comm_string == NULL || comm_list == NULL || comm_list_num == NULL)
@@ -728,7 +743,7 @@ int tst_comm_select (const char * comm_string, int * comm_list, const int comm_l
         }
     }
 
-  for (i = 0; i < TST_COMMS_NUM; i++)
+  for (i = 0; i < num_registered_comms; i++)
     {
       if (!strcasecmp (comm_string, comms[i].description))
         {
