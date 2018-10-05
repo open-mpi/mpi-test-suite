@@ -235,28 +235,20 @@ int tst_thread_cleanup (struct tst_thread_env_t ** thread_env)
   return 0;
 }
 
-/*
- * Returns the thread ID of the current thread
+/** \brief Return thread ID of the current thread
+ *
+ * \return Success: thread ID, Fail: -1
  */
-inline int tst_thread_get_num (void)
-{
+inline int tst_thread_get_num() {
+  assert(num_threads > 0);
+  assert(NULL != tst_thread_tid_array);
   int i = 0;
   pthread_t self = pthread_self();
-  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "Searching for thread_id %p\n", self);
-
-  if (NULL == tst_thread_tid_array) {
-      return 0;
-  }
   for (i = 0; i <= num_threads; i++) {
-     tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "Comparing with thread_id %p ....", tst_thread_tid_array[i]);
-     if ( pthread_equal (tst_thread_tid_array[i], self) ) {
-	tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "Found :-) Return %d\n", i);
-	return i;
-     }
-     else
-	tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "Not equal\n");
+    if (pthread_equal(tst_thread_tid_array[i], self)) {
+      return i;
+    }
   }
-  ERROR (EINVAL, "Thread ID could not be determined");
   return -1;
 }
 
