@@ -16,13 +16,6 @@
 
 #define COMM_NUM 32
 
-#ifndef MIN
-#define MIN(a,b) ((a) < (b) ? (a) : (b))
-#endif
-
-#ifndef MAX
-#define MAX(a,b) ((a) > (b) ? (a) : (b))
-#endif
 
 #define CHECK_ARG(i, ret) do {        \
   if ((i) < 0 || (i) > TST_COMMS_NUM) \
