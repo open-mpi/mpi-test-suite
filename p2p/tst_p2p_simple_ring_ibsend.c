@@ -10,6 +10,7 @@
  *
  * Date: Aug 8th 2003
  */
+#include <assert.h>
 #include <mpi.h>
 #include "mpi_test_suite.h"
 #include "tst_output.h"
@@ -41,20 +42,12 @@ int tst_p2p_simple_ring_ibsend_init (struct tst_env * env)
   env->send_buffer = tst_type_allocvalues (env->type, env->values_num);
   env->recv_buffer = tst_type_allocvalues (env->type, env->values_num);
 
-#ifdef HAVE_MPI2_THREADS
-  num_threads = tst_thread_num_threads ();
-#endif
   /*
    * Now, initialize the send_buffer
    */
   comm = tst_comm_getcomm (env->comm);
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
-
   tst_type_setstandardarray (env->type, env->values_num, env->send_buffer, comm_rank);
-
-  env->mpi_buffer_size = num_threads * (tst_type_gettypesize (env->type) * env->values_num + MPI_BSEND_OVERHEAD);
-  if ((env->mpi_buffer = malloc (env->mpi_buffer_size)) == NULL)
-    ERROR (errno, "malloc");
 
   /*
    * The buffer may be attached by one thread of the processes, only
@@ -63,6 +56,10 @@ int tst_p2p_simple_ring_ibsend_init (struct tst_env * env)
 #ifdef HAVE_MPI2_THREADS
   if ( tst_thread_get_num() == 0 ) {
 #endif
+    num_threads = tst_thread_num_threads ();
+    env->mpi_buffer_size = num_threads * (tst_type_gettypesize (env->type) * env->values_num + MPI_BSEND_OVERHEAD);
+    if ((env->mpi_buffer = malloc (env->mpi_buffer_size)) == NULL)
+      ERROR (errno, "malloc");
     MPI_CHECK (MPI_Buffer_attach (env->mpi_buffer, env->mpi_buffer_size));
 #ifdef HAVE_MPI2_THREADS
   }
@@ -141,7 +138,11 @@ int tst_p2p_simple_ring_ibsend_cleanup (struct tst_env * env)
 #ifdef HAVE_MPI2_THREADS
   if ( tst_thread_get_num () == 0 ) {
 #endif
-    MPI_CHECK (MPI_Buffer_detach (&env->mpi_buffer, &env->mpi_buffer_size));
+    void *buf;
+    int size = -1;
+    MPI_CHECK (MPI_Buffer_detach (&buf, &size));
+    assert(env->mpi_buffer == buf);
+    assert(env->mpi_buffer_size == size);
 #ifdef HAVE_MPI2_THREADS
   }
 #endif
