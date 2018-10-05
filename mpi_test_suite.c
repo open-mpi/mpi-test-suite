@@ -1,3 +1,5 @@
+/** \todo CN Maybe redesign the logfile implementation? */
+
 #include "config.h"
 
 #include <getopt.h>
@@ -210,25 +212,19 @@ int main (int argc, char * argv[])
     }
   }
 
-  /*
-   * XXX CN Maybe redesign the logfile implementation?
-   */
   tst_output_init (DEBUG_LOG, TST_OUTPUT_RANK_SELF, TST_REPORT_MAX, TST_OUTPUT_TYPE_LOGFILE, "tst.log");
 
-  char *info_str = (char *) calloc( MAX_INFO_STRING_LENGTH, sizeof(char) );
-  get_compiler_info( &info_str );
-  tst_output_printf (DEBUG_LOG, TST_REPORT_RUN, "Compiler used was %s\n", info_str );
-  get_mpi_info( &info_str );
-  tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "MPI version used was %s\n", info_str );
-  get_compile_time( &info_str );
-  tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "Compiled at %s\n", info_str );
-  get_timestamp( &info_str );
-  tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "Started at %s\n", info_str );
-
-
-
+  char *info_str = (char *) calloc(MAX_INFO_STRING_LENGTH, sizeof(char));
+  get_compiler_info(&info_str);
+  tst_output_printf(DEBUG_LOG, TST_REPORT_RUN, "Compiler used was %s\n", info_str);
+  get_mpi_info(&info_str);
+  tst_output_printf(DEBUG_LOG, TST_REPORT_FULL, "MPI version used was %s\n", info_str);
+  get_compile_time(&info_str);
+  tst_output_printf(DEBUG_LOG, TST_REPORT_FULL, "Compiled at %s\n", info_str);
+  get_timestamp(&info_str);
+  tst_output_printf(DEBUG_LOG, TST_REPORT_FULL, "Started at %s\n", info_str);
 #ifndef HAVE_MPI2_THREADS
-  tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "Testsuite was compiled without MPI2_THREADS");
+  tst_output_printf(DEBUG_LOG, TST_REPORT_FULL, "Testsuite was compiled without MPI2_THREADS");
 #endif
   /*
    * Output example:
@@ -252,8 +248,7 @@ int main (int argc, char * argv[])
    * Checking if the upper boundary for tag values is at least 32767 as required by MPI-1.1.
    * (see MPI-1.1 section 7.1.1.1 Tag values or MPI-3.1 section 8.1.2)
    */
-  if (tst_tag_ub < 32767)
-  {
+  if (tst_tag_ub < 32767) {
     printf ("Error: MPI_TAG_UB was below 32767.\n");
   }
 
