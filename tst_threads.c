@@ -240,7 +240,7 @@ int tst_thread_cleanup (struct tst_thread_env_t ** thread_env)
  * \return Success: thread ID, Fail: -1
  */
 inline int tst_thread_get_num() {
-  assert(num_threads > 0);
+  assert(num_threads >= 0);
   assert(NULL != tst_thread_tid_array);
   int i = 0;
   pthread_t self = pthread_self();
