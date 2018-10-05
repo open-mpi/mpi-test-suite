@@ -563,8 +563,7 @@ int main (int argc, char * argv[])
 #ifdef HAVE_MPI2_THREADS
   if (num_threads <= 0)
     {
-      printf ("Number of threads wrong:%d\n",
-              num_threads);
+      printf ("Error: Number of threads must be greater than 0 (given %d)\n", num_threads);
       usage ();
     }
   tst_thread_init (num_threads, &tst_thread_env);
