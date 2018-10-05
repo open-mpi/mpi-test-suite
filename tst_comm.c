@@ -635,7 +635,7 @@ MPI_Comm tst_comm_getcomm (int i) {
 
   CHECK_ARG (i, MPI_COMM_NULL);
 
-  if (tst_thread_get_num() > 0) {
+  if (tst_thread_running() && tst_thread_get_num() > 0) {
     int threadId = tst_thread_get_num();
     return comms[i].mpi_thread_comms[threadId - 1];
   }
