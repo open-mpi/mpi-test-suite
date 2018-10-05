@@ -1,12 +1,12 @@
 #include "config.h"
-#ifdef HAVE_PTHREAD_H
-#  include <pthread.h>
-#endif
+
+#include <assert.h>
+#include <pthread.h>
 
 #include "mpi_test_suite.h"
 
 
-static int num_threads; /* Number of available threads - 1 */
+static int num_threads; /**< Number of available threads - 1 */
 static int working;
 static pthread_mutex_t working_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t working_cond = PTHREAD_COND_INITIALIZER;
@@ -171,18 +171,14 @@ static void * tst_thread_dispatcher (void * arg)
 }
 
 
-/*
- * Initialize the thread-framework
- */
-int tst_thread_init (int max_threads, struct tst_thread_env_t *** thread_env)
-{
+/** \brief Initialize the thread-framework */
+int tst_thread_init(int max_threads, struct tst_thread_env_t ***thread_env) {
   int i;
   struct tst_thread_env_t ** env;
 
-  if (max_threads <= 0 || thread_env == NULL)
-    ERROR (EINVAL, "Called with faulty arguments");
+  assert(max_threads > 0);
+  assert(thread_env != NULL);
 
-  num_threads = max_threads - 1;
   /*
    * Without the pthread_mutex_lock, as no threads are started, yet
    */
@@ -201,20 +197,21 @@ int tst_thread_init (int max_threads, struct tst_thread_env_t *** thread_env)
    */
   tst_thread_tid_array[0] = pthread_self();
 
-  for (i = 0; i < num_threads; i++)
-    {
-      int ret;
-      env[i] = malloc (sizeof (struct tst_thread_env_t));
-      memset (env[i], 0, sizeof (struct tst_thread_env_t));
-      env[i]->thread_num = i;
-      env[i]->state = TST_THREAD_STATE_IDLE;
-      ret = pthread_create (&(env[i]->tid), NULL, tst_thread_dispatcher, env[i]);
-      if (ret != 0)
-        ERROR (errno, "tst_thread_init: pthread_create");
-      tst_thread_tid_array[i + 1] = env[i]->tid;
-    }
+  for (i = 0; i < max_threads - 1; i++) {
+    int ret;
+    env[i] = malloc (sizeof (struct tst_thread_env_t));
+    memset (env[i], 0, sizeof (struct tst_thread_env_t));
+    env[i]->thread_num = i;
+    env[i]->state = TST_THREAD_STATE_IDLE;
+    ret = pthread_create (&(env[i]->tid), NULL, tst_thread_dispatcher, env[i]);
+    if (ret != 0)
+      ERROR (errno, "tst_thread_init: pthread_create");
+    tst_thread_tid_array[i + 1] = env[i]->tid;
 
+    num_threads++;
+  }
 
+  assert(num_threads == max_threads - 1);
   *thread_env = env;
   return 0;
 }
