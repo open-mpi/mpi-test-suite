@@ -1,7 +1,7 @@
 /*
  * File: tst_threaded_comm_dup.c
  *
- * Functionality: 
+ * Functionality:
  *      Generates as many copies of the communicator as threads exist
  *      using MPI_Comm_dup. Then each thread executes MPI_Bcast on its
  *      copy of the communicator.
@@ -11,12 +11,12 @@
  * Date: Feb 26th 2007
  */
 #include <mpi.h>
+
 #include "mpi_test_suite.h"
+#include "tst_threads.h"
 #include "tst_output.h"
 
-#ifdef HAVE_PTHREAD_H
-#  include <pthread.h>
-#endif
+
 
 
 static MPI_Comm * new_comms;
@@ -41,13 +41,13 @@ int tst_threaded_comm_dup_init (struct tst_env * env)
                  tst_global_rank, env->comm, env->type, env->values_num);
 
   env->send_buffer = tst_type_allocvalues (env->type, env->values_num);
-  /* 
-   * initialise copies of communicators 
+  /*
+   * initialise copies of communicators
    */
   if (thread_num == 0) {
-    if (NULL == (new_comms = malloc (num_threads * sizeof (MPI_Comm)))) 
+    if (NULL == (new_comms = malloc (num_threads * sizeof (MPI_Comm))))
       ERROR (errno, "malloc");
-    for (i = 0; i < num_threads; i++) 
+    for (i = 0; i < num_threads; i++)
       MPI_CHECK (MPI_Comm_dup (comm, &new_comms[i]));
     tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) initialised copies of communicators\n",
 	tst_global_rank);

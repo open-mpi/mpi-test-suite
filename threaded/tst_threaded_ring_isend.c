@@ -12,6 +12,7 @@
  */
 #include <mpi.h>
 #include "mpi_test_suite.h"
+#include "tst_threads.h"
 #include "tst_output.h"
 
 
@@ -19,7 +20,7 @@ int tst_threaded_ring_isend_init (struct tst_env * env)
 {
   int comm_rank;
   MPI_Comm comm;
-  int thread_num = tst_thread_get_num(); 
+  int thread_num = tst_thread_get_num();
 
   tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
                  tst_global_rank, env->comm, env->type, env->values_num);
@@ -37,7 +38,7 @@ int tst_threaded_ring_isend_init (struct tst_env * env)
   if ( (env->status_buffer = malloc (sizeof (MPI_Status) * 2)) == NULL )
     ERROR (errno, "malloc");
 
-  if (0 == thread_num) 
+  if (0 == thread_num)
   {
     tst_thread_alloc_global_requests (2);
     tst_thread_signal_init (2);
@@ -64,11 +65,11 @@ int tst_threaded_ring_isend_run (struct tst_env * env)
   int thread_num;
 
   num_threads = tst_thread_num_threads();
-  thread_num = tst_thread_get_num(); 
+  thread_num = tst_thread_get_num();
 
   statuses = env->status_buffer;
   requests = tst_thread_get_global_request (0);
-  
+
   comm = tst_comm_getcomm (env->comm);
   type = tst_type_getdatatype (env->type);
 
@@ -117,7 +118,7 @@ int tst_threaded_ring_isend_run (struct tst_env * env)
       tst_thread_signal_wait (0);
       MPI_Waitall(2, requests, statuses);
       /*
-       * Inform thread 0 that communication has finished 
+       * Inform thread 0 that communication has finished
        */
       tst_thread_signal_send (1);
     }
@@ -154,12 +155,12 @@ int tst_threaded_ring_isend_run (struct tst_env * env)
 
 int tst_threaded_ring_isend_cleanup (struct tst_env * env)
 {
-  int thread_num = tst_thread_get_num(); 
+  int thread_num = tst_thread_get_num();
 
   tst_type_freevalues (env->type, env->send_buffer, env->values_num);
   tst_type_freevalues (env->type, env->recv_buffer, env->values_num);
 
-  if (0 == thread_num) 
+  if (0 == thread_num)
   {
     free (env->status_buffer);
     free (env->req_buffer);

@@ -1,7 +1,7 @@
 /*
  * File: tst_file_simple.c
  * Functionality:
- *  simple test opening and closing a file using MPI_File_open and 
+ *  simple test opening and closing a file using MPI_File_open and
  *  MPI_File_close
  * Author: Christoph Niethammer
  *
@@ -12,6 +12,7 @@
 
 #include <mpi.h>
 #include "mpi_test_suite.h"
+#include "tst_threads.h"
 
 
 

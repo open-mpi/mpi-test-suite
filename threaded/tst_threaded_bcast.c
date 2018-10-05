@@ -10,6 +10,7 @@
  */
 #include <mpi.h>
 #include "mpi_test_suite.h"
+#include "tst_threads.h"
 #include "tst_output.h"
 
 #ifdef HAVE_PTHREAD_H
@@ -25,7 +26,7 @@ int tst_threaded_ring_init (struct tst_env * env)
   int comm_rank;
   int thread_num;
   MPI_Comm comm;
-  MPI_Group 
+  MPI_Group
 
   tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
                  tst_global_rank, env->comm, env->type, env->values_num);

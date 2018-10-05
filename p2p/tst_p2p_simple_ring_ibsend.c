@@ -12,12 +12,10 @@
  */
 #include <assert.h>
 #include <mpi.h>
-#include "mpi_test_suite.h"
-#include "tst_output.h"
 
-#ifdef HAVE_PTHREAD_H
-#  include <pthread.h>
-#endif
+#include "mpi_test_suite.h"
+#include "tst_threads.h"
+#include "tst_output.h"
 
 
 /*

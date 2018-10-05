@@ -1,5 +1,7 @@
 #include "config.h"
 
+#include "tst_threads.h"
+
 #include <assert.h>
 #include <pthread.h>
 
@@ -13,43 +15,12 @@ static pthread_cond_t working_cond = PTHREAD_COND_INITIALIZER;
 static void * tst_global_buffer;
 static int tst_global_buffer_size;
 
-typedef enum {
-  TST_THREAD_CMD_NULL = 0,
-  TST_THREAD_CMD_INIT,
-  TST_THREAD_CMD_RUN,
-  TST_THREAD_CMD_CLEANUP,
-  TST_THREAD_CMD_FINALIZE
-} tst_thread_cmd_t;
-
 static tst_thread_cmd_t cmd = TST_THREAD_CMD_NULL;
 static int cmd_count = 0;
 static pthread_mutex_t cmd_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t cmd_cond = PTHREAD_COND_INITIALIZER;
 
 
-typedef enum {
-  TST_THREAD_STATE_IDLE = 0,
-  TST_THREAD_STATE_CALLING_INIT,
-  TST_THREAD_STATE_CALLING_RUN,
-  TST_THREAD_STATE_CALLING_CLEANUP,
-  TST_THREAD_STATE_FINALIZE
-} tst_thread_state_t;
-
-
-struct tst_thread_env_t {
-  int thread_num;
-  tst_thread_state_t state;
-  pthread_t tid;
-  struct tst_env env;
-  int (*tst_init_func) (const struct tst_env * env);
-  int (*tst_run_func) (const struct tst_env * env);
-  int (*tst_cleanup_func) (const struct tst_env * env);
-};
-
-typedef enum {
-  TST_THREAD_SIGNAL_STATE_WAIT = 0,
-  TST_THREAD_SIGNAL_STATE_GOON
-} tst_thread_signal_state;
 
 
 /* saving thread_ids for global access, also available in main via struct thread_env */
@@ -171,8 +142,8 @@ int tst_thread_init(int max_threads, struct tst_thread_env_t ***thread_env) {
   /* Without the pthread_mutex_lock, as no threads are started, yet */
   working = 0;
 
-  tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) tst_thread_init: max_threads:%d sizeof (struct tst_thread_env_t):%d\n",
-                 tst_global_rank, max_threads, sizeof (struct tst_thread_env_t));
+  tst_output_printf(DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) tst_thread_init: Initializing %d threads\n",
+                 tst_global_rank, max_threads);
 
   tst_thread_tid_array = malloc ( max_threads * sizeof (pthread_t));
   memset (tst_thread_tid_array, 0, max_threads * sizeof (pthread_t));

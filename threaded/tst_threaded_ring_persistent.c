@@ -12,6 +12,7 @@
  */
 #include <mpi.h>
 #include "mpi_test_suite.h"
+#include "tst_threads.h"
 #include "tst_output.h"
 
 
@@ -32,7 +33,7 @@ int tst_threaded_ring_persistent_init (struct tst_env * env)
   int recv_from;
   int thread_tag_to;
   int thread_tag_from;
-  
+
   tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
                      tst_global_rank, env->comm, env->type, env->values_num);
 
@@ -45,7 +46,7 @@ int tst_threaded_ring_persistent_init (struct tst_env * env)
   MPI_CHECK (MPI_Comm_size (comm, &comm_size));
   thread_num  = tst_thread_get_num ();
   num_threads = tst_thread_num_threads ();
-  
+
   /*
    * Now, initialize the send_buffer
    */
@@ -85,7 +86,7 @@ int tst_threaded_ring_persistent_init (struct tst_env * env)
 
   tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "Adresses of allocated requests:\tRequest 0: %p\tRequest 1: %p, MPI_REQUEST_NULL: %p\n", &(env->req_buffer[0]), &(env->req_buffer[1]), MPI_REQUEST_NULL);
   tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "Before init:\tRequest 0: %p\tRequest 1: %p, MPI_REQUEST_NULL: %p\n", env->req_buffer[0], env->req_buffer[1], MPI_REQUEST_NULL);
- 
+
   MPI_CHECK (MPI_Send_init (env->send_buffer, env->values_num, type, send_to, thread_tag_to, comm, &(env->req_buffer[0])));
   MPI_CHECK (MPI_Recv_init (env->recv_buffer, env->values_num, type, recv_from, thread_tag_from, comm,  &(env->req_buffer[1])));
   tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "After init:\tRequest 0: %p\tRequest 1: %p, MPI_REQUEST_NULL: %p\n", env->req_buffer[0], env->req_buffer[1], MPI_REQUEST_NULL);
@@ -108,7 +109,7 @@ int tst_threaded_ring_persistent_run (struct tst_env * env)
   comm = tst_comm_getcomm (env->comm);
   type = tst_type_getdatatype (env->type);
   thread_tag = env->tag + tst_thread_get_num ();
-      
+
   if (tst_comm_getcommclass (env->comm) & TST_MPI_COMM_SELF)
     {
       comm_size = 1;
@@ -138,7 +139,7 @@ int tst_threaded_ring_persistent_run (struct tst_env * env)
   MPI_CHECK (MPI_Start (&(env->req_buffer[0])));
   MPI_CHECK (MPI_Start (&(env->req_buffer[1])));
 #endif
-  
+
   tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "After start:\tRequest 0: %p\tRequest 1: %p, MPI_REQUEST_NULL: %p\n", env->req_buffer[0], env->req_buffer[1], MPI_REQUEST_NULL);
   tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "Before wait:\tRequest 0: %p\tRequest 1: %p, MPI_REQUEST_NULL: %p\n", env->req_buffer[0], env->req_buffer[1], MPI_REQUEST_NULL);
 #if WAITALL
@@ -148,7 +149,7 @@ int tst_threaded_ring_persistent_run (struct tst_env * env)
   MPI_CHECK (MPI_Wait (&(env->req_buffer[1]), &(env->status_buffer[1])));
 #endif
   tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "After wait:\tRequest 0: %p\tRequest 1: %p, MPI_REQUEST_NULL: %p\n", env->req_buffer[0], env->req_buffer[1], MPI_REQUEST_NULL);
-  
+
   /*
    * Now verify the sent data
    */

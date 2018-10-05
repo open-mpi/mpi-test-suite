@@ -461,32 +461,6 @@ extern int tst_type_deselect (const char * type_string,
 extern int tst_type_compare(const MPI_Datatype type1, const MPI_Datatype type2);
 extern int tst_hash_value (const struct tst_env * env);
 
-extern int tst_thread_init (int max_threads, struct tst_thread_env_t *** thread_env);
-extern int tst_thread_cleanup (struct tst_thread_env_t ** thread_env);
-extern int tst_thread_assign_reset (struct tst_thread_env_t ** thread_env);
-extern int tst_thread_assign_all (struct tst_env * env, struct tst_thread_env_t ** thread_env);
-extern int tst_thread_assign_one (struct tst_env * env, int thread_number, struct tst_thread_env_t ** thread_env);
-extern int tst_thread_execute_init (struct tst_env * env);
-extern int tst_thread_execute_run (struct tst_env * env);
-extern int tst_thread_execute_cleanup (struct tst_env * env);
-
-extern int tst_thread_get_num (void);
-extern int tst_thread_running (void);
-extern int tst_thread_num_threads (void);
-
-extern int tst_thread_signal_init (int num);
-extern int tst_thread_signal_cleanup (void);
-extern int tst_thread_signal_wait (int tag);
-extern int tst_thread_signal_send (int tag);
-
-extern void * tst_thread_global_buffer_init (int size);
-extern int tst_thread_global_buffer_cleanup (void);
-extern void * tst_thread_get_global_buffer ();
-extern int tst_thread_get_global_buffer_size ();
-
-extern MPI_Request * tst_thread_alloc_global_requests (int num);
-extern MPI_Request * tst_thread_get_global_request (int num);
-extern int tst_thread_free_global_requests (void);
 
 /*
  * Test functions

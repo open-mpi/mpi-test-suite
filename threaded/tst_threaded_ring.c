@@ -3,7 +3,7 @@
  *
  * Functionality:
  *  Threaded point-to-point ring-communication test using MPI_Send and MPI_Recv each on its own thread.
- *  The ring over the threads is realised using tags. The rings starting with process and thread zero. 
+ *  The ring over the threads is realised using tags. The rings starting with process and thread zero.
  *  Works with intra-communicators and up to now with any C (standard and struct) type.
  *
  * Author: Christoph Niethammer
@@ -12,6 +12,7 @@
  */
 #include <mpi.h>
 #include "mpi_test_suite.h"
+#include "tst_threads.h"
 #include "tst_output.h"
 
 #ifdef HAVE_PTHREAD_H
