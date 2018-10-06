@@ -14,6 +14,7 @@
 #include "mpi_test_suite.h"
 #include "tst_threads.h"
 #include "tst_output.h"
+#include "tst_comm.h"
 
 
 int tst_threaded_ring_isend_init (struct tst_env * env)
@@ -32,8 +33,8 @@ int tst_threaded_ring_isend_init (struct tst_env * env)
   /*
    * Now, initialize the send_buffer
    */
-  comm = tst_comm_getcomm (env->comm);
-  MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
+  comm = tst_comm_getmastercomm(env->comm);
+  MPI_CHECK (MPI_Comm_rank(comm, &comm_rank));
 
   if ( (env->status_buffer = malloc (sizeof (MPI_Status) * 2)) == NULL )
     ERROR (errno, "malloc");
@@ -61,16 +62,13 @@ int tst_threaded_ring_isend_run (struct tst_env * env)
   MPI_Status * statuses;
   MPI_Request * requests;
 
-  int num_threads;
-  int thread_num;
-
-  num_threads = tst_thread_num_threads();
-  thread_num = tst_thread_get_num();
+  int num_threads = 1 + tst_thread_num_threads();  /* we have to add 1 for the master thread */
+  int thread_num = (tst_thread_get_num() + num_threads) % num_threads;
 
   statuses = env->status_buffer;
   requests = tst_thread_get_global_request (0);
 
-  comm = tst_comm_getcomm (env->comm);
+  comm = tst_comm_getmastercomm (env->comm);
   type = tst_type_getdatatype (env->type);
 
   if (tst_comm_getcommclass (env->comm) & TST_MPI_COMM_SELF)
