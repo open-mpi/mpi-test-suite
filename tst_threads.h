@@ -7,6 +7,9 @@
 #include "mpi_test_suite.h"
 
 
+#define TST_THREAD_MASTER -1
+
+
 typedef enum {
   TST_THREAD_CMD_NULL = 0,
   TST_THREAD_CMD_INIT,

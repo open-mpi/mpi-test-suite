@@ -8,6 +8,7 @@
 #include "mpi_test_suite.h"
 
 
+
 static int num_threads; /**< Number of available threads - 1 */
 static int working;
 static pthread_mutex_t working_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -136,7 +137,7 @@ int tst_thread_init(int max_threads, struct tst_thread_env_t ***thread_env) {
   int i;
   struct tst_thread_env_t ** env;
 
-  assert(max_threads > 0);
+  assert(max_threads >= 0);
   assert(thread_env != NULL);
   assert(num_threads == 0);
 
@@ -146,17 +147,12 @@ int tst_thread_init(int max_threads, struct tst_thread_env_t ***thread_env) {
   tst_output_printf(DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) tst_thread_init: Initializing %d threads\n",
                  tst_global_rank, max_threads);
 
-  tst_thread_tid_array = malloc ( max_threads * sizeof (pthread_t));
-  memset (tst_thread_tid_array, 0, max_threads * sizeof (pthread_t));
-  env = malloc ( max_threads * sizeof (struct tst_thread_env_t *));
-  memset (env, 0, max_threads * sizeof (struct tst_thread_env_t*));
+  tst_thread_tid_array = malloc(max_threads * sizeof (pthread_t));
+  memset(tst_thread_tid_array, 0, max_threads * sizeof (pthread_t));
+  env = malloc( max_threads * sizeof (struct tst_thread_env_t *));
+  memset(env, 0, max_threads * sizeof (struct tst_thread_env_t*));
 
-  /*
-   * Master thread also doing some work
-   */
-  tst_thread_tid_array[0] = pthread_self();
-
-  for (i = 0; i < max_threads - 1; i++) {
+  for (i = 0; i < max_threads; i++) {
     int ret;
     env[i] = malloc (sizeof (struct tst_thread_env_t));
     memset (env[i], 0, sizeof (struct tst_thread_env_t));
@@ -165,11 +161,11 @@ int tst_thread_init(int max_threads, struct tst_thread_env_t ***thread_env) {
     ret = pthread_create (&(env[i]->tid), NULL, tst_thread_dispatcher, env[i]);
     if (ret != 0)
       ERROR (errno, "tst_thread_init: pthread_create");
-    tst_thread_tid_array[i + 1] = env[i]->tid;
+    tst_thread_tid_array[i] = env[i]->tid;
     num_threads++;
   }
 
-  assert(num_threads == max_threads - 1);
+  assert(num_threads == max_threads);
   *thread_env = env;
   return 0;
 }
@@ -202,19 +198,18 @@ int tst_thread_cleanup (struct tst_thread_env_t ** thread_env)
 
 /** \brief Return thread ID of the current thread
  *
- * \return Success: thread ID, Fail: -1
+ * \return thread ID
  */
 inline int tst_thread_get_num() {
-  assert(num_threads >= 0);
-  assert(NULL != tst_thread_tid_array);
+  assert(num_threads == 0 || ((num_threads > 0) && (NULL != tst_thread_tid_array)));
   int i = 0;
   pthread_t self = pthread_self();
-  for (i = 0; i <= num_threads; i++) {
+  for (i = 0; i < num_threads; i++) {
     if (pthread_equal(tst_thread_tid_array[i], self)) {
       return i;
     }
   }
-  return -1;
+  return TST_THREAD_MASTER;
 }
 
 /** \brief Reset test environment of all running threads
@@ -337,7 +332,7 @@ int tst_thread_execute_cleanup (struct tst_env * env)
 
 
 inline int tst_thread_num_threads () {
-  return num_threads + 1; /* +1 because the main thread also is doing some work */
+  return num_threads;
 }
 
 

@@ -96,7 +96,6 @@ int tst_one_sided_simple_ring_get_cleanup (struct tst_env * env)
   comm = tst_comm_getcomm (env->comm);
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
 
-  //if (tst_global_rank == 0 && tst_thread_get_num() == 0)
   	MPI_Win_free (&send_win);
 
   tst_type_freevalues (env->type, env->send_buffer, env->values_num);

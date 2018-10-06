@@ -31,7 +31,7 @@ static int mpi_buffer_size = 0;
 int tst_p2p_simple_ring_ibsend_init (struct tst_env * env)
 {
   int comm_rank;
-  int num_threads = 1;
+  int num = 1;
   MPI_Comm comm;
 
   tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
@@ -52,10 +52,10 @@ int tst_p2p_simple_ring_ibsend_init (struct tst_env * env)
    * Actually, the standard doesn't even say so.
    */
 #ifdef HAVE_MPI2_THREADS
-  if ( tst_thread_get_num() == 0 ) {
+  if ( tst_thread_get_num() == TST_THREAD_MASTER ) {
 #endif
-    num_threads = tst_thread_num_threads ();
-    env->mpi_buffer_size = num_threads * (tst_type_gettypesize (env->type) * env->values_num + MPI_BSEND_OVERHEAD);
+    num = 1 + tst_thread_num_threads();
+    env->mpi_buffer_size = num * (tst_type_gettypesize (env->type) * env->values_num + MPI_BSEND_OVERHEAD);
     if ((env->mpi_buffer = malloc (env->mpi_buffer_size)) == NULL)
       ERROR (errno, "malloc");
     MPI_CHECK (MPI_Buffer_attach (env->mpi_buffer, env->mpi_buffer_size));
@@ -134,7 +134,7 @@ int tst_p2p_simple_ring_ibsend_run (struct tst_env * env)
 int tst_p2p_simple_ring_ibsend_cleanup (struct tst_env * env)
 {
 #ifdef HAVE_MPI2_THREADS
-  if ( tst_thread_get_num () == 0 ) {
+  if ( tst_thread_get_num () == TST_THREAD_MASTER ) {
 #endif
     void *buf;
     int size = -1;
