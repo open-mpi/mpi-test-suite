@@ -138,6 +138,7 @@ int tst_thread_init(int max_threads, struct tst_thread_env_t ***thread_env) {
 
   assert(max_threads > 0);
   assert(thread_env != NULL);
+  assert(num_threads == 0);
 
   /* Without the pthread_mutex_lock, as no threads are started, yet */
   working = 0;
