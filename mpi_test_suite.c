@@ -121,7 +121,7 @@ static int usage (void)
            "num_values:\tone (or more) numbers of values to communicate (default:%d)\n"
            "report:\t\tlevel of detail for tests being run, see -l (default:SUMMARY)\n"
            "execution_mode:\tlevel of correctness testing, tests to run and internal tests, see -l (default:RELAXED)\n"
-           "num_threads:\tnumber of threads to execute the tests (default:no threads)\n"
+           "num_threads:\tnumber of additional threads to execute the tests (default: 0)\n"
            "\n"
            "All multiple test/comm/datatype-names must be comma-separated.\n"
            "Names are not case-sensitive, due to spaces in names, proper quoting should be used.\n"
@@ -560,7 +560,7 @@ int main (int argc, char * argv[])
     }
 
 #ifdef HAVE_MPI2_THREADS
-  if (num_threads <= 0)
+  if (num_threads < 0)
     {
       printf ("Error: Number of threads must be greater than 0 (given %d)\n", num_threads);
       usage ();
