@@ -2,6 +2,8 @@
 
 #include "config.h"
 
+#include "tst_comm.h"
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -55,21 +57,25 @@ static int num_registered_comms = 0;
 static struct comm comms[COMM_NUM];
 
 
-int tst_comm_register(char *description, MPI_Comm mpi_comm, int class, int size, int *mapping, int other_size, int *other_mapping) {
-  assert(num_registered_comms < COMM_NUM);
+int tst_comm_init(struct comm *comm) {
   int i;
   int num_threads = tst_thread_num_threads();
-  comms[num_registered_comms].mpi_comm = mpi_comm;
-  comms[num_registered_comms].mpi_thread_comms = (MPI_Comm *) malloc(num_threads * sizeof(MPI_Comm));
+  comm->mpi_thread_comms = (MPI_Comm *) malloc(num_threads * sizeof(MPI_Comm));
   for (i = 0; i < num_threads; i++) {
-    if(mpi_comm != MPI_COMM_NULL) {
-      MPI_CHECK (MPI_Comm_dup(mpi_comm, &comms[num_registered_comms].mpi_thread_comms[i]));
+    if(comm->mpi_comm != MPI_COMM_NULL) {
+      MPI_CHECK (MPI_Comm_dup(comm->mpi_comm, &comm->mpi_thread_comms[i]));
     }
     else {
-      comms[num_registered_comms].mpi_thread_comms[i] = MPI_COMM_NULL;
+      comm->mpi_thread_comms[i] = MPI_COMM_NULL;
     }
   }
+  return 0;
+}
+
+int tst_comm_register(char *description, MPI_Comm mpi_comm, int class, int size, int *mapping, int other_size, int *other_mapping) {
+  assert(num_registered_comms < COMM_NUM);
   strncpy(comms[num_registered_comms].description, description, TST_DESCRIPTION_LEN);
+  comms[num_registered_comms].mpi_comm = mpi_comm;
   comms[num_registered_comms].class = class;
   comms[num_registered_comms].size = size;
   comms[num_registered_comms].mapping = mapping;
@@ -425,7 +431,15 @@ int tst_comm_register_split_type_shared() {
 }
 
 
-int tst_comms_init(int * num_comms) {
+int tst_comms_init() {
+  int i;
+  for (i = 0; i < num_registered_comms; i++) {
+    tst_comm_init(&comms[i]);
+  }
+  return num_registered_comms;
+}
+
+int tst_comms_register() {
 
   tst_comm_register_comm_world();
   tst_comm_register_comm_null();
@@ -441,14 +455,14 @@ int tst_comms_init(int * num_comms) {
   tst_comm_register_merged_inter_comm();
   tst_comm_register_split_type_shared();
 
-  *num_comms = num_registered_comms;
-  return 0;
+  return num_registered_comms;
 
   int count_comms = num_registered_comms;
   int comm_size;
   int comm_rank;
   MPI_Comm tmp_comm = MPI_COMM_NULL;
   int i;
+  int * num_comms;
 
   MPI_Comm_size (MPI_COMM_WORLD, &comm_size);
   MPI_Comm_rank (MPI_COMM_WORLD, &comm_rank);

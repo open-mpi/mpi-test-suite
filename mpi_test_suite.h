@@ -393,7 +393,6 @@ struct tst_thread_env_t; /* Just a forward declaration */
 /**                     EXPORTED FUNCTIONS                                 **/
 /**                                                                        **/
 /****************************************************************************/
-extern int tst_comms_init (int * num_comms);
 extern int tst_comm_cleanup (void);
 extern MPI_Comm tst_comm_getcomm (int comm);
 extern int tst_comm_getcommclass (int comm);

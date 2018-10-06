@@ -10,6 +10,7 @@
 #include <mpi.h>
 
 #include "mpi_test_suite.h"
+#include "tst_comm.h"
 #include "tst_threads.h"
 #include "tst_output.h"
 #include "compile_info.h"
@@ -258,7 +259,7 @@ int main (int argc, char * argv[])
                     tst_global_rank, tst_tag_ub);
 
   /* XXX CN Maybe rename these functions to tst_get_num_comms/types/tests ?  */
-  tst_comms_init(&num_comms);
+  num_comms = tst_comms_register();
   tst_type_init(&num_types);
   tst_test_init(&num_tests);
 
@@ -567,6 +568,7 @@ int main (int argc, char * argv[])
   tst_thread_init (num_threads, &tst_thread_env);
 #endif
 
+  num_comms = tst_comms_init();
   /*
    * For every test included in the tst_*_array, check if runnable and run!
    */
