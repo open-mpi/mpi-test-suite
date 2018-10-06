@@ -656,6 +656,12 @@ MPI_Comm tst_comm_getcomm (int i) {
   }
 }
 
+
+MPI_Comm tst_comm_getmastercomm (int i) {
+  CHECK_ARG (i, MPI_COMM_NULL);
+  return comms[i].mpi_comm;
+}
+
 int tst_comm_getcommsize (int i)
 {
   int size;

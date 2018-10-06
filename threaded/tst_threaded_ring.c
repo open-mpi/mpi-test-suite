@@ -10,14 +10,12 @@
  *
  * Date: Oct 26th 2006
  */
+
 #include <mpi.h>
 #include "mpi_test_suite.h"
 #include "tst_threads.h"
 #include "tst_output.h"
-
-#ifdef HAVE_PTHREAD_H
-#  include <pthread.h>
-#endif
+#include "tst_comm.h"
 
 
 int debug_wait = 1;
@@ -25,8 +23,8 @@ int debug_wait = 1;
 int tst_threaded_ring_init (struct tst_env * env)
 {
   // while (DebugWait) ;
-  int comm_rank;
-  MPI_Comm comm;
+  int comm_rank = -1;
+  MPI_Comm comm = MPI_COMM_NULL;
 
   tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "(Rank:%d) env->comm:%d env->type:%d env->values_num:%d\n",
                  tst_global_rank, env->comm, env->type, env->values_num);
@@ -34,7 +32,7 @@ int tst_threaded_ring_init (struct tst_env * env)
   env->send_buffer = tst_type_allocvalues (env->type, env->values_num);
   env->recv_buffer = tst_type_allocvalues (env->type, env->values_num);
 
-  comm = tst_comm_getcomm (env->comm);
+  comm = tst_comm_getmastercomm (env->comm);
   MPI_CHECK (MPI_Comm_rank (comm, &comm_rank));
 
   /* initialize the send_buffer */
@@ -53,21 +51,18 @@ int tst_threaded_ring_run (struct tst_env * env)
   MPI_Comm comm;
   MPI_Datatype type;
   MPI_Status status;
-  int thread_num;
-  int num_threads = tst_thread_num_threads();
-  int thread_tag_to;
-  int thread_tag_from;
+  int num_threads = 1 + tst_thread_num_threads();  /* we have to add 1 for the master thread */
+  int thread_num = (tst_thread_get_num() + num_threads) % num_threads;
 
-  thread_num = tst_thread_get_num();
-  comm = tst_comm_getcomm (env->comm);
+  comm = tst_comm_getmastercomm (env->comm);
   type = tst_type_getdatatype (env->type);
   /*
    * Calculate the tags to specify the number of the thread to send to and the thread
    * number to recieve from.
    * The tags are the sum of the constant env->tag and a threadspecific number.
    */
-  thread_tag_to = env->tag + (thread_num + 1) % num_threads;    /* number of next thread */
-  thread_tag_from = env->tag + (thread_num);                    /* already knows it's number */
+  int thread_tag_to = env->tag + (thread_num + 1) % num_threads;    /* number of next thread */
+  int thread_tag_from = env->tag + thread_num;                    /* already knows it's number */
 
   if (tst_comm_getcommclass (env->comm) & TST_MPI_COMM_SELF)
     {
