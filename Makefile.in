@@ -164,7 +164,9 @@ PROGRAM = mpi_test_suite
 
 .SUFFIXES: .o .c
 
-all: $(OBJ)
+all: $(PROGRAM)
+
+$(PROGRAM): $(OBJ)
 	$(CC) -o $(PROGRAM) $(OBJ) $(LDFLAGS)
 
 $(OBJ): $(HEADER)
