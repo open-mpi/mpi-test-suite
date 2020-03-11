@@ -167,7 +167,6 @@ PROGRAM = mpi_test_suite
 all: $(PROGRAM)
 
 $(PROGRAM): $(OBJ)
-	$(CC) -o $(PROGRAM) $(OBJ) $(LDFLAGS)
 
 $(OBJ): $(HEADER)
 .c.o:   $(HEADER)
