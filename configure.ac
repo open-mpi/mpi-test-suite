@@ -1,11 +1,14 @@
-dnl Copyright (c) 2009 Cisco Systems, Inc.  All rights reserved.
+dnl Copyright (c) 2009      Cisco Systems, Inc.  All rights reserved.
+dnl Copyright (c) 2020      High-Performance Computing Center Stuttgart,
+dnl                         University of Stuttgart. All rights reserved.
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT
+AC_INIT([mpi_test_suite], [1.0])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign no-dependencies subdir-objects])
 AC_PREREQ(2.59)
 
 AC_CONFIG_SRCDIR([mpi_test_suite.c])
-AC_CONFIG_HEADERS(config.h)
+AC_CONFIG_HEADERS([config.h])
 AC_CANONICAL_HOST
 AC_ARG_PROGRAM
 
