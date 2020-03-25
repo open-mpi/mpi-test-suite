@@ -48,13 +48,10 @@ The main focus is on:
 
 Compiling the MPI-Testsuite
 ---------------------------
-The MPI-Testsuite has to be configured with the configure-build system prior
-to compiling.
-The flags are currently the same as for PACX-MPI, so one has to specify
-the location of the MPI-installation with option --with-mpi-dir=<DIR>.
+The MPI-Testsuite uses an autotools based build system.
+To configure provide the MPI compiter with
 
-In order to use PACX-MPI as MPI-implementation, one has to additionally pass
-the option --enable-pacx --with-pacx-dir=<PACX>
+>>> ./configure CC=mpicc
 
 After a successful configure-run, one may compile with make.
 
@@ -75,7 +72,7 @@ and ALL generated communicators! Only failed tests are shown afterwards.
 Through command-line switches, the user may influence and reduce the
 number of tests with the following commands, first the showing the help:
 
->>> mpirun -np XX ./mpi_test_suite -h
+>>> mpirun -np 1 ./mpi_test_suite -h
 
 Usage: mpi_test_suite [-h] [-v] [-l] [-t test] [-c comm] [-d datatype]
        [-n num_values] [-r report] [-x execution_mode] [-j num_threads]
