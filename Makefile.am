@@ -2,7 +2,12 @@
 
 bin_PROGRAMS = mpi_test_suite
 
+cmdline.c cmdline.h: cmdline.ggo
+	gengetopt < $<
+
 mpi_test_suite_SOURCES = \
+	cmdline.c \
+	cmdline.h \
 	coll/tst_coll_allgather.c \
 	coll/tst_coll_allgather_in_place.c \
 	coll/tst_coll_allreduce.c \
