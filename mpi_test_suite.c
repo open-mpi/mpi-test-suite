@@ -496,19 +496,6 @@ int main (int argc, char * argv[])
     tst_test_print_failed ();
   }
 
-/*
- * XXX Disable for Thread Checker test, as we free twice???
- */
-/*
-  tst_comm_cleanup ();
-  tst_type_cleanup ();
-  tst_test_cleanup ();
-  tst_profiling_cleanup ();
-  free (tst_comm_array);
-  free (tst_type_array);
-  free (tst_test_array);
-*/
-
   time_stop = MPI_Wtime ();
   tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "(Rank:%d) Overall time taken:%lf\n",
                      tst_global_rank, time_stop - time_start);
