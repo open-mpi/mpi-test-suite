@@ -183,10 +183,6 @@ int main (int argc, char * argv[])
 #ifndef HAVE_MPI2_THREADS
   tst_output_printf(DEBUG_LOG, TST_REPORT_FULL, "Testsuite was compiled without MPI2_THREADS");
 #endif
-  /*
-   * Output example:
-   * tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "Hello from rank %d\n", tst_global_rank);
-   */
 
   #if MPI_VERSION < 2
   MPI_CHECK (MPI_Attr_get (MPI_COMM_WORLD, MPI_TAG_UB, &val, &flag));
