@@ -169,31 +169,6 @@ int main (int argc, char * argv[])
   MPI_Comm_rank (MPI_COMM_WORLD, &tst_global_rank);
   MPI_Comm_size (MPI_COMM_WORLD, &tst_global_size);
 
-  {
-    char * start_delay_str;
-    /* XXX DOC CN Need to add MPI_TEST_SUITE_START_DELAY environment variable to documentation
-     */
-    start_delay_str = getenv ("MPI_TEST_SUITE_START_DELAY");
-  if (NULL != start_delay_str)
-    {
-      char hostname[256];
-      int delay;
-      delay = atoi(start_delay_str);
-      if (delay < 0) {
-	printf ("Warning: Delay time should be greater than zero! Using no delay now.\n");
-      }
-      else {
-	gethostname (hostname, 256);
-	hostname[255] = '\0';
-	/* XXX LOG CN Should be modified for logfie support.
-	*/
-	printf ("(Rank:%d) host:%s pid:%ld Going to sleep for %d seconds\n",
-	    tst_global_rank, hostname, (long int)getpid(), delay);
-	sleep (delay);
-      }
-    }
-  }
-
   tst_output_init (DEBUG_LOG, TST_OUTPUT_RANK_SELF, TST_REPORT_MAX, TST_OUTPUT_TYPE_LOGFILE, "tst.log");
 
   char *info_str = (char *) calloc(MAX_INFO_STRING_LENGTH, sizeof(char));
