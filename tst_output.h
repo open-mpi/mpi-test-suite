@@ -22,8 +22,6 @@ typedef enum {
   TST_OUTPUT_TYPE_STDERR,    /**< Output on stderr */
   TST_OUTPUT_TYPE_STDOUT,    /**< Output on stdout */
   TST_OUTPUT_TYPE_LOGFILE,   /**< Output into logfile */
-  TST_OUTPUT_TYPE_LATEX,     /**< Output into latex file */
-  TST_OUTPUT_TYPE_HTML       /**< Output into html file */
 } tst_output_types;
 
 

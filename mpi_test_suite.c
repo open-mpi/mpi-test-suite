@@ -169,31 +169,6 @@ int main (int argc, char * argv[])
   MPI_Comm_rank (MPI_COMM_WORLD, &tst_global_rank);
   MPI_Comm_size (MPI_COMM_WORLD, &tst_global_size);
 
-  {
-    char * start_delay_str;
-    /* XXX DOC CN Need to add MPI_TEST_SUITE_START_DELAY environment variable to documentation
-     */
-    start_delay_str = getenv ("MPI_TEST_SUITE_START_DELAY");
-  if (NULL != start_delay_str)
-    {
-      char hostname[256];
-      int delay;
-      delay = atoi(start_delay_str);
-      if (delay < 0) {
-	printf ("Warning: Delay time should be greater than zero! Using no delay now.\n");
-      }
-      else {
-	gethostname (hostname, 256);
-	hostname[255] = '\0';
-	/* XXX LOG CN Should be modified for logfie support.
-	*/
-	printf ("(Rank:%d) host:%s pid:%ld Going to sleep for %d seconds\n",
-	    tst_global_rank, hostname, (long int)getpid(), delay);
-	sleep (delay);
-      }
-    }
-  }
-
   tst_output_init (DEBUG_LOG, TST_OUTPUT_RANK_SELF, TST_REPORT_MAX, TST_OUTPUT_TYPE_LOGFILE, "tst.log");
 
   char *info_str = (char *) calloc(MAX_INFO_STRING_LENGTH, sizeof(char));
@@ -208,10 +183,6 @@ int main (int argc, char * argv[])
 #ifndef HAVE_MPI2_THREADS
   tst_output_printf(DEBUG_LOG, TST_REPORT_FULL, "Testsuite was compiled without MPI2_THREADS");
 #endif
-  /*
-   * Output example:
-   * tst_output_printf (DEBUG_LOG, TST_REPORT_MAX, "Hello from rank %d\n", tst_global_rank);
-   */
 
   #if MPI_VERSION < 2
   MPI_CHECK (MPI_Attr_get (MPI_COMM_WORLD, MPI_TAG_UB, &val, &flag));
@@ -524,19 +495,6 @@ int main (int argc, char * argv[])
   if (tst_global_rank == 0) {
     tst_test_print_failed ();
   }
-
-/*
- * XXX Disable for Thread Checker test, as we free twice???
- */
-/*
-  tst_comm_cleanup ();
-  tst_type_cleanup ();
-  tst_test_cleanup ();
-  tst_profiling_cleanup ();
-  free (tst_comm_array);
-  free (tst_type_array);
-  free (tst_test_array);
-*/
 
   time_stop = MPI_Wtime ();
   tst_output_printf (DEBUG_LOG, TST_REPORT_FULL, "(Rank:%d) Overall time taken:%lf\n",
