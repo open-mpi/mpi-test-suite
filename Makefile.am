@@ -2,6 +2,8 @@
 
 bin_PROGRAMS = mpi_test_suite
 
+EXTRA_DIST = cmdline.ggo
+
 cmdline.c cmdline.h: cmdline.ggo
 	gengetopt < $<
 
