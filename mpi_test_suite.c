@@ -148,13 +148,13 @@ int main (int argc, char * argv[])
   tst_output_init (DEBUG_LOG, TST_OUTPUT_RANK_SELF, TST_REPORT_MAX, TST_OUTPUT_TYPE_LOGFILE, "tst.log");
 
   char info_str[MAX_INFO_STRING_LENGTH];
-  get_compiler_info(&info_str);
+  get_compiler_info(info_str);
   tst_output_printf(DEBUG_LOG, TST_REPORT_RUN, "Compiler used was %s\n", info_str);
-  get_mpi_info(&info_str);
+  get_mpi_info(info_str);
   tst_output_printf(DEBUG_LOG, TST_REPORT_FULL, "MPI version used was %s\n", info_str);
-  get_compile_time(&info_str);
+  get_compile_time(info_str);
   tst_output_printf(DEBUG_LOG, TST_REPORT_FULL, "Compiled at %s\n", info_str);
-  get_timestamp(&info_str);
+  get_timestamp(info_str);
   tst_output_printf(DEBUG_LOG, TST_REPORT_FULL, "Started at %s\n", info_str);
 #ifndef HAVE_MPI2_THREADS
   tst_output_printf(DEBUG_LOG, TST_REPORT_FULL, "Testsuite was compiled without MPI2_THREADS");
