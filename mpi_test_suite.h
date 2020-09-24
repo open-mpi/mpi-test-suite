@@ -368,7 +368,6 @@ struct tst_mpi_type_mix_array {
 
 extern int tst_global_rank;
 extern int tst_global_size;
-extern int tst_verbose;
 extern int tst_atomic;
 
 extern const char * tst_reports[];

@@ -16,33 +16,6 @@
 #include "mpi_test_suite.h"
 
 
-
-/* Function to replace substrings in a string
- *
- * Parameters:
- *      char * search   string to search for
- *      char * replace  replacement for searchstring
- *      char * string   pointer on string to search through
- *      char * result[] place to store pointer of the result string
- *
- * Results:
- *      Success:        number of replacements
- */
-static int tst_output_str_replace(char *search, char *replace, char *string, char **result);
-
-
-/* Function to mask special chars for latex in a string
- *
- * Parameters:
- *      char * string   string to escape
- *      char * result[] place to store pointer of the result string
- * Result:
- *      Success:        Number of replacements
- *      Fail:           -1
- */
-static int tst_output_latex_special_chars(char *string, char **result);
-
-
 /****************************************************************************/
 /**                                                                        **/
 /**                     GLOBAL VARIABLES                                   **/
