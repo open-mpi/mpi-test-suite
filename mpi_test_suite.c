@@ -147,7 +147,7 @@ int main (int argc, char * argv[])
 
   tst_output_init (DEBUG_LOG, TST_OUTPUT_RANK_SELF, TST_REPORT_MAX, TST_OUTPUT_TYPE_LOGFILE, "tst.log");
 
-  char *info_str = (char *) calloc(MAX_INFO_STRING_LENGTH, sizeof(char));
+  char info_str[MAX_INFO_STRING_LENGTH];
   get_compiler_info(&info_str);
   tst_output_printf(DEBUG_LOG, TST_REPORT_RUN, "Compiler used was %s\n", info_str);
   get_mpi_info(&info_str);
