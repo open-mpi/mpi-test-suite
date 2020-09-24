@@ -95,10 +95,7 @@ int main (int argc, char * argv[])
   }
 
 
-  int i;
-  int j;
-  int k;
-  int l;
+  int i, j, k, l;
   int flag;
 
   int num_comms = 0;
