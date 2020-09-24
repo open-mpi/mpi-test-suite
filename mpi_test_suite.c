@@ -1,5 +1,3 @@
-/** \todo CN Maybe redesign the logfile implementation? */
-
 #include "config.h"
 
 #include <stdio.h>
@@ -57,9 +55,6 @@ static int tst_tag_ub = 32767;
 /**                                                                        **/
 /****************************************************************************/
 
-/*
- * Global functions, which don't fit into another category.
- */
 int tst_hash_value (const struct tst_env * env)
 {
   return (env->comm * 65521 + /* Smallest prime smaller than 2^16 */
