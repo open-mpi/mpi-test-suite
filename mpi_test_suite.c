@@ -1,5 +1,3 @@
-/** \todo CN Maybe redesign the logfile implementation? */
-
 #include "config.h"
 
 #include <stdio.h>
@@ -57,9 +55,6 @@ static int tst_tag_ub = 32767;
 /**                                                                        **/
 /****************************************************************************/
 
-/*
- * Global functions, which don't fit into another category.
- */
 int tst_hash_value (const struct tst_env * env)
 {
   return (env->comm * 65521 + /* Smallest prime smaller than 2^16 */
@@ -100,10 +95,7 @@ int main (int argc, char * argv[])
   }
 
 
-  int i;
-  int j;
-  int k;
-  int l;
+  int i, j, k, l;
   int flag;
 
   int num_comms = 0;
@@ -152,14 +144,14 @@ int main (int argc, char * argv[])
 
   tst_output_init (DEBUG_LOG, TST_OUTPUT_RANK_SELF, TST_REPORT_MAX, TST_OUTPUT_TYPE_LOGFILE, "tst.log");
 
-  char *info_str = (char *) calloc(MAX_INFO_STRING_LENGTH, sizeof(char));
-  get_compiler_info(&info_str);
+  char info_str[MAX_INFO_STRING_LENGTH];
+  get_compiler_info(info_str);
   tst_output_printf(DEBUG_LOG, TST_REPORT_RUN, "Compiler used was %s\n", info_str);
-  get_mpi_info(&info_str);
+  get_mpi_info(info_str);
   tst_output_printf(DEBUG_LOG, TST_REPORT_FULL, "MPI version used was %s\n", info_str);
-  get_compile_time(&info_str);
+  get_compile_time(info_str);
   tst_output_printf(DEBUG_LOG, TST_REPORT_FULL, "Compiled at %s\n", info_str);
-  get_timestamp(&info_str);
+  get_timestamp(info_str);
   tst_output_printf(DEBUG_LOG, TST_REPORT_FULL, "Started at %s\n", info_str);
 #ifndef HAVE_MPI2_THREADS
   tst_output_printf(DEBUG_LOG, TST_REPORT_FULL, "Testsuite was compiled without MPI2_THREADS");
