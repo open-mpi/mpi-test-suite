@@ -1,4 +1,4 @@
-Copyright (c) 2003-2018 High Performance Computing Center Stuttgart,
+Copyright (c) 2003-2020 High Performance Computing Center Stuttgart,
                         University of Stuttgart.  All rights reserved.
 Copyright (c) 2005-2009 The University of Tennessee and The University
                         of Tennessee Research Foundation.  All rights
@@ -20,90 +20,118 @@ $HEADER$
            ----------------------------------------------
 
 Overview
---------
+========
 
 1.) Introduction
-2.) Compiling the MPI-Testsuite
-3.) Running the MPI-Testsuite
-3a.) MPI-implementations already tested
-3b.) Tests failing on specific platforms
-4.) Programming New Tests
+2.) Getting Started
+2.1.) Compiling the MPI-Testsuite
+2.2.) Running the MPI-Testsuite
+2.3.) MPI-implementations already tested
+2.4.) Tests failing on specific platforms
+3.) Extending the testsuite
+3.1.) Adding new tests
 
 
 Introduction
-------------
+============
 This MPI-testsuite was initially developed for the use with PACX-MPI and
 has been extended within the Open MPI project.
 
 The main focus is on:
-  - High degree of code coverage through combinations of tests.
-  - Easy maintainability,
-  - Easy integration of new tests,
-  - Rich underlying functionality for flexible tests
-    (convenience functions for datatypes, comms and checking),
-  - Only a single binary (for single, since expensive
-    MPI_Init/MPI_Finalize) to make it as quick and easy as possible to
-    run automatically.
+- High degree of code coverage through combinations of tests.
+- Easy maintainability,
+- Easy integration of new tests,
+- Rich underlying functionality for flexible tests
+  (convenience functions for datatypes, comms and checking),
+- Only a single binary (for single, since expensive
+  MPI_Init/MPI_Finalize) to make it as quick and easy as possible to
+  run automatically.
+
+
+
+Getting Started
+===============
+
+Prerequisites
+-------------
+Required dependencies to build and run the MPI test suite:
+- MPI library with c compiler support
+- make
+
+Optional dependencies for developers:
+- gengetopt (used for the generation of the command line parser code)
+- autoconf, automake
 
 
 Compiling the MPI-Testsuite
 ---------------------------
-The MPI-Testsuite has to be configured with the configure-build system prior
-to compiling.
-The flags are currently the same as for PACX-MPI, so one has to specify
-the location of the MPI-installation with option --with-mpi-dir=<DIR>.
+The MPI-Testsuite uses an autotools based build system.
+To configure provide the MPI c compiler with
 
-In order to use PACX-MPI as MPI-implementation, one has to additionally pass
-the option --enable-pacx --with-pacx-dir=<PACX>
+>>> ./configure CC=mpicc
 
 After a successful configure-run, one may compile with make.
+
+>>> make
 
 
 Running the MPI-Testsuite
 -------------------------
-The MPI-Testsuite may be run with an arbitrary number of processes!
+The MPI-Testsuite may be run with an arbitrary number of processes.
 It runs a variety of P2P and Collective tests with varying
 datatypes and preset communicators. Each test specifies, which kind of
 datatypes, e.g. struct-datatypes and comms, e.g. MPI_COMM_SELF,
 intra-comms and alike it may run.
 
-
 Per default, ALL tests will be run with ALL combinations of datatypes
 and ALL generated communicators! Only failed tests are shown afterwards.
-
 
 Through command-line switches, the user may influence and reduce the
 number of tests with the following commands, first the showing the help:
 
->>> mpirun -np XX ./mpi_test_suite -h
+>>> mpirun -np 1 ./mpi_test_suite -h
 
-Usage: mpi_test_suite [-h] [-v] [-l] [-t test] [-c comm] [-d datatype]
-       [-n num_values] [-r report] [-x execution_mode] [-j num_threads]
-test:           one (or more) tests or test-classes (see -l) and
-comm:           one (or more) communicator or communicator-classes (see -l)
-datatype:       one (or more) datatype or datatype-classes (see -l)
-num_values:     one (or more) numbers of values to communicate (default:1000)
-report:         level of detail for tests being run, see -l (default:SUMMARY)
-execution_mode: level of correctness testing, tests to run and internal tests, see -l (default:RELAXED)
-num_threads:    number of threads to execute the tests (default:no threads)
+Usage: mpi_test_suite [OPTION]...
 
-All multiple test/comm/datatype-names must be comma-separated.
-Names are not case-sensitive, due to spaces in names, proper quoting should be used.
+  -h, --help                   Print help and exit
+  -V, --version                Print version and exit
+  -t, --test=STRING            tests or test-classes  (default=`all')
+  -c, --comm=STRING            communicators or commicator-classes
+                                 (default=`all')
+  -d, --datatype=STRING        datatypes of datatype-classes  (default=`all')
+  -n, --num-values=STRING      number of values to communicate in tests
+                                 (default=`1000')
 
--h:             Show this help
--v:             Turn on verbose mode for debugging output
--l/--list:      List all available tests, communicators, datatypes and
-                corresponding classes.
+All multiple test-/comm-/datatype-names and num-values must be comma-separated.
+Names are not case-sensitive, due to spaces in names, propper quoting should be
+used. The special name 'all' can be used to select all tests/comms/datatypes.
+To exclude a test/comm/datatype prefix it with '^' but be aware, that the
+selection will happen in order, so use 'all,^exclude'.
+
+  -a, --atomic-io              enable atomicity for files in I/O for all tests
+                                 that support it
+  -j, --num-threads=INT        number of additional threads to execute the
+                                 tests  (default=`0')
+  -r, --report=STRING          level of detail for test report  (possible
+                                 values="summary", "run", "full"
+                                 default=`summary')
+  -x, --execution-mode=STRING  level of correctness testing  (possible
+                                 values="disabled", "strict", "relaxed"
+                                 default=`relaxed')
+  -v, --verbose                enable verbose output for debugging purpose
+  -l, --list                   list all available tests, communicators,
+                                 datatypes and corresponding classes
 
 
+The following command lists all available tests/test-classes, comms/comm-classes and
+type/type-classes:
 
-The following lists all available tests/test-classes, comms/comm-classes and
-type/type-classes is listed.
+>>> mpirun -np 1 ./mpi_test_suite -l
+
 Showing all the individual tests, comms and types would be too long, however,
 all of the tests, comms and types are grouped in classes, all of which are
 listed with (first the class, followed by number, then a free distinct name):
 
->>> mpirun -np 1 ./mpi_test_suite -l
 Num Tests : 100
 Environment test:0 Status
 Environment test:1 Request_Null
@@ -206,20 +234,27 @@ On some platforms, we found, that some tests fail:
 
 
 
-Programming New Tests
----------------------
+Extending the testsuite
+=======================
+
+Adding new tests
+----------------
+
 In order to integrate a new test, the programmer should
   - write three functions in a new file with a descriptive name, like:
       tst_p2p_simple_ring_bsend.c
     containing:
-      tst_p2p_simeple_ring_bsend_init
-      tst_p2p_simeple_ring_bsend_run
-      tst_p2p_simeple_ring_bsend_cleanup
+      tst_p2p_simple_ring_bsend_init
+      tst_p2p_simple_ring_bsend_run
+      tst_p2p_simple_ring_bsend_cleanup
     where all names start with "tst_",
     and the kind of communication calls tested (actually a TST_CLASS)
     and the communication pattern (here a simple ring using MPI_Bsend).
+ - Add the new file to the list of sources for the mpi_test_suite target in Makefile.am
+   and update the build system with
+   >>> autoreconf -vif
 
- - Add these functions to mpi_test_suite.h in a sorted manner
+ - Add the new functions to mpi_test_suite.h in a sorted manner
  - Add the test-description to the tst_tests-array in tst_test.c:
    Here, the
    struct tst_test {

@@ -1,0 +1,19 @@
+args "--default-optional"
+
+option "test" t "tests or test-classes" string default="all"
+option "comm" c "communicators or commicator-classes" string default="all"
+option "datatype" d "datatypes of datatype-classes" string default="all"
+option "num-values" n "number of values to communicate in tests" string default="1000"
+text "\n"
+text "All multiple test-/comm-/datatype-names and num-values must be comma-separated. \
+Names are not case-sensitive, due to spaces in names, propper quoting should be used. \
+The special name 'all' can be used to select all tests/comms/datatypes. To exclude a \
+test/comm/datatype prefix it with '^' but be aware, that the selection will happen \
+in order, so use 'all,^exclude'."
+text "\n"
+option "atomic-io" a "enable atomicity for files in I/O for all tests that support it"
+option "num-threads" j "number of additional threads to execute the tests" int default="0"
+option "report" r "level of detail for test report" values="summary","run","full" default="summary"
+option "execution-mode" x "level of correctness testing" values="disabled","strict","relaxed" default="relaxed"
+
+option "list" l "list all available tests, communicators, datatypes and corresponding classes"
