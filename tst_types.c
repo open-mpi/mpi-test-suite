@@ -500,7 +500,7 @@ int tst_type_cleanup (void)
   int i;
   for (i=PREDEFINED_DATATYPES; i < TST_TYPES_NUM; i++)
     {
-      if (NULL == ((void*)types[i].mpi_datatype) || MPI_DATATYPE_NULL == types[i].mpi_datatype)
+      if (MPI_DATATYPE_NULL == types[i].mpi_datatype)
         continue;
 
       MPI_Type_free (&types[i].mpi_datatype);
