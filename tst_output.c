@@ -33,7 +33,6 @@ const char * tst_reports[] = {
 };
 
 #ifdef HAVE_MPI2_THREADS
-extern int num_threads;
 extern int tst_thread_running (void);
 #endif
 
