@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include "./config.h"
+#include "config.h"
 
 
 #define DEBUG_REPORT_TYPE       TST_REPORT_MAX
