@@ -72,16 +72,6 @@ tst_output_types tst_output_init(tst_output_stream * output, int rank,
   }
 #endif
 
-  /* Check if stream type uses a file and get the name of this file */
-  if (type == TST_OUTPUT_TYPE_LOGFILE) {
-    va_start(arglist, type);
-    fname = va_arg (arglist, char *);
-    sprintf (output->filename,"R%d_", tst_output_global_rank);
-    freelen = TST_OUTPUT_FILENAME_MAX - (1 + strlen(output->filename));
-    strncat (output->filename, fname, freelen);
-    va_end (arglist);
-  }
-
   /* Now do the initialisation for the different stream types */
   switch (type) {
     case TST_OUTPUT_TYPE_STDERR:
@@ -91,6 +81,11 @@ tst_output_types tst_output_init(tst_output_stream * output, int rank,
       output->streamptr = stdout;
       break;
     case TST_OUTPUT_TYPE_LOGFILE:
+      va_start(arglist, type);
+      fname = va_arg (arglist, char *);
+      snprintf(output->filename, TST_OUTPUT_FILENAME_MAX, "R%d_%s",
+              tst_output_global_rank, fname);
+      va_end (arglist);
       output->streamptr = fopen(output->filename, "w+");
       if (output->streamptr == NULL) {
         fprintf (stderr, "Error opening stream: Could not open output file.");
