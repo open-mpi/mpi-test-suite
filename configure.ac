@@ -3,7 +3,7 @@ dnl Copyright (c) 2020      High-Performance Computing Center Stuttgart,
 dnl                         University of Stuttgart. All rights reserved.
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT([mpi_test_suite], [1.0])
+AC_INIT([mpi_test_suite], [1.1.1])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign no-dependencies subdir-objects])
 AC_PREREQ(2.59)
 
