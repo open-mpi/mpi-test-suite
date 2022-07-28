@@ -1,5 +1,5 @@
 dnl Copyright (c) 2009      Cisco Systems, Inc.  All rights reserved.
-dnl Copyright (c) 2020      High-Performance Computing Center Stuttgart,
+dnl Copyright (c) 2020-2022 High-Performance Computing Center Stuttgart,
 dnl                         University of Stuttgart. All rights reserved.
 
 dnl Process this file with autoconf to produce a configure script.
@@ -17,17 +17,40 @@ AX_PROG_CC_MPI(,,[
     AC_MSG_FAILURE([MPI compiler required.])
 ])
 
-AC_ARG_ENABLE(mpi2,
-  AS_HELP_STRING([--enable-mpi2], [Check for MPI2 features [[default=yes]]]),
-  [test "$enableval" = "no" && ENABLE_MPI2=no], ENABLE_MPI2=yes)
+AC_ARG_ENABLE([mpi2],
+  AS_HELP_STRING([--enable-mpi2], [Build MPI2 tests [[default=yes]]]),,
+  [enable_mpi2=yes])
+AS_IF([test "$enable_mpi2" = "yes"],[
+    AC_DEFINE([HAVE_MPI2], [1], [Define to enable MPI2 tests])
+])
 
-AC_ARG_ENABLE(mpi2-oneside,
-  AS_HELP_STRING([--enable-mpi2-oneside], [build checks for MPI2 onesided Communication [[default=yes]]]),
-  [test "$enableval" = "no" && ENABLE_MPI2_ONESIDED=no], ENABLE_MPI2_ONESIDED=yes)
+AC_ARG_ENABLE([mpi2-one-side],
+    AS_HELP_STRING([--enable-mpi2-one-side], [Build tests for MPI2 one-sided communication [[default=yes]]]),,
+    [enable_mpi2_one_sided=yes])
+AS_IF([test "$enable_mpi2_one_sided" = "yes"],[
+    AC_DEFINE([HAVE_MPI2_ONE_SIDED], [1], [Define to enable MPI2 one-sided tests])
+])
 
-AC_ARG_ENABLE(mpi2-io,
-  AS_HELP_STRING([--enable-mpi2-io], [build checks for MPI2 dynamic process management [[default=yes]]]),
-  [test "$enableval" = "no" && ENABLE_MPI2_IO=no], ENABLE_MPI2_IO=yes)
+AC_ARG_ENABLE([mpi2-io],
+    AS_HELP_STRING([--enable-mpi2-io], [Build tests for MPI2 I/O [[default=yes]]]),,
+    [enable_mpi2_io=yes])
+AS_IF([test "$enable_mpi2_io" = "yes"],[
+    AC_DEFINE([HAVE_MPI2_IO], [1], [Define to enable MPI2 I/O tests])
+])
+
+AC_ARG_ENABLE([mpi2-threads],
+    AS_HELP_STRING([--enable-mpi2-threads], [Build tests for MPI2 thread support [[default=no]]]),,
+    [enable_mpi2_threads=no])
+AS_IF([test "$enable_mpi2_threads" = "yes"],[
+    AC_DEFINE([HAVE_MPI2_THREADS], [1], [Define to enable MPI2 thread support tests])
+])
+
+AC_ARG_ENABLE([mpi2-dynamic],
+    AS_HELP_STRING([--enable-mpi2-dynamic], [Build tests for MPI2 dynamic process management [[default=no]]]),
+    [enable_mpi2_dynamic=no])
+AS_IF([test "$enable_mpi2_dynamic" = "yes"],[
+    AC_DEFINE([HAVE_MPI2_DYNAMIC], [1], [Define to enable MPI2 dynamic process management tests])
+])
 
 
 dnl Checks for header files and compiler characteristics.
