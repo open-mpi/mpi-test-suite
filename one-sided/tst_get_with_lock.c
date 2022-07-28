@@ -13,9 +13,6 @@
  * Copyright (c) 2009 Cisco Systems, Inc.  All rights reserved.
  */
 
-//#include "config.h"
-//#ifdef HAVE_MPI2_ONESIDE
-
 #include <mpi.h>
 #include "mpi_test_suite.h"
 
@@ -131,5 +128,4 @@ int tst_get_with_lock_alltoall_cleanup (struct tst_env * env)
 
   return 0;
 }
-//#endif
 

@@ -1,5 +1,3 @@
-//#include "config.h"
-//#ifdef HAVE_MPI2_ONESIDE
 
 #include <mpi.h>
 #include "mpi_test_suite.h"
@@ -148,4 +146,3 @@ int tst_put_with_post_alltoall_cleanup (struct tst_env * env)
   return 0;
 }
 
-//#endif

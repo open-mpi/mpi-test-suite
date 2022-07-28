@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include "./config.h"
+#include "config.h"
 
 
 #define DEBUG_REPORT_TYPE       TST_REPORT_MAX
@@ -33,10 +33,11 @@ typedef enum {
 } tst_report_types;
 
 
+#define TST_OUTPUT_FILENAME_MAX 256
 typedef struct {
   FILE * streamptr;  /**< Pointer on the stream */
   tst_output_types type;
-  char filename[256];  /**< Filename if stream writes to file */
+  char filename[TST_OUTPUT_FILENAME_MAX];  /**< Filename if stream writes to file */
   tst_report_types level;
   int rank;    /**< MPI rank responsible for output */
   int isopen;  /**< open status: 1 if open */
