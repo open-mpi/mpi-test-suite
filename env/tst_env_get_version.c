@@ -32,7 +32,7 @@ int tst_env_get_version_run (struct tst_env * env)
 
   int valid_mpi_versions[][2] = { {3,1}, {3,0}, {2,2}, {2,1}, {2,0}, {1,2} };
   int i;
-  for( i = 0; i < sizeof(valid_mpi_versions); i++) {
+  for( i = 0; i < (sizeof(valid_mpi_versions)/sizeof(valid_mpi_versions[0])); i++) {
     if( valid_mpi_versions[i][0] == version && valid_mpi_versions[i][1] == subversion) {
       return 0;
     }

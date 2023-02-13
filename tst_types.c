@@ -48,7 +48,6 @@
 
 #define TST_TYPES_NUM (sizeof (types) / sizeof (types[0]))
 #define TST_TYPES_CLASS_NUM (sizeof (tst_types_class_strings) / sizeof (tst_types_class_strings[0]))
-#define SIZEOF_TYPE_MIX_LB_UB (sizeof(char)+sizeof(short)+sizeof(int)+sizeof(long)+sizeof(float)+sizeof(double))
 
 /*
  * Local static Functions
@@ -148,22 +147,15 @@ static struct type types[32] = {
        */
       {MPI_DATATYPE_NULL,     "MPI_TYPE_MIX",         0, sizeof(struct tst_mpi_type_mix), TST_MPI_TYPE_MIX, 11, {TST_MPI_INT}},
       {MPI_DATATYPE_NULL,     "MPI_TYPE_MIX_ARRAY",   0, sizeof(struct tst_mpi_type_mix_array), TST_MPI_TYPE_MIX_ARRAY, 6, {TST_MPI_INT}},
-#ifndef HAVE_MPI_NECSX
-      {MPI_DATATYPE_NULL,     "MPI_TYPE_MIX_LB_UB",   0, 0, TST_MPI_TYPE_MIX_LB_UB, 6, {TST_MPI_INT}},
-#endif
-
+      
       /*
-       * Two examples for MPI_Type_dup usage on a predefined- and a derived datatype.
+       * Example for MPI_Type_dup usage on a predefined datatype.
        */
 #if defined(HAVE_MPI2)
       {MPI_DATATYPE_NULL,     "Dup MPI_CHAR",            0, sizeof (char), TST_MPI_CHAR, 1, {TST_MPI_CHAR}},
-#ifndef HAVE_MPI_NECSX
-/*30*/{MPI_DATATYPE_NULL,     "Dup MPI_TYPE_MIX_LB_UB",  0, 0, TST_MPI_TYPE_MIX_LB_UB, 6, {TST_MPI_INT}},
-#endif
-
 #else
       {MPI_DATATYPE_NULL,     "function MPI_Type_dup() n/a", 0, 0, 0, 0, {0}},
-      {MPI_DATATYPE_NULL,     "function MPI_Type_dup() n/a", 0, 0, 0, 0, {0}},
+
 
 #endif /* HAVE_MPI2 */
 
@@ -401,50 +393,6 @@ int tst_type_init (int * num_types)
       }
     num++;
   }
-#if MPI_VERSION < 3
-#ifndef HAVE_MPI_NECSX
-  {
-    /*
-     * MPI_TYPE_MIX_LB_UB
-     */
-
-    int block_mix[8];
-    MPI_Aint disp_array[8] = {
-        -1*(sizeof(char)+sizeof(long)+sizeof(double)), /* Position of LB */
-        -1*sizeof(char),                               /* Position of char */
-        0,                                             /* Position of short */
-        sizeof(short),                                 /* Position of int */
-        -1*(sizeof(char)+sizeof(long)),                /* Position of long */
-        sizeof(short)+sizeof(int),                     /* Position of float */
-        -1*(sizeof(char)+sizeof(long)+sizeof(double)), /* Position of double */
-        sizeof(short)+sizeof(int)+sizeof(float)        /* Position of UB */
-      };
-    MPI_Datatype mix_type[8] = {
-        MPI_LB,
-        MPI_CHAR,
-        MPI_SHORT,
-        MPI_INT,
-        MPI_LONG,
-        MPI_FLOAT,
-        MPI_DOUBLE,
-        MPI_UB };
-    for(i=0 ; i <  8; i++) block_mix[i]=1;
-    MPI_Type_create_struct(8, block_mix, disp_array, mix_type, &(types[num].mpi_datatype));
-    MPI_Type_commit(&(types[num].mpi_datatype));
-    types[num].type_num = 6;
-    types[num].type_mapping[0] = TST_MPI_CHAR;
-    types[num].type_mapping[1] = TST_MPI_SHORT;
-    types[num].type_mapping[2] = TST_MPI_INT;
-    types[num].type_mapping[3] = TST_MPI_LONG;
-    types[num].type_mapping[4] = TST_MPI_FLOAT;
-    types[num].type_mapping[5] = TST_MPI_DOUBLE;
-    MPI_Type_lb ((types[num].mpi_datatype), &(types[num].lb));
-    MPI_Type_ub ((types[num].mpi_datatype), &(types[num].ub));
-
-    num++;
-  }
-#endif
-#endif
 
 #if defined(HAVE_MPI2)
   {
@@ -462,33 +410,6 @@ int tst_type_init (int * num_types)
     types[num].type_mapping[0] = types[0].type_mapping[0];*/
     num++;
   }
-#if MPI_VERSION < 3
-#if !defined (HAVE_MPI_NECSX) && !defined(HAVE_MPI_OPENMPI)
-  /*
-   * OpenMPI fails here!!!
-   */
-  {
-    /*
-     * Dup MPI_TYPE_MIX_LB_UB
-     */
-    if (strcmp(types[num-2].description, "MPI_TYPE_MIX_LB_UB"))
-      ERROR (EINVAL, "Internal Error");
-    MPI_Type_dup (types[num-2].mpi_datatype, &(types[num].mpi_datatype));
-    types[num].type_num = types[num-1].type_num;
-    types[num].type_mapping[0] = types[num-1].type_mapping[0];
-    types[num].type_mapping[1] = types[num-1].type_mapping[1];
-    types[num].type_mapping[2] = types[num-1].type_mapping[2];
-    types[num].type_mapping[3] = types[num-1].type_mapping[3];
-    types[num].type_mapping[4] = types[num-1].type_mapping[4];
-    types[num].type_mapping[5] = types[num-1].type_mapping[5];
-
-    MPI_Type_lb ((types[num].mpi_datatype), &(types[num].lb));
-    MPI_Type_ub ((types[num].mpi_datatype), &(types[num].ub));
-
-    num++;
-  }
-#endif
-#endif
 #endif /* HAVE_MPI2 */
 
   *num_types = num;
@@ -854,59 +775,6 @@ int tst_type_freevalues (const int type, char * buffer, const int values_num)
       break;                                                                                     \
     }
 
-#define TST_TYPE_SET_STRUCT_MIX_LB_UB(tst_type,c_type,c_type_caps)                               \
-  case tst_type:                                                                                 \
-    {                                                                                            \
-      MPI_Aint __disp_array[8]={                                                                 \
-        -1*(sizeof(char)+sizeof(long)+sizeof(double)), /* Position of LB */                      \
-        -1*sizeof(char),                               /* Position of char */                    \
-	0,                                             /* Position of short */                   \
-	sizeof(short),                                 /* Position of int */                     \
-	-1*(sizeof(char)+sizeof(long)),                /* Position of long */                    \
-	sizeof(short)+sizeof(int),                     /* Position of float */                   \
-	-1*(sizeof(char)+sizeof(long)+sizeof(double)), /* Position of double */                  \
-	sizeof(short)+sizeof(int)+sizeof(float)        /* Position of UB */                      \
-      };                                                                                         \
-      switch (type_set)                                                                          \
-      {                                                                                          \
-      case TST_TYPE_SET_ZERO:                                                                    \
-        buffer[__disp_array[1]]=0;                                                               \
-	*((short*)(&buffer[__disp_array[2]]))= 0;                                                \
-	*((int*)(&buffer[__disp_array[3]]))= 0;                                                  \
-	*((long*)(&buffer[__disp_array[4]]))= 0;                                                 \
-	*((float*)(&buffer[__disp_array[5]]))= 0;                                                \
-	*((double*)(&buffer[__disp_array[6]]))= 0;                                               \
-        break;                                                                                   \
-      case TST_TYPE_SET_MAX:                                                                     \
-        buffer[__disp_array[1]]=CHAR_MAX;                                                        \
-	*((short*)(&buffer[__disp_array[2]]))= SHRT_MAX;                                         \
-	*((int*)(&buffer[__disp_array[3]]))= INT_MAX;                                            \
-	*((long*)(&buffer[__disp_array[4]]))= LONG_MAX;                                          \
-	*((float*)(&buffer[__disp_array[5]]))= FLT_MAX;                                          \
-	*((double*)(&buffer[__disp_array[6]]))= DBL_MAX;                                         \
-        break;                                                                                   \
-      case TST_TYPE_SET_MIN:                                                                     \
-        buffer[__disp_array[1]]=CHAR_MIN;                                                        \
-	*((short*)(&buffer[__disp_array[2]]))= SHRT_MIN;                                         \
-	*((int*)(&buffer[__disp_array[3]]))= INT_MIN;                                            \
-	*((long*)(&buffer[__disp_array[4]]))= LONG_MIN;                                          \
-	*((float*)(&buffer[__disp_array[5]]))= FLT_MIN;                                          \
-	*((double*)(&buffer[__disp_array[6]]))= DBL_MIN;                                         \
-      break;                                                                                     \
-      case TST_TYPE_SET_VALUE:                                                                   \
-	buffer[__disp_array[1]]= direct_value;                                                   \
-	*((short*)(&buffer[__disp_array[2]]))= direct_value;                                     \
-	*((int*)(&buffer[__disp_array[3]]))= direct_value;                                       \
-	*((long*)(&buffer[__disp_array[4]]))= direct_value;                                      \
-	*((float*)(&buffer[__disp_array[5]]))= direct_value;                                     \
-	*((double*)(&buffer[__disp_array[6]]))= direct_value;                                    \
-      break;                                                                                     \
-      default:                                                                                   \
-      return -1;                                                                                 \
-      }                                                                                          \
-      break;                                                                                     \
-    }
-
 
 int tst_type_setvalue (int type, char * buffer, int type_set, long long direct_value)
 {
@@ -981,8 +849,7 @@ int tst_type_setvalue (int type, char * buffer, int type_set, long long direct_v
       TST_TYPE_SET_CONTI (TST_MPI_INT_STRUCT, int, INT);
       TST_TYPE_SET_STRUCT_MIX (TST_MPI_TYPE_MIX, struct tst_mpi_type_mix, NOT_USED);
       TST_TYPE_SET_STRUCT_MIX_ARRAY (TST_MPI_TYPE_MIX_ARRAY, struct tst_mpi_type_mix_array, NOT_USED);
-      TST_TYPE_SET_STRUCT_MIX_LB_UB (TST_MPI_TYPE_MIX_LB_UB, NOT_USED, NOT_USED);
-
+      
 /*
       TST_TYPE_SET (TST_MPI_COMPLEX
       TST_TYPE_SET (TST_MPI_DOUBLE_COMPLEX
