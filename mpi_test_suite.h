@@ -917,6 +917,10 @@ extern int tst_threaded_ring_persistent_cleanup (struct tst_env * env);
 extern int tst_threaded_comm_dup_init (struct tst_env * env);
 extern int tst_threaded_comm_dup_run (struct tst_env * env);
 extern int tst_threaded_comm_dup_cleanup (struct tst_env * env);
+
+extern int tst_threaded_ring_partitioned_init (struct tst_env * env);
+extern int tst_threaded_ring_partitioned_run (struct tst_env * env);
+extern int tst_threaded_ring_partitioned_cleanup (struct tst_env * env);
 #endif
 
 #endif /* __MPI_TESTSUITE_H__ */
