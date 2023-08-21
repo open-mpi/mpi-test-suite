@@ -378,7 +378,7 @@ int main (int argc, char * argv[])
       MPI_Abort(MPI_COMM_WORLD, 1);
     }
     else {
-      num_threads = args_info.num_threads;
+      num_threads = args_info.num_threads_arg;
     }
 #else
     printf ("Error: Threads are not enabled by configure\n");
