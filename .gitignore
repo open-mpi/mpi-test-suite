@@ -56,3 +56,13 @@ Makefile
 
 # Object files
 *.o
+
+# Log files
+*.log
+
+# Executable
+mpi_test_suite
+
+# Generated with gengetopt
+cmdline.c
+cmdline.h
