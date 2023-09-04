@@ -1384,6 +1384,14 @@ static struct tst_test tst_tests[] = {
    TST_MODE_RELAXED,
    TST_NONE,
    &tst_threaded_ring_partitioned_init, &tst_threaded_ring_partitioned_run, &tst_threaded_ring_partitioned_cleanup},
+
+  {TST_CLASS_THREADED, "Threaded ring partitioned with less receive partitions",
+   TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
+   1,
+   TST_MPI_ALL_C_TYPES,
+   TST_MODE_RELAXED,
+   TST_NONE,
+   &tst_threaded_ring_partitioned_many_to_one_init, &tst_threaded_ring_partitioned_many_to_one_run, &tst_threaded_ring_partitioned_many_to_one_cleanup},
 #endif
 
   {TST_CLASS_UNSPEC, "None",

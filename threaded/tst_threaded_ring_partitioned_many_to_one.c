@@ -3,7 +3,8 @@
  *
  * Functionality:
  *  Sends data through a ring using partitioned communication.
- *  Each thread corresponds to a partition of the send/receive buffers.
+ *  Each partition in the send buffer corresponds to exactly one thread, 
+ *  but a receive partition corresponds to multiple threads.
  *
  * Author: Axel Schneewind
  *
@@ -21,7 +22,9 @@
 
 static pthread_barrier_t thread_barrier;
 
-int tst_threaded_ring_partitioned_init(struct tst_env *env)
+static int ratio_send_to_receive = 4;
+
+int tst_threaded_ring_partitioned_many_to_one_init(struct tst_env *env)
 {
   int comm_rank;
   MPI_Comm comm = tst_comm_getmastercomm(env->comm);
@@ -47,6 +50,9 @@ int tst_threaded_ring_partitioned_init(struct tst_env *env)
 
     // global buffer holds send and recv buffer
     tst_thread_global_buffer_init(2 * buffer_size);
+
+    // for signalling that a partition has arrived
+    tst_thread_signal_init(num_worker_threads);
   }
 
   // wait until buffer is initialized by master thread (busy wait as thread barrier is not ready here)
@@ -79,7 +85,7 @@ static int wait_for_partition(MPI_Request *recv_request, int partition_num)
   return flag;
 }
 
-int tst_threaded_ring_partitioned_run(struct tst_env *env)
+int tst_threaded_ring_partitioned_many_to_one_run(struct tst_env *env)
 {
   int comm_size;
   int comm_rank;
@@ -129,19 +135,26 @@ int tst_threaded_ring_partitioned_run(struct tst_env *env)
             send_to, recv_from, env->tag);
 
   // number of partitions and values per partition
-  int num_partitions = num_worker_threads;
+  int num_send_partitions = num_worker_threads;
+  int num_recv_partitions = num_send_partitions / ratio_send_to_receive;
   int partition_size = env->values_num; // number of elements
+
+  // partition numbers for this thread
+  int send_partition_num = thread_num;
+  int recv_partition_num = (thread_num % ratio_send_to_receive == 0) ? thread_num / ratio_send_to_receive : -1;
 
   // init send and recv and start both
   if (thread_num == TST_THREAD_MASTER)
   {
-    tst_output_printf(DEBUG_LOG, TST_REPORT_MAX, "(Rank:%i, Thread:%i) initializing send to %i and recv from %i with %i partitions of size %i*%i bytes\n",
-              comm_rank, thread_num,
-              send_to, recv_from, num_partitions, partition_size, type_extent);
+    tst_output_printf(DEBUG_LOG, TST_REPORT_MAX, 
+      "(Rank:%i, Thread:%i) initializing send to %i and recv from %i\n"
+      "                     with %i send partitions of size %i*%i bytes\n"
+      "                     and  %i recv partitions of size %i*%i bytes\n",
+        comm_rank, thread_num, send_to, recv_from, num_send_partitions, partition_size, type_extent, num_recv_partitions, partition_size * ratio_send_to_receive, type_extent);
 
-    MPI_CHECK(MPI_Psend_init(env->send_buffer, num_partitions, partition_size, type, send_to,
+    MPI_CHECK(MPI_Psend_init(env->send_buffer, num_send_partitions, partition_size, type, send_to,
                  0, comm, MPI_INFO_NULL, send_request));
-    MPI_CHECK(MPI_Precv_init(env->recv_buffer, num_partitions, partition_size, type, recv_from,
+    MPI_CHECK(MPI_Precv_init(env->recv_buffer, num_recv_partitions, partition_size * ratio_send_to_receive, type, recv_from,
                  0, comm, MPI_INFO_NULL, recv_request));
 
     MPI_CHECK(MPI_Startall(2, env->req_buffer));
@@ -157,30 +170,40 @@ int tst_threaded_ring_partitioned_run(struct tst_env *env)
     if (thread_num == TST_THREAD_MASTER)
       time_init = MPI_Wtime();
 
-    if (thread_num >= 0 && thread_num < num_partitions)
+    if (send_partition_num >= 0 && send_partition_num < num_send_partitions)
     {
       // allow this partition to be sent
-      MPI_CHECK(MPI_Pready(thread_num, *send_request));
+      MPI_CHECK(MPI_Pready(send_partition_num, *send_request));
     }
 
-    if (thread_num >= 0 && thread_num < num_partitions)
+    if (recv_partition_num >= 0 && recv_partition_num < num_recv_partitions)
     {
-      wait_for_partition(recv_request, thread_num);
+      wait_for_partition(recv_request, recv_partition_num);
     }
   }
   else
   {
-    if (thread_num >= 0 && thread_num < num_partitions)
+    if (send_partition_num >= 0 && send_partition_num < num_send_partitions)
     {
-      wait_for_partition(recv_request, thread_num);
+      if (recv_partition_num >= 0 && recv_partition_num < num_recv_partitions)
+      {
+        wait_for_partition(recv_request, recv_partition_num);
+
+        for (int i = 1; i < ratio_send_to_receive; i++)
+          tst_thread_signal_send(thread_num + i);
+      }
+      else
+      {
+        tst_thread_signal_wait(thread_num);
+      }
 
       // simply copy data from input to output buffer
-      int begin_index = partition_size * thread_num * type_extent;
+      int begin_index = partition_size * send_partition_num * type_extent;
       int size = partition_size * type_extent;
       memcpy(&env->send_buffer[begin_index], &env->recv_buffer[begin_index], size);
 
       // allow sending of this partition
-      MPI_CHECK(MPI_Pready(thread_num, *send_request));
+      MPI_CHECK(MPI_Pready(send_partition_num, *send_request));
     }
   }
 
@@ -209,7 +232,7 @@ int tst_threaded_ring_partitioned_run(struct tst_env *env)
     return 0;
 }
 
-int tst_threaded_ring_partitioned_cleanup(struct tst_env *env)
+int tst_threaded_ring_partitioned_many_to_one_cleanup(struct tst_env *env)
 {
   int thread_num = tst_thread_get_num();
   int num_worker_threads = tst_thread_num_threads();
