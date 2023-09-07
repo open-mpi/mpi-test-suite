@@ -72,15 +72,16 @@ int tst_threaded_ring_partitioned_many_to_one_init(struct tst_env *env)
   return 0;
 }
 
-// busy wait until partition arrived
+
+// busy wait until partition arrived, using exponential backoff with initial backoff time given.
 // returns 1 if the partition has arrived and 0 if waiting was interupted
-static int wait_for_partition(MPI_Request *recv_request, int partition_num)
+static int wait_for_partition(MPI_Request *recv_request, int partition_num, useconds_t backoff_time)
 {
   int flag = 0;
   do
   {
     MPI_CHECK(MPI_Parrived(*recv_request, partition_num, &flag));
-  } while (flag == 0 && usleep(2000) == 0);
+  } while (flag == 0 && usleep((backoff_time = (backoff_time * 3) / 2)) == 0);
 
   return flag;
 }
@@ -137,7 +138,7 @@ int tst_threaded_ring_partitioned_many_to_one_run(struct tst_env *env)
   // number of partitions and values per partition
   int num_send_partitions = num_worker_threads;
   int num_recv_partitions = num_send_partitions / ratio_send_to_receive;
-  int partition_size = env->values_num; // number of elements
+  int partition_size = env->values_num; // number of elements per send partition
 
   // partition numbers for this thread
   int send_partition_num = thread_num;
@@ -161,7 +162,7 @@ int tst_threaded_ring_partitioned_many_to_one_run(struct tst_env *env)
 
     // wait for all ranks to become ready
     MPI_CHECK(MPI_Barrier(MPI_COMM_WORLD));
-  };
+  }
 
   pthread_barrier_wait(&thread_barrier);
 
@@ -178,24 +179,20 @@ int tst_threaded_ring_partitioned_many_to_one_run(struct tst_env *env)
 
     if (recv_partition_num >= 0 && recv_partition_num < num_recv_partitions)
     {
-      wait_for_partition(recv_request, recv_partition_num);
+      wait_for_partition(recv_request, recv_partition_num, 512);
     }
   }
   else
   {
     if (send_partition_num >= 0 && send_partition_num < num_send_partitions)
     {
-      if (recv_partition_num >= 0 && recv_partition_num < num_recv_partitions)
-      {
-        wait_for_partition(recv_request, recv_partition_num);
-
-        for (int i = 1; i < ratio_send_to_receive; i++)
-          tst_thread_signal_send(thread_num + i);
-      }
-      else
-      {
-        tst_thread_signal_wait(thread_num);
-      }
+	  if (recv_partition_num >= 0 && recv_partition_num < num_recv_partitions) {
+	  	wait_for_partition(recv_request, recv_partition_num, 128);
+		for (int i = 1; i < ratio_send_to_receive; i++)
+			tst_thread_signal_send(send_partition_num + i);
+	  } else {
+		tst_thread_signal_wait(send_partition_num);
+	  }
 
       // simply copy data from input to output buffer
       int begin_index = partition_size * send_partition_num * type_extent;
