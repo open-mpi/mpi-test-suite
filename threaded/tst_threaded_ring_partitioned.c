@@ -60,6 +60,7 @@ int tst_threaded_ring_partitioned_init(struct tst_env *env)
   env->recv_buffer = (char *)tst_thread_get_global_buffer() + buffer_size;
 
   env->req_buffer = tst_thread_get_global_request(0);
+  env->status_buffer = MPI_STATUSES_IGNORE;
 
   // master thread of master rank initializes array values
   if (comm_rank == TST_RANK_MASTER && thread_num == TST_THREAD_MASTER)
