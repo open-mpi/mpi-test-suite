@@ -124,6 +124,8 @@ mpi_test_suite_SOURCES = \
 	threaded/tst_threaded_ring.c \
 	threaded/tst_threaded_ring_isend.c \
 	threaded/tst_threaded_ring_persistent.c \
+	threaded/tst_threaded_ring_partitioned.c \
+	threaded/tst_threaded_ring_partitioned_many_to_one.c \
 	tst_comm.c \
 	tst_comm.h \
 	tst_file.c \
