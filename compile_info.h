@@ -1,4 +1,4 @@
-#ifndef BINRAY_INFO_H
+#ifndef BINARY_INFO_H
 #define BINARY_INFO_H
 
 #include <stdio.h>
