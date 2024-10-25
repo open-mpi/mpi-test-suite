@@ -359,7 +359,7 @@ int main (int argc, char * argv[])
     str = strtok (NULL, ",");
   }
 
-  for (tst_report = TST_REPORT_SUMMARY; tst_report < TST_REPORT_MAX; tst_report++) {
+  for (tst_report = TST_REPORT_NONE; tst_report < TST_REPORT_MAX; tst_report++) {
     if (0 == strcasecmp (args_info.report_arg, tst_reports[tst_report])) {
       break;
     }
@@ -461,7 +461,7 @@ int main (int argc, char * argv[])
               MPI_Barrier (MPI_COMM_WORLD);
           }
 
-  if (tst_global_rank == 0) {
+  if (tst_global_rank == 0 && tst_report >= TST_REPORT_SUMMARY) {
     tst_test_print_failed ();
   }
 

@@ -26,7 +26,8 @@ typedef enum {
 
 
 typedef enum {
-  TST_REPORT_SUMMARY = 0, /**< No output, except for final summary */
+  TST_REPORT_NONE = 0,    /**< No output */
+  TST_REPORT_SUMMARY,     /**< No output, except for final summary */
   TST_REPORT_RUN,         /**< Output every test that runs, plus the previous */
   TST_REPORT_FULL,        /**< Full output, including hexdump of wrong memory */
   TST_REPORT_MAX          /**< Output everything */

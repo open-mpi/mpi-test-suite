@@ -26,6 +26,7 @@ static int tst_output_global_rank;
 
 /* Corresponding strings to values in enum tst_report_types. */
 const char * tst_reports[] = {
+  "None",
   "Summary",
   "Run",
   "Full",
