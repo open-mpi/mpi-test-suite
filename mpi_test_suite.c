@@ -142,7 +142,7 @@ int main (int argc, char * argv[])
   MPI_Comm_rank (MPI_COMM_WORLD, &tst_global_rank);
   MPI_Comm_size (MPI_COMM_WORLD, &tst_global_size);
 
-  tst_output_init (DEBUG_LOG, TST_OUTPUT_RANK_SELF, TST_REPORT_MAX, TST_OUTPUT_TYPE_LOGFILE, "tst.log");
+  tst_output_init (DEBUG_LOG, TST_OUTPUT_RANK_SELF, TST_REPORT_NONE, TST_OUTPUT_TYPE_STDERR);
 
   char info_str[MAX_INFO_STRING_LENGTH];
   get_compiler_info(info_str);
