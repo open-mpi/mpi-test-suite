@@ -435,7 +435,7 @@ int main (int argc, char * argv[])
             if (tst_test_check_sync (&tst_env))
               MPI_Barrier (MPI_COMM_WORLD);
 
-            if (tst_global_rank == 0 && tst_report > TST_REPORT_SUMMARY)
+            if (tst_global_rank == 0 && tst_report >= TST_REPORT_RUN)
               printf ("%s tests %s (%d/%d), comm %s (%d/%d), type %s (%d/%d)\n",
                       tst_test_getclass_string (tst_env.test),
                       tst_test_getdescription (tst_env.test), tst_env.test+1, num_tests,
