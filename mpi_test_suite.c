@@ -142,7 +142,7 @@ int main (int argc, char * argv[])
   MPI_Comm_rank (MPI_COMM_WORLD, &tst_global_rank);
   MPI_Comm_size (MPI_COMM_WORLD, &tst_global_size);
 
-  tst_output_init (DEBUG_LOG, TST_OUTPUT_RANK_SELF, TST_REPORT_MAX, TST_OUTPUT_TYPE_LOGFILE, "tst.log");
+  tst_output_init (DEBUG_LOG, TST_OUTPUT_RANK_SELF, TST_REPORT_NONE, TST_OUTPUT_TYPE_STDERR);
 
   char info_str[MAX_INFO_STRING_LENGTH];
   get_compiler_info(info_str);
@@ -359,7 +359,7 @@ int main (int argc, char * argv[])
     str = strtok (NULL, ",");
   }
 
-  for (tst_report = TST_REPORT_SUMMARY; tst_report < TST_REPORT_MAX; tst_report++) {
+  for (tst_report = TST_REPORT_NONE; tst_report < TST_REPORT_MAX; tst_report++) {
     if (0 == strcasecmp (args_info.report_arg, tst_reports[tst_report])) {
       break;
     }
@@ -435,7 +435,7 @@ int main (int argc, char * argv[])
             if (tst_test_check_sync (&tst_env))
               MPI_Barrier (MPI_COMM_WORLD);
 
-            if (tst_global_rank == 0 && tst_report > TST_REPORT_SUMMARY)
+            if (tst_global_rank == 0 && tst_report >= TST_REPORT_RUN)
               printf ("%s tests %s (%d/%d), comm %s (%d/%d), type %s (%d/%d)\n",
                       tst_test_getclass_string (tst_env.test),
                       tst_test_getdescription (tst_env.test), tst_env.test+1, num_tests,
@@ -461,7 +461,7 @@ int main (int argc, char * argv[])
               MPI_Barrier (MPI_COMM_WORLD);
           }
 
-  if (tst_global_rank == 0) {
+  if (tst_global_rank == 0 && tst_report >= TST_REPORT_SUMMARY) {
     tst_test_print_failed ();
   }
 

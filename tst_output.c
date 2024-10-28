@@ -26,6 +26,7 @@ static int tst_output_global_rank;
 
 /* Corresponding strings to values in enum tst_report_types. */
 const char * tst_reports[] = {
+  "None",
   "Summary",
   "Run",
   "Full",
@@ -143,6 +144,10 @@ int tst_output_printf(tst_output_stream * output,
   int count;
   va_list arglist;
 
+  if (output->isopen == 0) {
+    return 0;
+  }
+
 #ifdef HAVE_MPI2_THREADS
   {
     if (tst_thread_running()) {
@@ -153,7 +158,7 @@ int tst_output_printf(tst_output_stream * output,
   }
 #endif
 
-  if ((output->isopen == 1) && (output->rank == tst_output_global_rank) && (error_level <= output->level)) {
+  if ((output->rank == tst_output_global_rank) && (error_level <= output->level)) {
     va_start(arglist, format);
     count = vfprintf (output->streamptr, format, arglist);
     fflush (output->streamptr);

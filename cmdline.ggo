@@ -13,7 +13,7 @@ in order, so use 'all,^exclude'."
 text "\n"
 option "atomic-io" a "enable atomicity for files in I/O for all tests that support it"
 option "num-threads" j "number of additional threads to execute the tests" int default="0"
-option "report" r "level of detail for test report" values="summary","run","full" default="summary"
+option "report" r "level of detail for test report" values="none","summary","run","full" default="summary"
 option "execution-mode" x "level of correctness testing" values="disabled","strict","relaxed" default="relaxed"
 
 option "list" l "list all available tests, communicators, datatypes and corresponding classes"
