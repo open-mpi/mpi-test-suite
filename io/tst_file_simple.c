@@ -38,8 +38,13 @@ int tst_file_simple_init (struct tst_env * env)
       memset (file_name, 0, sizeof (char)*100);
       sprintf(file_name, "%s%ld", TST_FILE_NAME, (long)getpid());
     }
-  if (0 == tst_thread_get_num())
+#ifdef HAVE_MPI2_THREADS
+  if (tst_thread_get_num() == TST_THREAD_MASTER) {
+#endif
     MPI_CHECK (MPI_Bcast(file_name, 100, MPI_CHAR, ROOT, comm));
+#ifdef HAVE_MPI2_THREADS
+  }
+#endif
   env->read_buffer = tst_type_allocvalues (env->type, env->values_num);
   tst_file_alloc(env->type, env->values_num, comm_size, file_name, comm);
 
