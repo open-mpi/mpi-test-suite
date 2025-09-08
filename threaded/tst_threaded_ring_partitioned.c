@@ -9,6 +9,7 @@
  *
  * Date: July 19th 2023
  */
+
 #include <mpi.h>
 #include "mpi_test_suite.h"
 #include "tst_threads.h"
@@ -16,6 +17,8 @@
 #include "tst_comm.h"
 
 #include <pthread.h>
+
+#ifdef HAVE_MPI4_PARTITIONED_P2P
 
 #define TST_RANK_MASTER 0
 
@@ -236,3 +239,5 @@ int tst_threaded_ring_partitioned_cleanup(struct tst_env *env)
 
   return 0;
 }
+
+#endif /* HAVE_MPI4_PARTITIONED_P2P */

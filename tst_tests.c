@@ -1377,6 +1377,7 @@ static struct tst_test tst_tests[] = {
    &tst_threaded_comm_dup_init, &tst_threaded_comm_dup_run, &tst_threaded_comm_dup_cleanup},
 
 
+#ifdef HAVE_MPI4_PARTITIONED_P2P
   {TST_CLASS_THREADED, "Threaded ring partitioned",
    TST_MPI_COMM_SELF | TST_MPI_INTRA_COMM,
    1,
@@ -1392,6 +1393,8 @@ static struct tst_test tst_tests[] = {
    TST_MODE_RELAXED,
    TST_NONE,
    &tst_threaded_ring_partitioned_many_to_one_init, &tst_threaded_ring_partitioned_many_to_one_run, &tst_threaded_ring_partitioned_many_to_one_cleanup},
+#endif /* HAVE_MPI4_PARTITIONED_P2P */
+
 #endif
 
   {TST_CLASS_UNSPEC, "None",

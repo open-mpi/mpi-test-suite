@@ -1,5 +1,5 @@
 dnl Copyright (c) 2009      Cisco Systems, Inc.  All rights reserved.
-dnl Copyright (c) 2020-2022 High-Performance Computing Center Stuttgart,
+dnl Copyright (c) 2020-2025 High-Performance Computing Center Stuttgart,
 dnl                         University of Stuttgart. All rights reserved.
 
 dnl Process this file with autoconf to produce a configure script.
@@ -50,6 +50,13 @@ AC_ARG_ENABLE([mpi2-dynamic],
     [enable_mpi2_dynamic=no])
 AS_IF([test "$enable_mpi2_dynamic" = "yes"],[
     AC_DEFINE([HAVE_MPI2_DYNAMIC], [1], [Define to enable MPI2 dynamic process management tests])
+])
+
+AC_ARG_ENABLE([mpi4-partitioned-p2p],
+    AS_HELP_STRING([--enable-mpi4-partitioned-p2p], [Build tests for MPI4 partitioned P2P [[default=yes]]]),,
+    [enable_mpi4_partitioned_p2p=yes])
+AS_IF([test "$enable_mpi4_partitioned_p2p" = "yes"],[
+    AC_DEFINE([HAVE_MPI4_PARTITIONED_P2P], [1], [Define to enable MPI4 partitioned P2P tests])
 ])
 
 
