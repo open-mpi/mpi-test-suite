@@ -53,7 +53,7 @@ Required dependencies to build and run the MPI test suite:
 - MPI library with C compiler support
 - `make`
 
-Optional dependencies for developers:
+The following additional dependencies are required when building from the Git repository:
 - `gengetopt` (used for the generation of the command line parser code)
 - GNU Autoconf, Automake
 
