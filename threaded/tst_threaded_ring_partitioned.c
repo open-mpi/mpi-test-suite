@@ -144,6 +144,13 @@ int tst_threaded_ring_partitioned_run(struct tst_env *env)
   int send_partition_num = thread_num;
   int recv_partition_num = (thread_num % ratio_send_to_receive == 0) ? thread_num / ratio_send_to_receive : -1;
 
+  // master thread does not work on any partitions
+  if (thread_num == TST_THREAD_MASTER)
+  {
+    send_partition_num = -1;
+    recv_partition_num = -1;
+  }
+
   // init send and recv and start both
   if (thread_num == TST_THREAD_MASTER)
   {
